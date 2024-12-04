@@ -3,6 +3,7 @@ using Microsoft.Win32;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -124,10 +125,16 @@ namespace AstroModLoader
             {
                 mod.Dirty = true;
             }
-            FullUpdateSynchronous();
+            FullUpdateSynchronous(false, false);
             SortMods();
             RefreshAllPriorites();
             SyncConfigToDisk();
+
+            // integrate async so we can open the window first
+            Task.Run(() =>
+            {
+                IntegrateMods();
+            });
         }
 
         public void VerifyGamePath()
@@ -959,18 +966,43 @@ namespace AstroModLoader
         }
 
         public static ModIntegrator OurIntegrator;
+        private volatile bool integrating = false;
         public void IntegrateMods()
         {
-            if (IsReadOnly || GamePath == null || InstallPath == null) return;
+            if (IsReadOnly || GamePath == null || InstallPath == null || integrating) return;
 
-            List<string> optionalMods = new List<string>();
-            foreach (Mod mod in Mods)
+            integrating = true;
+            try
             {
-                if (mod.Enabled && mod.IsOptional) optionalMods.Add(mod.CurrentModData.ModID);
-            }
+                AMLUtils.InvokeUI(() =>
+                {
+                    if (BaseForm.integratingLabel != null) BaseForm.integratingLabel.Text = "Integrating...";
+                });
 
-            if (TableHandler.ShouldContainOptionalColumn()) OurIntegrator.OptionalModIDs = optionalMods;
-            OurIntegrator.IntegrateMods(InstallPath, Path.Combine(GamePath, "Astro", "Content", "Paks"));
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
+
+                List<string> optionalMods = new List<string>();
+                foreach (Mod mod in Mods)
+                {
+                    if (mod.Enabled && mod.IsOptional) optionalMods.Add(mod.CurrentModData.ModID);
+                }
+
+                if (TableHandler.ShouldContainOptionalColumn()) OurIntegrator.OptionalModIDs = optionalMods;
+                OurIntegrator.IntegrateMods(InstallPath, Path.Combine(GamePath, "Astro", "Content", "Paks"));
+
+                sw.Stop();
+                string tm = sw.Elapsed.TotalMilliseconds.ToString("#.##");
+
+                AMLUtils.InvokeUI(() =>
+                {
+                    if (BaseForm.integratingLabel != null) BaseForm.integratingLabel.Text = "Integrated in " + tm + " ms";
+                });
+            }
+            finally
+            {
+                integrating = false;
+            }
         }
 
         public void RefreshAllPriorites()
@@ -1034,7 +1066,7 @@ namespace AstroModLoader
             });
         }
 
-        public void FullUpdateSynchronous(bool releaseSemaphore = false)
+        public void FullUpdateSynchronous(bool releaseSemaphore = false, bool integrate = true)
         {
             UpdateReadOnlyStatus();
             try
@@ -1042,9 +1074,14 @@ namespace AstroModLoader
                 Directory.CreateDirectory(DownloadPath);
                 Directory.CreateDirectory(InstallPath);
 
+                foreach (var path in AMLUtils.BannedFilesInOutputDirectory)
+                {
+                    try { File.Delete(Path.Combine(InstallPath, path)); } catch { }
+                }
+
                 SyncConfigToDisk();
                 SyncModsToDisk();
-                IntegrateMods();
+                if (integrate) IntegrateMods();
             }
             catch (Exception ex)
             {

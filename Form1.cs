@@ -28,6 +28,7 @@ namespace AstroModLoader
         {
             InitializeComponent();
             modInfo.Text = "";
+            integratingLabel.Text = "";
             AMLUtils.InitializeInvoke(this);
 
             this.Text = "AstroModLoader Classic v" + Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
@@ -726,6 +727,8 @@ namespace AstroModLoader
             loadButton.Location = new Point(refresh.Location.X + refresh.Width + 5, dataGridView1.Location.Y + dataGridView1.Height + 10);
             syncButton.Location = new Point(dataGridView1.Location.X + dataGridView1.Width - syncButton.Width, dataGridView1.Location.Y + dataGridView1.Height + 10);
             exitButton.Location = new Point(syncButton.Location.X + syncButton.Width - exitButton.Width, (footerPanel.Height - exitButton.Height) / 2);
+
+            integratingLabel.Location = new Point(exitButton.Location.X - 6 - integratingLabel.Width, integratingLabel.Location.Y);
 
             dataGridView1.Invalidate();
         }

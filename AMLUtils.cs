@@ -52,6 +52,14 @@ namespace AstroModLoader
             }
         }
 
+
+        // this is used just to ensure that astro_modloader (Rust) files are not kept accidentally
+        public static List<string> BannedFilesInOutputDirectory = new List<string>
+        {
+            "900-AstroModIntegrator-0.1.0_P.pak",
+            "800-CoreMod-0.1.0_P.pak"
+        };
+
         public static string SerializeObject<T>(T value)
         {
             StringBuilder sb = new StringBuilder(256);
