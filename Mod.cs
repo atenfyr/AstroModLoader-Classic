@@ -1,17 +1,11 @@
 ﻿using AstroModIntegrator;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace AstroModLoader
 {
@@ -54,7 +48,7 @@ namespace AstroModLoader
             return ForceLatest;
         }
 
-        [JsonConverter(typeof(VersionConverter))]
+        [JsonConverter(typeof(Newtonsoft.Json.Converters.VersionConverter))]
         [DisplayName("Version")]
         [JsonProperty("version")]
         public Version InstalledVersion { get; set; }
@@ -119,7 +113,9 @@ namespace AstroModLoader
             if (AllModData[InstalledVersion].Name.Length > 32) AllModData[InstalledVersion].Name = AllModData[InstalledVersion].Name.Substring(0, 32);
         }
 
-        private static readonly Regex ModIDFilterRegex = new Regex(@"[^A-Za-z0-9]", RegexOptions.Compiled);
+        // . is informally allowed in mod IDs these days, to include author name
+        // this violates the specification, but it is a de facto standard
+        private static readonly Regex ModIDFilterRegex = new Regex(@"[^A-Za-z0-9\.]", RegexOptions.Compiled);
         public string ConstructName(int forcePriority = -1)
         {
             return AMLUtils.GeneratePriorityFromPositionInList(forcePriority >= 0 ? forcePriority : Priority) + "-" + ModIDFilterRegex.Replace(CurrentModData.ModID, "") + "-" + InstalledVersion + "_P.pak";

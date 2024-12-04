@@ -476,13 +476,13 @@ namespace AstroModLoader
 
         internal Metadata ExtractMetadataFromPath(string modPath)
         {
-            if (new Mod(null, Path.GetFileName(modPath)).Priority >= 999) return null;
+            if (new Mod(null, Path.GetFileName(modPath)).Priority >= 800) return null;
 
             try
             {
                 using (FileStream f = new FileStream(modPath, FileMode.Open, FileAccess.Read))
                 {
-                    return new PakExtractor(new BinaryReader(f)).ReadMetadata();
+                    return new PakExtractor(f).ReadMetadata();
                 }
             }
             catch
@@ -712,7 +712,7 @@ namespace AstroModLoader
                 else
                 {
                     //if (Program.CommandLineOptions.ServerMode && m.CurrentModData.Sync == SyncMode.ClientOnly) continue;
-                    if (m.Priority < 999)
+                    if (m.Priority < 800)
                     {
                         File.Copy(modPath, Path.Combine(DownloadPath, modNameOnDisk), true);
                         m.Enabled = true;
@@ -756,6 +756,14 @@ namespace AstroModLoader
         public void SyncModsToDisk()
         {
             if (IsReadOnly) return;
+
+            Dictionary<string, Mod> testModsInDownloadPath = new Dictionary<string, Mod>();
+            string[] allMods = Directory.GetFiles(DownloadPath, "*.pak", SearchOption.TopDirectoryOnly);
+            foreach (string modPath in allMods)
+            {
+                testModsInDownloadPath[modPath] = new Mod(ExtractMetadataFromPath(modPath), Path.GetFileName(modPath));
+            }
+
             foreach (Mod mod in Mods)
             {
                 if (mod.Dirty)
@@ -764,11 +772,11 @@ namespace AstroModLoader
                     File.Delete(Path.Combine(InstallPath, mod.NameOnDisk));
                     if (mod.Enabled)
                     {
-                        string[] allMods = Directory.GetFiles(DownloadPath, "*.pak", SearchOption.TopDirectoryOnly);
                         string copyingPath = null;
-                        foreach (string modPath in allMods)
+                        foreach (KeyValuePair<string, Mod> entry in testModsInDownloadPath)
                         {
-                            Mod testMod = new Mod(ExtractMetadataFromPath(modPath), Path.GetFileName(modPath));
+                            string modPath = entry.Key;
+                            Mod testMod = entry.Value;
                             if ((testMod.CurrentModData.ModID == mod.CurrentModData.ModID || testMod.NameOnDisk == mod.NameOnDisk) && testMod.InstalledVersion == mod.InstalledVersion)
                             {
                                 copyingPath = modPath;

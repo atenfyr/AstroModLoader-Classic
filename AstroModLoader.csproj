@@ -1,175 +1,29 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{2C9EBD7B-D624-45A6-A9AA-0A978EA7833B}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>AstroModLoader</RootNamespace>
-    <AssemblyName>AstroModLoader</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>false</SelfContained>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <Deterministic>true</Deterministic>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
-    <TargetFrameworkProfile />
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <AssemblyVersion>1.6.1.1</AssemblyVersion>
+    <FileVersion>1.6.1.1</FileVersion>
+    <Version>1.6.1.1</Version>
+    <Product>AstroModLoader Classic</Product>
+    <Copyright>Copyright © AstroTechies 2024</Copyright>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Resources\icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AstroModIntegrator">
-      <HintPath>.\AstroModIntegrator.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Design" />
-    <Reference Include="System.IO.Compression.FileSystem" />
-    <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.Security" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Deployment" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="AboutPopup.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="AboutPopup.Designer.cs">
-      <DependentUpon>AboutPopup.cs</DependentUpon>
-    </Compile>
-    <Compile Include="AMLPalette.cs" />
-    <Compile Include="AMLUtils.cs" />
-    <Compile Include="BasicButtonPopup.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="BasicButtonPopup.Designer.cs">
-      <DependentUpon>BasicButtonPopup.cs</DependentUpon>
-    </Compile>
-    <Compile Include="CoolButton.cs">
+    <Compile Update="CoolButton.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="CoolBorderedControls.cs">
+    <Compile Update="CoolBorderedControls.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Form1.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Form1.Designer.cs">
-      <DependentUpon>Form1.cs</DependentUpon>
-    </Compile>
-    <Compile Include="GitHubAPI.cs" />
-    <Compile Include="IndependentConfig.cs" />
-    <Compile Include="IndexFile.cs" />
-    <Compile Include="PlayFabAPI.cs" />
-    <Compile Include="ServerSyncPopup.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ServerSyncPopup.Designer.cs">
-      <DependentUpon>ServerSyncPopup.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Server.cs" />
-    <Compile Include="TextPrompt.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="TextPrompt.Designer.cs">
-      <DependentUpon>TextPrompt.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Mod.cs" />
-    <Compile Include="ModConfig.cs" />
-    <Compile Include="ModHandler.cs" />
-    <Compile Include="ModProfile.cs" />
-    <Compile Include="ProfileSelector.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ProfileSelector.Designer.cs">
-      <DependentUpon>ProfileSelector.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SettingsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SettingsForm.Designer.cs">
-      <DependentUpon>SettingsForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="TableHandler.cs" />
-    <EmbeddedResource Include="AboutPopup.resx">
-      <DependentUpon>AboutPopup.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="BasicButtonPopup.resx">
-      <DependentUpon>BasicButtonPopup.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Form1.resx">
-      <DependentUpon>Form1.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ServerSyncPopup.resx">
-      <DependentUpon>ServerSyncPopup.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="TextPrompt.resx">
-      <DependentUpon>TextPrompt.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ProfileSelector.resx">
-      <DependentUpon>ProfileSelector.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-      <DesignTime>True</DesignTime>
-    </Compile>
-    <EmbeddedResource Include="SettingsForm.resx">
-      <DependentUpon>SettingsForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <None Include="LICENSE.md" />
-    <None Include="NOTICE.md" />
-    <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="README.md" />
-    <None Include="Resources\icon.ico" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="next_patch_notes.txt" />
@@ -178,20 +32,20 @@
     <PackageReference Include="CommandLineParser">
       <Version>2.8.0</Version>
     </PackageReference>
-    <PackageReference Include="Costura.Fody">
-      <Version>3.3.3</Version>
-    </PackageReference>
-    <PackageReference Include="Fody">
-      <Version>4.0.2</Version>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    <PackageReference Include="Costura.Fody" Version="5.7.0">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Newtonsoft.Json">
-      <Version>13.0.1</Version>
+    <PackageReference Include="Fody" Version="6.5.5">
+      <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="Ookii.Dialogs.WinForms">
-      <Version>1.1.0</Version>
+      <Version>4.0.0</Version>
     </PackageReference>
+    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\AstroModIntegrator\AstroModIntegrator.csproj" />
+  </ItemGroup>
 </Project>

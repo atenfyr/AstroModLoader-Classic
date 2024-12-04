@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -234,7 +235,7 @@ namespace AstroModLoader
         */
         public static bool IsAMLVersionLower(this Version v1)
         {
-            Version fullAmlVersion = Assembly.GetExecutingAssembly().GetName().Version;
+            Version fullAmlVersion = new Version(Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
             return v1.CompareTo(fullAmlVersion) > 0;
         }
 
@@ -259,6 +260,21 @@ namespace AstroModLoader
         public static T[] Subsequence<T>(this IEnumerable<T> arr, int startIndex, int length)
         {
             return arr.Skip(startIndex).Take(length).ToArray();
+        }
+
+        public static void OpenURL(string url)
+        {
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+        }
+
+        public static void OpenDirectory(string dir)
+        {
+            Process.Start(new ProcessStartInfo()
+            {
+                FileName = dir,
+                UseShellExecute = true,
+                Verb = "open"
+            });
         }
 
         private static Control internalForm;

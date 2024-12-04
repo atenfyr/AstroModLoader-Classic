@@ -30,7 +30,7 @@ namespace AstroModLoader
             modInfo.Text = "";
             AMLUtils.InitializeInvoke(this);
 
-            this.Text = "AstroModLoader v" + Application.ProductVersion;
+            this.Text = "AstroModLoader Classic v" + Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
 
             // Enable double buffering to look nicer
             if (!SystemInformation.TerminalServerSession)
@@ -266,7 +266,7 @@ namespace AstroModLoader
         /*private string AdjustNewPathToBeValid(string newPath, Metadata originalModData)
         {
             Mod testMod = new Mod(originalModData, Path.GetFileName(newPath));
-            if (testMod.Priority >= 999) return null;
+            if (testMod.Priority >= 800) return null;
             return Path.Combine(Path.GetDirectoryName(newPath), testMod.ConstructName());
         }*/
 
@@ -278,7 +278,7 @@ namespace AstroModLoader
             if (normalFilePath.Length < 6) return false;
 
             Mod testMod = new Mod(originalModData, normalFilePath);
-            if (testMod.Priority >= 999) return false;
+            if (testMod.Priority >= 800) return false;
 
             string desiredName = testMod.ConstructName(0);
             string realName = "000-" + normalFilePath.Substring(4);
@@ -472,7 +472,7 @@ namespace AstroModLoader
                         mod.InstalledVersion = newMods[mod.CurrentModData.ModID][0];
 
                         // If this is a new mod, we enable it or disable it automatically, but if it's not new then we respect the user's pre-existing setting 
-                        if (mod.AvailableVersions.Count == 1) mod.Enabled = ModManager.InstalledAstroBuild.AcceptablySimilar(mod.CurrentModData.AstroBuild) && (!Program.CommandLineOptions.ServerMode || mod.CurrentModData.Sync != SyncMode.ClientOnly);
+                        if (mod.AvailableVersions.Count == 1) mod.Enabled = ModManager.InstalledAstroBuild.AcceptablySimilar(mod.CurrentModData.GameBuild) && (!Program.CommandLineOptions.ServerMode || mod.CurrentModData.Sync != SyncMode.ClientOnly);
                     }
                 }
 
@@ -514,9 +514,9 @@ namespace AstroModLoader
             if (e.RowIndex == -1) return;
             if (AMLUtils.IsLinux) return;
 
-            Type t = dataGridView1.GetType().BaseType;
-            FieldInfo viewSetter = t.GetField("latestEditingControl", BindingFlags.Default | BindingFlags.NonPublic | BindingFlags.Instance);
-            viewSetter.SetValue(dataGridView1, null);
+            Type t = dataGridView1?.GetType()?.BaseType;
+            FieldInfo viewSetter = t?.GetField("latestEditingControl", BindingFlags.Default | BindingFlags.NonPublic | BindingFlags.Instance);
+            viewSetter?.SetValue(dataGridView1, null);
         }
 
         private void DataGridView1_DataError(object sender, DataGridViewDataErrorEventArgs anError)
@@ -703,7 +703,7 @@ namespace AstroModLoader
         private void modInfo_LinkClicked(object sender, EventArgs e)
         {
             Mod selectedMod = TableManager.GetCurrentlySelectedMod();
-            if (selectedMod != null && !string.IsNullOrEmpty(selectedMod.CurrentModData.Homepage) && AMLUtils.IsValidUri(selectedMod.CurrentModData.Homepage)) Process.Start(selectedMod.CurrentModData.Homepage);
+            if (selectedMod != null && !string.IsNullOrEmpty(selectedMod.CurrentModData.Homepage) && AMLUtils.IsValidUri(selectedMod.CurrentModData.Homepage)) AMLUtils.OpenURL(selectedMod.CurrentModData.Homepage);
         }
 
         public void ForceResize()
@@ -813,12 +813,12 @@ namespace AstroModLoader
             {
                 if (ModManager.Platform == PlatformType.Steam)
                 {
-                    Process.Start(@"steam://run/361420");
+                    AMLUtils.OpenURL(@"steam://run/361420");
                     return;
                 }
                 else if (ModManager.Platform == PlatformType.Win10)
                 {
-                    if (!string.IsNullOrEmpty(ModManager.MicrosoftRuntimeID)) Process.Start(@"shell:appsFolder\" + ModManager.MicrosoftRuntimeID + "!ASTRONEER");
+                    if (!string.IsNullOrEmpty(ModManager.MicrosoftRuntimeID)) AMLUtils.OpenURL(@"shell:appsFolder\" + ModManager.MicrosoftRuntimeID + "!ASTRONEER");
                     return;
                 }
             }
@@ -852,7 +852,8 @@ namespace AstroModLoader
                     Process.Start(new ProcessStartInfo()
                     {
                         WorkingDirectory = Path.GetDirectoryName(ModManager.LaunchCommand),
-                        FileName = ModManager.LaunchCommand
+                        FileName = ModManager.LaunchCommand,
+                        UseShellExecute = true
                     });
                 }
                 catch

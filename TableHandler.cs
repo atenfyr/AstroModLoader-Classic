@@ -196,14 +196,14 @@ namespace AstroModLoader
 
                 row.Cells[3].Value = mod.CurrentModData.Author;
 
-                if (mod.CurrentModData.AstroBuild == null)
+                if (mod.CurrentModData.GameBuild == null)
                 {
                     row.Cells[4].Value = mod.CurrentModData.Sync == AstroModIntegrator.SyncMode.None ? "" : "Any";
                 }
                 else
                 {
-                    row.Cells[4].Value = mod.CurrentModData.AstroBuild;
-                    if (ModManager.InstalledAstroBuild != null && !mod.CurrentModData.AstroBuild.AcceptablySimilar(ModManager.InstalledAstroBuild))
+                    row.Cells[4].Value = mod.CurrentModData.GameBuild;
+                    if (ModManager.InstalledAstroBuild != null && !mod.CurrentModData.GameBuild.AcceptablySimilar(ModManager.InstalledAstroBuild))
                     {
                         row.Cells[4].Style.ForeColor = AMLPalette.WarningColor;
                         row.Cells[4].Style.SelectionForeColor = AMLPalette.WarningColor;

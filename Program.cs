@@ -1,5 +1,6 @@
 ﻿using CommandLine;
 using System;
+using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -44,6 +45,7 @@ namespace AstroModLoader
                 if (Environment.OSVersion.Version.Major >= 6) SetProcessDPIAware();
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
+                Application.SetDefaultFont(new Font(new FontFamily("Microsoft Sans Serif"), 8.25f)); // default font changed in .NET Core 3.0
 
                 Form1 f1 = new Form1();
                 Application.Run(f1);

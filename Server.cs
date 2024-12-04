@@ -74,7 +74,7 @@ namespace AstroModLoader
                     try
                     {
                         Mod thisMod = new Mod(JsonConvert.DeserializeObject<Metadata>(keyValuePair.Value), keyValuePair.Key);
-                        if (thisMod.Priority < 999) finalRes.Add(thisMod);
+                        if (thisMod.Priority < 800) finalRes.Add(thisMod);
                     }
                     catch
                     {

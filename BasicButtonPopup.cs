@@ -67,7 +67,7 @@ namespace AstroModLoader
             }
             else
             {
-                Process.Start(PageToVisit);
+                AMLUtils.OpenURL(PageToVisit);
             }
         }
 

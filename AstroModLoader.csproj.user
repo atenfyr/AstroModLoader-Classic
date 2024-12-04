@@ -12,4 +12,27 @@
     <StartArguments>
     </StartArguments>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Update="AboutPopup.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="BasicButtonPopup.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Form1.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="ProfileSelector.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="ServerSyncPopup.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="SettingsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="TextPrompt.cs">
+      <SubType>Form</SubType>
+    </Compile>
+  </ItemGroup>
 </Project>
