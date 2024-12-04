@@ -966,12 +966,12 @@ namespace AstroModLoader
         }
 
         public static ModIntegrator OurIntegrator;
-        private volatile bool integrating = false;
+        private volatile bool currentlyIntegrating = false;
         public void IntegrateMods()
         {
-            if (IsReadOnly || GamePath == null || InstallPath == null || integrating) return;
+            if (IsReadOnly || GamePath == null || InstallPath == null || currentlyIntegrating) return;
 
-            integrating = true;
+            currentlyIntegrating = true;
             try
             {
                 AMLUtils.InvokeUI(() =>
@@ -999,9 +999,16 @@ namespace AstroModLoader
                     if (BaseForm.integratingLabel != null) BaseForm.integratingLabel.Text = "Integrated in " + tm + " ms";
                 });
             }
+            catch
+            {
+                AMLUtils.InvokeUI(() =>
+                {
+                    if (BaseForm.integratingLabel != null) BaseForm.integratingLabel.Text = "Failed to integrate!";
+                });
+            }
             finally
             {
-                integrating = false;
+                currentlyIntegrating = false;
             }
         }
 
