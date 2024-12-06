@@ -165,10 +165,12 @@ namespace AstroModLoader
         private static string AboutText;
         private void aboutButton_Click(object sender, EventArgs e)
         {
-            AboutText = "AstroModLoader v" + Application.ProductVersion + "\n" +
-            "By AstroTechies\n" +
+            var softwareAgeInYears = (int.Parse(DateTime.Now.ToString("yyyyMMdd")) - 20201104) / 10000;
+
+            AboutText = "AstroModLoader Classic v" + BaseForm.InformationalVersion + "\n" +
+            "By AstroTechies, atenfyr\n" +
             "\nThanks to the folks in the Astroneer Modding Discord community for their contributions\n" +
-            "\nThanks to you for making this little modding venture what it is\n";
+            "\nThank you for making this little modding venture what it is even after " + softwareAgeInYears + " years\n";
 
             var formPopup = new AboutPopup();
             formPopup.StartPosition = FormStartPosition.CenterParent;

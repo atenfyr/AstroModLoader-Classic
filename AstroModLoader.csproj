@@ -8,11 +8,11 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
-    <AssemblyVersion>1.6.1.1</AssemblyVersion>
-    <FileVersion>1.6.1.1</FileVersion>
-    <Version>1.6.1.1</Version>
+    <AssemblyVersion>1.6.2.0</AssemblyVersion>
+    <FileVersion>1.6.2.0</FileVersion>
+    <Version>1.6.2.0</Version>
     <Product>AstroModLoader Classic</Product>
-    <Copyright>Copyright © AstroTechies 2024</Copyright>
+    <Copyright>Copyright © AstroTechies, atenfyr 2024</Copyright>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Resources\icon.ico</ApplicationIcon>

@@ -24,6 +24,8 @@ namespace AstroModLoader
         public CoolDataGridView dataGridView1;
         public Panel footerPanel;
 
+        public string InformationalVersion;
+
         public Form1()
         {
             InitializeComponent();
@@ -31,7 +33,8 @@ namespace AstroModLoader
             integratingLabel.Text = "";
             AMLUtils.InitializeInvoke(this);
 
-            this.Text = "AstroModLoader Classic v" + Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+            InformationalVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+            this.Text = "AstroModLoader Classic v" + InformationalVersion;
 
             // Enable double buffering to look nicer
             if (!SystemInformation.TerminalServerSession)
