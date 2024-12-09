@@ -713,6 +713,7 @@ namespace AstroModLoader
         public void ForceResize()
         {
             footerPanel.Width = this.Width;
+            footerPanel.Location = new Point(0, this.ClientSize.Height - footerPanel.Height);
             modPanel.Width = this.ClientSize.Width - 15;
             dataGridView1.Width = modPanel.Width - dataGridView1.Location.X;
 
