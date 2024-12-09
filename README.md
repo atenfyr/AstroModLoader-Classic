@@ -1,16 +1,9 @@
-[![Discord](https://img.shields.io/discord/774729322674126858.svg?style=flat-square)](https://discord.gg/bBqdVYxu4k)
-[![Release](https://img.shields.io/github/v/release/AstroTechies/AstroModLoader.svg?style=flat-square)](https://github.com/AstroTechies/AstroModLoader/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/AstroTechies/AstroModLoader/total.svg?style=flat-square)](https://github.com/AstroTechies/AstroModLoader/releases)
-[![Stars](https://img.shields.io/github/stars/AstroTechies/AstroModLoader.svg?style=flat-square)](https://github.com/AstroTechies/AstroModLoader/stargazers)
-[![Issues](https://img.shields.io/github/issues/AstroTechies/AstroModLoader.svg?style=flat-square)](https://github.com/AstroTechies/AstroModLoader/issues)
-[![License](https://img.shields.io/github/license/AstroTechies/AstroModLoader.svg?style=flat-square)](https://github.com/AstroTechies/AstroModLoader/blob/master/LICENSE.md)
-
 <p align="center">
   <h3 align="center">AstroModLoader</h3>
 </p>
 <p align="center"><img src="https://i.imgur.com/CQX1FpH.png"></p>
 
-AstroModLoader is a community-made, open-source mod manager for Astroneer .pak mods on Steam and the Microsoft Store. It includes support for mod profiles, automatic update integration, and the ability to easily swap between multiple mod versions so that you can worry less about setup and more about playing.
+AstroModLoader Classic is a port of the original AstroModLoader, an open-source mod manager in C# for Astroneer .pak mods on Steam and the Microsoft Store, for modern versions of Astroneer (as of 2024). It includes support for mod profiles, automatic update integration, and the ability to easily swap between multiple mod versions so that you can worry less about setup and more about playing.
 
 ## Features
 AstroModLoader includes the following features and more:
@@ -22,12 +15,10 @@ AstroModLoader includes the following features and more:
 * Customizable mod load order by holding SHIFT and using the arrow keys in the mod list
 * Easy drag-and-drop functionality to install mods
 * Syncing of mods with modded [AstroLauncher](https://github.com/ricky-davis/AstroLauncher) servers
-* [Built-in mod integration](https://github.com/AstroTechies/AstroModIntegrator) to help prevent mod conflict
+* [Built-in mod integration](https://github.com/atenfyr/AstroModIntegrator) to help prevent mod conflict
 
 ## Usage
-To run a local copy of AstroModLoader, visit the [Releases tab](https://github.com/AstroTechies/AstroModLoader/releases) to download the executable, or clone the repository and build AstroModLoader yourself within Visual Studio.
-
-If you encounter any problems with AstroModLoader or you would like to learn more about Astroneer modding in general, feel free to join the Astroneer Modding Discord community: https://discord.gg/bBqdVYxu4k
+To run a local copy of AstroModLoader, visit the [Releases tab](https://github.com/atenfyr/AstroModLoader/releases) to download the executable, or clone the repository and build AstroModLoader yourself within Visual Studio.
 
 ### Mod Installation
 To install mods, drag and drop the .zip or the .pak file of your mod onto the AstroModLoader window while it is running.
@@ -52,8 +43,8 @@ Additionally, the following keyboard commands can be used within popup windows:
 * TAB can be used to switch selection between buttons. ENTER can then be used to press the currently selected button.
 
 ## Prerequisites
-* .NET Framework 4.7.2
+* .NET Desktop Runtime 8.0
 * A copy of Astroneer
 
 ## Licensing
-AstroModLoader is licensed under the MIT license, which can be found in [the LICENSE.md file.](https://github.com/AstroTechies/AstroModLoader/blob/master/LICENSE.md) In addition, necessary licenses for the third-party material used in this software can be found in [the NOTICE.md file.](https://github.com/AstroTechies/AstroModLoader/blob/master/NOTICE.md)
+AstroModLoader is licensed under the MIT license, which can be found in [the LICENSE.md file.](https://github.com/atenfyr/AstroModLoader/blob/master/LICENSE.md) In addition, necessary licenses for the third-party material used in this software can be found in [the NOTICE.md file.](https://github.com/atenfyr/AstroModLoader/blob/master/NOTICE.md)

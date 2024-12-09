@@ -11,12 +11,16 @@
     <AssemblyVersion>1.6.2.0</AssemblyVersion>
     <FileVersion>1.6.2.0</FileVersion>
     <Version>1.6.2.0</Version>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <Product>AstroModLoader Classic</Product>
     <Copyright>Copyright © AstroTechies, atenfyr 2024</Copyright>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Resources\icon.ico</ApplicationIcon>
   </PropertyGroup>
+  <ItemGroup>
+    <None Remove="UAssetAPI.dll" />
+  </ItemGroup>
   <ItemGroup>
     <Compile Update="CoolButton.cs">
       <SubType>Component</SubType>
@@ -27,6 +31,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="next_patch_notes.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="UAssetAPI.dll" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CommandLineParser">

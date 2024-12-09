@@ -773,7 +773,7 @@ namespace AstroModLoader
             FullRefresh();
         }
 
-        public static readonly string GitHubRepo = "AstroTechies/AstroModLoader";
+        public static readonly string GitHubRepo = "atenfyr/AstroModLoader";
         private Version latestOnlineVersion = null;
         private void Form1_Load(object sender, EventArgs e)
         {

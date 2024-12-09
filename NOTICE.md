@@ -123,9 +123,9 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 THE POSSIBILITY OF SUCH DAMAGE.
 
 ## AstroModIntegrator
-https://github.com/AstroTechies/AstroModIntegrator
+https://github.com/atenfyr/AstroModIntegrator
 
-Copyright (c) 2024 AstroTechies
+Copyright (c) 2024 AstroTechies, atenfyr
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
