@@ -841,7 +841,7 @@ namespace AstroModLoader
             ModConfig diskConfig = null;
             try
             {
-                diskConfig = JsonConvert.DeserializeObject<ModConfig>(File.ReadAllText(Path.Combine(basePath, "Saved", "Mods", "modconfig.json")));
+                diskConfig = JsonConvert.DeserializeObject<ModConfig>(File.ReadAllText(Path.Combine(basePath, "Saved", "Mods", "AMLClassicConfig.json")));
             }
             catch
             {
@@ -856,7 +856,7 @@ namespace AstroModLoader
             ModConfig diskConfig = null;
             try
             {
-                diskConfig = JsonConvert.DeserializeObject<ModConfig>(File.ReadAllText(Path.Combine(DownloadPath, "modconfig.json")));
+                diskConfig = JsonConvert.DeserializeObject<ModConfig>(File.ReadAllText(Path.Combine(DownloadPath, "AMLClassicConfig.json")));
             }
             catch
             {
@@ -953,7 +953,7 @@ namespace AstroModLoader
             newConfig.Profiles = ProfileList;
             newConfig.ModsOnDisk = GenerateProfile();
 
-            File.WriteAllBytes(Path.Combine(DownloadPath, "modconfig.json"), Encoding.UTF8.GetBytes(AMLUtils.SerializeObject(newConfig)));
+            File.WriteAllBytes(Path.Combine(DownloadPath, "AMLClassicConfig.json"), Encoding.UTF8.GetBytes(AMLUtils.SerializeObject(newConfig)));
         }
 
         public void SyncConfigToDisk()

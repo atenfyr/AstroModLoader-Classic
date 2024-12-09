@@ -1,9 +1,9 @@
 <p align="center">
-  <h3 align="center">AstroModLoader</h3>
+  <h3 align="center">AstroModLoader Classic</h3>
 </p>
 <p align="center"><img src="https://i.imgur.com/CQX1FpH.png"></p>
 
-AstroModLoader Classic is a port of the original AstroModLoader, an open-source mod manager in C# for Astroneer .pak mods on Steam and the Microsoft Store, for modern versions of Astroneer (as of 2024). It includes support for mod profiles, automatic update integration, and the ability to easily swap between multiple mod versions so that you can worry less about setup and more about playing.
+AstroModLoader Classic is a modern port of the original AstroModLoader, an open-source mod manager in C# for Astroneer .pak mods on Steam and the Microsoft Store, for modern versions of Astroneer (as of 2024). It includes support for mod profiles, automatic mod integration, and the ability to easily swap between multiple mod versions so that you can worry less about setup and more about playing.
 
 ## Features
 AstroModLoader includes the following features and more:
@@ -50,7 +50,7 @@ Additionally, the following keyboard commands can be used within popup windows:
 AstroModLoader is licensed under the MIT license, which can be found in [the LICENSE.md file.](https://github.com/atenfyr/AstroModLoader/blob/master/LICENSE.md) In addition, necessary licenses for the third-party material used in this software can be found in [the NOTICE.md file.](https://github.com/atenfyr/AstroModLoader/blob/master/NOTICE.md)
 
 ## Blueprint API
-AstroModLoader Classic performs integration with AstroModIntegrator Classic, which supports the same fundamental integration features that [astro_modloader](https://github.com/AstroTechies/astro_modloader) (the Rust re-write) does, but notably has a different and more fully-featured blueprint API. To use the AstroModIntegrator Classic blueprint API, first install the [AstroTechies ModdingKit](https://github.com/AstroTechies/ModdingKit), delete the Content/Integrator directory, and replace it with the Content/Integrator provided here: [https://github.com/atenfyr/AstroModIntegrator/tree/master/BlueprintAssets](https://github.com/atenfyr/AstroModIntegrator/tree/master/BlueprintAssets)
+AstroModLoader Classic performs integration with AstroModIntegrator Classic, which supports the same fundamental integration features that [astro_modloader](https://github.com/AstroTechies/astro_modloader) (the Rust re-write) does, but notably has a different and more fully-featured blueprint API. To use the AstroModIntegrator Classic blueprint API, first install the [AstroTechies ModdingKit](https://github.com/AstroTechies/ModdingKit), delete the Content/Integrator directory, and replace it with the Content/Integrator directory provided here: [https://github.com/atenfyr/AstroModIntegrator/tree/master/BlueprintAssets](https://github.com/atenfyr/AstroModIntegrator/tree/master/BlueprintAssets)
 
 You may refer to the IntegratorAPI blueprint function library to find methods that can be used when AstroModIntegrator Classic has been used. Methods supplied by this library are not compatible with the Rust astro_modloader. It is possible to retrieve integrator information and a list of installed mods in a way that is compatible with both AstroModIntegrator Classic and astro_modloader. Some sample blueprint code is provided below with the AstroModIntegrator Classic blueprint API installed.
 
@@ -62,4 +62,4 @@ This code allows you to retrieve basic integrator information. If the user is us
 ### Get All Mods
 ![](https://i.imgur.com/peQ6Cq3.png)
 
-This code allows you to retrieve a list of mods. If the user is using AstroModIntegrator Classic, you can simply use the "Get All Mods" API node. This is fully functional with both mod loaders, and the Mod struct has the same fields in both mod loaders, although "Sync" and "IsOptional" carry no real meaning in astro_modloader.
+This code allows you to retrieve a list of mods. If the user is using AstroModIntegrator Classic, you can simply use the "Get All Mods" API node. This code is fully functional with both mod loaders, and the Mod struct has the same fields in both mod loaders, although "Sync" and "IsOptional" carry no real meaning in astro_modloader.
