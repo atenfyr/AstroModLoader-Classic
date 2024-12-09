@@ -15,7 +15,7 @@ AstroModLoader includes the following features and more:
 * Customizable mod load order by holding SHIFT and using the arrow keys in the mod list
 * Easy drag-and-drop functionality to install mods
 * Syncing of mods with modded [AstroLauncher](https://github.com/ricky-davis/AstroLauncher) servers
-* [Built-in mod integration](https://github.com/atenfyr/AstroModIntegrator) to help prevent mod conflict
+* [Built-in mod integration](https://github.com/atenfyr/AstroModIntegrator) to help prevent mod conflict and detect mod conflicts with servers
 
 ## Usage
 To run a local copy of AstroModLoader, visit the [Releases tab](https://github.com/atenfyr/AstroModLoader/releases) to download the executable, or clone the repository and build AstroModLoader yourself within Visual Studio.
@@ -48,3 +48,18 @@ Additionally, the following keyboard commands can be used within popup windows:
 
 ## Licensing
 AstroModLoader is licensed under the MIT license, which can be found in [the LICENSE.md file.](https://github.com/atenfyr/AstroModLoader/blob/master/LICENSE.md) In addition, necessary licenses for the third-party material used in this software can be found in [the NOTICE.md file.](https://github.com/atenfyr/AstroModLoader/blob/master/NOTICE.md)
+
+## Blueprint API
+AstroModLoader Classic performs integration with AstroModIntegrator Classic, which supports the same fundamental integration features that [astro_modloader](https://github.com/AstroTechies/astro_modloader) (the Rust re-write) does, but notably has a different and more fully-featured blueprint API. To use the AstroModIntegrator Classic blueprint API, first install the [AstroTechies ModdingKit](https://github.com/AstroTechies/ModdingKit), delete the Content/Integrator directory, and replace it with the Content/Integrator provided here: [https://github.com/atenfyr/AstroModIntegrator/tree/master/BlueprintAssets](https://github.com/atenfyr/AstroModIntegrator/tree/master/BlueprintAssets)
+
+You may refer to the IntegratorAPI blueprint function library to find methods that can be used when AstroModIntegrator Classic has been used. Methods supplied by this library are not compatible with the Rust astro_modloader. It is possible to retrieve integrator information and a list of installed mods in a way that is compatible with both AstroModIntegrator Classic and astro_modloader. Some sample blueprint code is provided below with the AstroModIntegrator Classic blueprint API installed.
+
+### Get Integrator Statics
+![](https://i.imgur.com/jBXQ5jM.png)
+
+This code allows you to retrieve basic integrator information. If the user is using AstroModIntegrator Classic, you can simply use the "Get Integrator Statics" API node. You must reference `IntegratorStatics_BP` in the construct node. AstroModIntegrator Classic will return a version like "Classic 1.6.2.0", while astro_modloader will return a version like "0.1.12". "Refuse Mismatched Connections" is meaningless in astro_modloader as this feature is unimplemented in that mod loader, but it does carry meaning with AstroModIntegrator Classic.
+
+### Get All Mods
+![](https://i.imgur.com/peQ6Cq3.png)
+
+This code allows you to retrieve a list of mods. If the user is using AstroModIntegrator Classic, you can simply use the "Get All Mods" API node. This is fully functional with both mod loaders, and the Mod struct has the same fields in both mod loaders, although "Sync" and "IsOptional" carry no real meaning in astro_modloader.
