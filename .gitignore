@@ -1,7 +1,4 @@
-bin
-obj
+*\bin
+*\obj
 .vs
-
-# For those who put the solution file in this directory
-*.sln
 packages

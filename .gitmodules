@@ -1,0 +1,3 @@
+[submodule "AstroModIntegrator"]
+	path = AstroModIntegrator
+	url = https://github.com/atenfyr/AstroModIntegrator.git

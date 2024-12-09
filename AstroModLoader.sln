@@ -1,0 +1,51 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.1082
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AstroModIntegrator", "AstroModIntegrator\AstroModIntegrator.csproj", "{62FCCA7B-39D6-4C3C-A74F-7966DF2D40BC}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModIntegratorCMD", "ModIntegratorCMD\ModIntegratorCMD.csproj", "{D8194300-9BA0-4105-80DB-110881C1144B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AstroModLoader", "AstroModLoader\AstroModLoader.csproj", "{2C9EBD7B-D624-45A6-A9AA-0A978EA7833B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{62FCCA7B-39D6-4C3C-A74F-7966DF2D40BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{62FCCA7B-39D6-4C3C-A74F-7966DF2D40BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{62FCCA7B-39D6-4C3C-A74F-7966DF2D40BC}.Debug|x86.ActiveCfg = Debug|x86
+		{62FCCA7B-39D6-4C3C-A74F-7966DF2D40BC}.Debug|x86.Build.0 = Debug|x86
+		{62FCCA7B-39D6-4C3C-A74F-7966DF2D40BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{62FCCA7B-39D6-4C3C-A74F-7966DF2D40BC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{62FCCA7B-39D6-4C3C-A74F-7966DF2D40BC}.Release|x86.ActiveCfg = Release|x86
+		{62FCCA7B-39D6-4C3C-A74F-7966DF2D40BC}.Release|x86.Build.0 = Release|x86
+		{D8194300-9BA0-4105-80DB-110881C1144B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8194300-9BA0-4105-80DB-110881C1144B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8194300-9BA0-4105-80DB-110881C1144B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D8194300-9BA0-4105-80DB-110881C1144B}.Debug|x86.Build.0 = Debug|Any CPU
+		{D8194300-9BA0-4105-80DB-110881C1144B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8194300-9BA0-4105-80DB-110881C1144B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D8194300-9BA0-4105-80DB-110881C1144B}.Release|x86.ActiveCfg = Release|Any CPU
+		{D8194300-9BA0-4105-80DB-110881C1144B}.Release|x86.Build.0 = Release|Any CPU
+		{2C9EBD7B-D624-45A6-A9AA-0A978EA7833B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C9EBD7B-D624-45A6-A9AA-0A978EA7833B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C9EBD7B-D624-45A6-A9AA-0A978EA7833B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2C9EBD7B-D624-45A6-A9AA-0A978EA7833B}.Debug|x86.Build.0 = Debug|Any CPU
+		{2C9EBD7B-D624-45A6-A9AA-0A978EA7833B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C9EBD7B-D624-45A6-A9AA-0A978EA7833B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2C9EBD7B-D624-45A6-A9AA-0A978EA7833B}.Release|x86.ActiveCfg = Release|Any CPU
+		{2C9EBD7B-D624-45A6-A9AA-0A978EA7833B}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {09B344F7-9135-48C6-9BB6-2E141EDC5F0E}
+	EndGlobalSection
+EndGlobal
