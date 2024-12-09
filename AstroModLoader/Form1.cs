@@ -732,7 +732,8 @@ namespace AstroModLoader
             syncButton.Location = new Point(modPanel.Width - syncButton.Width, dataGridView1.Location.Y + dataGridView1.Height + 10);
             exitButton.Location = new Point(syncButton.Location.X + syncButton.Width - exitButton.Width, (footerPanel.Height - exitButton.Height) / 2);
 
-            integratingLabel.Location = new Point(exitButton.Location.X - 6 - integratingLabel.Width, integratingLabel.Location.Y);
+            integratingLabel.Location = new Point(exitButton.Location.X - 6 - integratingLabel.Width, exitButton.Location.Y);
+            integratingLabel.Height = exitButton.Height;
 
             dataGridView1.Invalidate();
         }
