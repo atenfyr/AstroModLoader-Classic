@@ -42,6 +42,16 @@ Additionally, the following keyboard commands can be used within popup windows:
 * ENTER and ESC can be used within confirmation windows to select "Yes" or "No" respectively, and "OK" or "Cancel" respectively in text input windows.
 * TAB can be used to switch selection between buttons. ENTER can then be used to press the currently selected button.
 
+### Server Mode
+AstroModLoader can be used to install mods on dedicated servers. To do this, place the executable file into the root folder of your server installation directory, and execute it as normal to start in server mode. You can also simply pass in the `--server` command line parameter.
+
+### Command Line Parameters
+AstroModLoader has support for the following command line parameters:
+* `--server`: Forces AstroModLoader to operate as if it is being ran for a server.
+* `--client`: Forces AstroModLoader to operate as if it is being ran for a client.
+* `--data <path>`: Specifies the %localappdata% folder or the local equivalent of it.
+* `--next_launch_path <path>`: Specifies a path to a file to store as the launch script.
+
 ## Prerequisites
 * .NET Desktop Runtime 8.0
 * A copy of Astroneer
