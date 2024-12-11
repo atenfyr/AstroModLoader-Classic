@@ -12,9 +12,6 @@
     <StartArguments>
     </StartArguments>
   </PropertyGroup>
-  <PropertyGroup>
-    <_LastSelectedProfileId>C:\Users\Alexandros\source\repos\AstroModLoader\AstroModLoader\Properties\PublishProfiles\FolderProfile.pubxml</_LastSelectedProfileId>
-  </PropertyGroup>
   <ItemGroup>
     <Compile Update="AboutPopup.cs">
       <SubType>Form</SubType>

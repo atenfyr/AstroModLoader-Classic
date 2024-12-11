@@ -1,5 +1,5 @@
-*\bin
-*\obj
+*/bin
+*/obj
 .vs
-*.pubxml.user
+AstroModLoader/Properties/PublishProfiles/*
 packages
