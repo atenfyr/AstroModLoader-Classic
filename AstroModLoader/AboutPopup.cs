@@ -18,12 +18,12 @@ namespace AstroModLoader
 
         private void licenseButton_Click(object sender, EventArgs e)
         {
-            AMLUtils.OpenURL("https://github.com/atenfyr/AstroModLoader/blob/master/LICENSE.md");
+            AMLUtils.OpenURL("https://github.com/atenfyr/AstroModLoader-Classic/blob/master/LICENSE.md");
         }
 
         private void thirdPartyButton_Click(object sender, EventArgs e)
         {
-            AMLUtils.OpenURL("https://github.com/atenfyr/AstroModLoader/blob/master/NOTICE.md");
+            AMLUtils.OpenURL("https://github.com/atenfyr/AstroModLoader-Classic/blob/master/NOTICE.md");
         }
     }
 }
