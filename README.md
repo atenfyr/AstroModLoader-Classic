@@ -1,7 +1,7 @@
 <p align="center">
   <h3 align="center">AstroModLoader Classic</h3>
 </p>
-<p align="center"><img src="https://i.imgur.com/xo1L3VY.png"></p>
+<p align="center"><img src="https://i.imgur.com/ZCtHnZ1.png"></p>
 
 AstroModLoader Classic is a modern port of the original AstroModLoader, an open-source mod manager in C# for Astroneer .pak mods on Steam and the Microsoft Store, for modern versions of Astroneer (as of 2024). It includes support for mod profiles, automatic mod integration, and the ability to easily swap between multiple mod versions so that you can worry less about setup and more about playing.
 
