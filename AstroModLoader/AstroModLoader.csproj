@@ -33,9 +33,6 @@
     <Content Include="next_patch_notes.txt" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="UAssetAPI.dll" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="CommandLineParser">
       <Version>2.8.0</Version>
     </PackageReference>
