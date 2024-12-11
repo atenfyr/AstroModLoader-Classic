@@ -123,7 +123,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 THE POSSIBILITY OF SUCH DAMAGE.
 
 ## AstroModIntegrator
-https://github.com/atenfyr/AstroModIntegrator
+https://github.com/atenfyr/AstroModLoader-Classic/tree/master/AstroModIntegrator
 
 Copyright (c) 2024 AstroTechies, atenfyr
 

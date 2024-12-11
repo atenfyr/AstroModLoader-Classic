@@ -1,7 +1,7 @@
 <p align="center">
   <h3 align="center">AstroModLoader Classic</h3>
 </p>
-<p align="center"><img src="https://i.imgur.com/ZCtHnZ1.png"></p>
+<p align="center"><img src="https://i.imgur.com/uhGEgpS.png"></p>
 
 AstroModLoader Classic is a modern port of the original AstroModLoader, an open-source mod manager in C# for Astroneer .pak mods on Steam and the Microsoft Store, for modern versions of Astroneer (as of 2024). It includes support for mod profiles, automatic mod integration, and the ability to easily swap between multiple mod versions so that you can worry less about setup and more about playing.
 
@@ -15,7 +15,7 @@ AstroModLoader Classic includes the following features and more:
 * Customizable mod load order by holding SHIFT and using the arrow keys in the mod list
 * Easy drag-and-drop functionality to install mods
 * Syncing of mods with modded [AstroLauncher](https://github.com/ricky-davis/AstroLauncher) servers
-* [Built-in mod integration](https://github.com/atenfyr/AstroModLoader-Classic/tree/master/AstroModIntegrator) to help prevent mod conflict and detect mod conflicts with servers
+* [Built-in mod integration](https://github.com/atenfyr/AstroModLoader-Classic/tree/master/AstroModIntegrator) to help prevent mod conflict and detect mod mismatches with servers
 
 ## Usage
 To run a local copy of AstroModLoader Classic, visit the [Releases tab](https://github.com/atenfyr/AstroModLoader-Classic/releases) to download the executable, or clone the repository and build AstroModLoader Classic yourself within Visual Studio.
@@ -27,7 +27,7 @@ Alternatively, on Steam, you can also manually add mods for use with AstroModLoa
 On the Windows Store, you can place them into the `%localappdata%\Packages\SystemEraSoftworks.29415440E1269_ftk5pbg2rayv2\LocalState\Astro\Saved\Mods` directory.
 
 ### Usage Notes
-AstroModLoader Classic features a fully-functional set of hotkeys to fully control your mods list. Below is a list of keyboard commands to manipulate the list of mods:
+AstroModLoader Classic features a full set of hotkeys to control your list of mods. Below is a list of keyboard commands to manipulate the list of mods:
 * DEL deletes all versions of the currently selected mod.
 * ALT+DEL deletes all versions of the currently selected mod except for the newest from disk.
 * SHIFT+UP and SHIFT+DOWN adjust the position of the currently selected mod. Mods at the top of the list (low priority) are loaded by the game before mods at the bottom of the list (high priority).
@@ -49,7 +49,7 @@ AstroModLoader Classic can be used to install mods on dedicated servers. To do t
 AstroModLoader Classic has support for the following command line parameters:
 * `--server`: Forces AstroModLoader Classic to operate as if it is being ran for a server.
 * `--client`: Forces AstroModLoader Classic to operate as if it is being ran for a client.
-* `--data <path>`: Specifies the %localappdata% folder or the local equivalent of it.
+* `--data <path>`: Overrides the path used for the %localappdata% folder (or the local equivalent of that folder).
 * `--next_launch_path <path>`: Specifies a path to a file to store as the launch script.
 
 ## Prerequisites
