@@ -188,8 +188,8 @@ namespace AstroModIntegrator
         [JsonProperty("persistent_actors")]
         public List<string> PersistentActors;
 
-        // undocumented, but we implement anyways; list of maps to integrate PersistentActors with
-        // defaults to ["Astro/Content/Maps/Staging_T2.umap", "Astro/Content/Maps/Staging_T2_PackedPlanets_Switch.umap"]
+        // undocumented, but we implement anyways; list of maps to integrate PersistentActors with; NOT /Game/ paths, but raw paths in the .pak file
+        // defaults to ["Astro/Content/Maps/Staging_T2.umap", "Astro/Content/Maps/Staging_T2_PackedPlanets_Switch.umap", "Astro/Content/U32_Expansion/U32_Expansion.umap"]
         [JsonProperty("persistent_actors_maps")]
         public List<string> PersistentActorMaps;
 

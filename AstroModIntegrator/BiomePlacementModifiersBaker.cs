@@ -128,8 +128,8 @@ namespace AstroModIntegrator
                     }
 
                     string voxelsName = modifier.PlanetType + "Voxels";
-                    NormalExport voxelsExport = voxelVolumeExports[voxelsName];
-                    if (voxelsExport == null) throw new FormatException("Unable to find voxels for planet " + modifier.PlanetType);
+                    voxelVolumeExports.TryGetValue(voxelsName, out NormalExport voxelsExport);
+                    if (voxelsExport == null) continue; // not an error, could just occur, e.g. with DLC map (needs PlanetType == "GlitchPlanet")
 
                     StructPropertyData biome = null;
                     switch (modifier.BiomeType)

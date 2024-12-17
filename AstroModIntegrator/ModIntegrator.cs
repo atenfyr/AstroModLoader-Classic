@@ -21,7 +21,8 @@ namespace AstroModIntegrator
 
         private static string[] DefaultMapPaths = [
             "Astro/Content/Maps/Staging_T2.umap",
-            "Astro/Content/Maps/Staging_T2_PackedPlanets_Switch.umap"
+            "Astro/Content/Maps/Staging_T2_PackedPlanets_Switch.umap",
+            "Astro/Content/U32_Expansion/U32_Expansion.umap" // DLC map
         ];
 
         internal byte[] FindFile(string target, PakExtractor ourExtractor)
