@@ -30,7 +30,7 @@ namespace AstroModIntegrator
     public static class IntegratorUtils
     {
         public static readonly EngineVersion EngineVersion = EngineVersion.VER_UE4_23;
-        public static readonly Version CurrentVersion = new Version(1, 7, 1, 0);
+        public static readonly Version CurrentVersion = new Version(1, 7, 2, 0);
         public static readonly string[] IgnoredModIDs = new string[]
         {
             "AstroModIntegrator",
