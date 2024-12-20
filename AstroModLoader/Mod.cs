@@ -187,6 +187,36 @@ namespace AstroModLoader
                     indexFile.OriginalURL = di.URL;
                     return indexFile;
                 }
+                else if (di.Type == DownloadMode.Thunderstore && !string.IsNullOrEmpty(di.ThunderstoreNamespace) && !string.IsNullOrEmpty(di.ThunderstoreName))
+                {
+                    string rawTStorePackage = "";
+                    string origUrl = "https://thunderstore.io/api/experimental/package/" + di.ThunderstoreNamespace + "/" + di.ThunderstoreName;
+                    using (var wb = new WebClient())
+                    {
+                        wb.Headers[HttpRequestHeader.UserAgent] = AMLUtils.UserAgent;
+                        rawTStorePackage = wb.DownloadString(origUrl);
+                    }
+                    if (string.IsNullOrEmpty(rawTStorePackage)) return null;
+
+                    // at the moment, thunderstore does not support listing all versions - so we just generate an index file with the latest version in it
+                    IndexFile indexFile = new IndexFile();
+                    indexFile.OriginalURL = origUrl;
+                    indexFile.Mods = new Dictionary<string, IndexMod>();
+
+                    dynamic tStorePackage = JsonConvert.DeserializeObject(rawTStorePackage);
+
+                    var idxMod = new IndexMod();
+                    var ver = tStorePackage["latest"]["version_number"].Value;
+                    idxMod.LatestVersion = Version.Parse(ver); // not TryParse b/c we want to throw on fail
+                    idxMod.AllVersions = new Dictionary<Version, IndexVersionData>();
+                    idxMod.AllVersions[idxMod.LatestVersion] = new IndexVersionData();
+                    idxMod.AllVersions[idxMod.LatestVersion].URL = tStorePackage["latest"]["download_url"].Value;
+                    idxMod.AllVersions[idxMod.LatestVersion].Filename = CurrentModData.ModID + ".zip";
+
+                    indexFile.Mods[CurrentModData.ModID] = idxMod;
+
+                    return indexFile;
+                }
             }
             catch (Exception ex)
             {

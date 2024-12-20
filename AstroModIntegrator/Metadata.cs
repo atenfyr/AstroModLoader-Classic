@@ -68,7 +68,9 @@ namespace AstroModIntegrator
     public enum DownloadMode
     {
         [EnumMember(Value = "index_file")]
-        IndexFile
+        IndexFile,
+        [EnumMember(Value = "thunderstore")]
+        Thunderstore
     }
 
     public class DownloadInfo
@@ -80,6 +82,14 @@ namespace AstroModIntegrator
         [JsonProperty("url")]
         [DefaultValue("")]
         public string URL;
+
+        [JsonProperty("namespace")]
+        [DefaultValue("")]
+        public string ThunderstoreNamespace;
+
+        [JsonProperty("name")]
+        [DefaultValue("")]
+        public string ThunderstoreName;
     }
 
     public enum SyncMode
