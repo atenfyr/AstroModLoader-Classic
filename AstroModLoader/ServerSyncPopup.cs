@@ -87,6 +87,7 @@ namespace AstroModLoader
                 // Incorporate newly synced index files into the global index
                 SetDebugText("Fetching index files");
                 List<string> DuplicateURLs = new List<string>();
+                Mod.ThunderstoreFetched = null;
                 foreach (Mod mod in allMods)
                 {
                     if (mod.CurrentModData.Sync == SyncMode.ServerAndClient || mod.CurrentModData.Sync == SyncMode.ClientOnly)

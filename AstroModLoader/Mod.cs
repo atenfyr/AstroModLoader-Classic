@@ -165,6 +165,8 @@ namespace AstroModLoader
             }
         }
 
+        public static volatile string ThunderstoreFetched = null;
+
         public IndexFile GetIndexFile(List<string> duplicateURLs)
         {
             DownloadInfo di = CurrentModData.Download;
@@ -189,29 +191,46 @@ namespace AstroModLoader
                 }
                 else if (di.Type == DownloadMode.Thunderstore && !string.IsNullOrEmpty(di.ThunderstoreNamespace) && !string.IsNullOrEmpty(di.ThunderstoreName))
                 {
-                    string rawTStorePackage = "";
-                    string origUrl = "https://thunderstore.io/api/experimental/package/" + di.ThunderstoreNamespace + "/" + di.ThunderstoreName;
-                    using (var wb = new WebClient())
+                    string origUrl = "https://thunderstore.io/c/astroneer/api/v1/package/";
+                    if (ThunderstoreFetched == null)
                     {
-                        wb.Headers[HttpRequestHeader.UserAgent] = AMLUtils.UserAgent;
-                        rawTStorePackage = wb.DownloadString(origUrl);
+                        using (var wb = new WebClient())
+                        {
+                            wb.Headers[HttpRequestHeader.UserAgent] = AMLUtils.UserAgent;
+                            ThunderstoreFetched = wb.DownloadString(origUrl);
+                        }
                     }
-                    if (string.IsNullOrEmpty(rawTStorePackage)) return null;
 
-                    // at the moment, thunderstore does not support listing all versions - so we just generate an index file with the latest version in it
+                    if (string.IsNullOrEmpty(ThunderstoreFetched)) return null;
+
                     IndexFile indexFile = new IndexFile();
                     indexFile.OriginalURL = origUrl;
                     indexFile.Mods = new Dictionary<string, IndexMod>();
 
-                    dynamic tStorePackage = JsonConvert.DeserializeObject(rawTStorePackage);
+                    dynamic tStorePackages = JsonConvert.DeserializeObject(ThunderstoreFetched); // array
+                    dynamic tStorePackage = null;
+                    string fullName = di.ThunderstoreNamespace + "-" + di.ThunderstoreName;
+                    foreach (var package in tStorePackages)
+                    {
+                        if (package["full_name"].Value == fullName)
+                        {
+                            tStorePackage = package;
+                            break;
+                        }
+                    }
+                    if (tStorePackage == null) return null;
 
                     var idxMod = new IndexMod();
-                    var ver = tStorePackage["latest"]["version_number"].Value;
-                    idxMod.LatestVersion = Version.Parse(ver); // not TryParse b/c we want to throw on fail
                     idxMod.AllVersions = new Dictionary<Version, IndexVersionData>();
-                    idxMod.AllVersions[idxMod.LatestVersion] = new IndexVersionData();
-                    idxMod.AllVersions[idxMod.LatestVersion].URL = tStorePackage["latest"]["download_url"].Value;
-                    idxMod.AllVersions[idxMod.LatestVersion].Filename = CurrentModData.ModID + ".zip";
+                    idxMod.LatestVersion = null;
+                    foreach (var version in tStorePackage["versions"])
+                    {
+                        Version ver = Version.Parse(version["version_number"].Value);
+                        if (idxMod.LatestVersion == null) idxMod.LatestVersion = ver;
+                        idxMod.AllVersions[ver] = new IndexVersionData();
+                        idxMod.AllVersions[ver].URL = version["download_url"].Value;
+                        idxMod.AllVersions[ver].Filename = CurrentModData.ModID + "-" + ver.ToString() + ".zip";
+                    }
 
                     indexFile.Mods[CurrentModData.ModID] = idxMod;
 

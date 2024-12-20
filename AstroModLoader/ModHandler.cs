@@ -540,6 +540,7 @@ namespace AstroModLoader
         public void AggregateIndexFiles()
         {
             if (GlobalIndexFile == null) GlobalIndexFile = new Dictionary<string, IndexMod>();
+            Mod.ThunderstoreFetched = null;
             foreach (Mod mod in Mods)
             {
                 IndexFile thisIndexFile = mod.GetIndexFile(DuplicateURLs);
