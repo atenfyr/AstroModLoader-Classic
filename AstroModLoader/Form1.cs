@@ -353,6 +353,8 @@ namespace AstroModLoader
                         continue;
                     }
 
+                    if (parsingProfile == null) continue;
+
                     parsingProfile.Name = string.IsNullOrWhiteSpace(parsingProfile.Name) ? "Unknown" : parsingProfile.Name;
                     while (ModManager.ProfileList.ContainsKey(parsingProfile.Name)) parsingProfile.Name = parsingProfile.Name + "*";
 
