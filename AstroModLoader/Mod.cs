@@ -226,7 +226,7 @@ namespace AstroModLoader
                     foreach (var version in tStorePackage["versions"])
                     {
                         Version ver = Version.Parse(version["version_number"].Value);
-                        if (idxMod.LatestVersion == null) idxMod.LatestVersion = ver;
+                        if (idxMod.LatestVersion == null || ver > idxMod.LatestVersion) idxMod.LatestVersion = ver;
                         idxMod.AllVersions[ver] = new IndexVersionData();
                         idxMod.AllVersions[ver].URL = version["download_url"].Value;
                         idxMod.AllVersions[ver].Filename = CurrentModData.ModID + "-" + ver.ToString() + ".zip";
