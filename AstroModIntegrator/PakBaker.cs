@@ -60,7 +60,7 @@ namespace AstroModIntegrator
             }
         }
 
-        public static byte[] Bake(Dictionary<string, byte[]> data)
+        public static byte[] Bake(Dictionary<string, byte[]> data, string mountPoint = null)
         {
             MemoryStream ourStream = new MemoryStream();
             BinaryWriter writer = new BinaryWriter(ourStream);
@@ -81,7 +81,7 @@ namespace AstroModIntegrator
 
             // Mount point and record count
             ulong indexOffset = (ulong)writer.BaseStream.Position;
-            writer.WriteUString("../../../");
+            writer.WriteUString(mountPoint ?? "../../../");
             writer.Write((int)data.Count);
 
             // Second Record blocks

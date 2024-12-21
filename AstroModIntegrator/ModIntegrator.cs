@@ -97,7 +97,7 @@ namespace AstroModIntegrator
 
         private Dictionary<string, byte[]> CreatedPakData;
 
-        public void IntegrateMods(string paksPath, string installPath) // @"C:\Users\<CLIENT USERNAME>\AppData\Local\Astro\Saved\Paks", @"C:\Program Files (x86)\Steam\steamapps\common\ASTRONEER\Astro\Content\Paks"
+        public void IntegrateMods(string paksPath, string installPath, string outputFolder = null, string mountPoint = null) // @"C:\Users\<CLIENT USERNAME>\AppData\Local\Astro\Saved\Paks", @"C:\Program Files (x86)\Steam\steamapps\common\ASTRONEER\Astro\Content\Paks"
         {
             Directory.CreateDirectory(paksPath);
             string[] files = Directory.GetFiles(paksPath, "*_P.pak", SearchOption.TopDirectoryOnly);
@@ -328,9 +328,9 @@ namespace AstroModIntegrator
                 }
             }
 
-            byte[] pakData = PakBaker.Bake(CreatedPakData);
+            byte[] pakData = PakBaker.Bake(CreatedPakData, mountPoint);
 
-            using (FileStream f = new FileStream(Path.Combine(paksPath, @"999-AstroModIntegrator_P.pak"), FileMode.Create, FileAccess.Write))
+            using (FileStream f = new FileStream(Path.Combine(outputFolder ?? paksPath, @"999-AstroModIntegrator_P.pak"), FileMode.Create, FileAccess.Write))
             {
                 f.Write(pakData, 0, pakData.Length);
             }

@@ -103,7 +103,7 @@ namespace ModIntegratorCMD
                 return;
             }
 
-            if (args.Length != 2)
+            if (args.Length < 2)
             {
                 string decidedPath = "C:\\Users\\YOU\\AppData\\Local\\Astro\\Saved\\Paks";
                 try
@@ -113,7 +113,7 @@ namespace ModIntegratorCMD
                 catch {}
 
                 Console.WriteLine("AstroModIntegrator - Automatically integrates Astroneer .pak mods based on their metadata\n");
-                Console.WriteLine("Usage: modintegrator <active mod paks directory> <game installation paks directory>\n");
+                Console.WriteLine("Usage: modintegrator <active mod paks directory> <game installation paks directory> [folder to output to]\n");
                 Console.WriteLine("Example: modintegrator \"" + decidedPath + "\" \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\ASTRONEER\\Astro\\Content\\Paks\"");
                 return;
             }
@@ -127,7 +127,7 @@ namespace ModIntegratorCMD
                     RefuseMismatchedConnections = true,
                     //OptionalModIDs = new List<string> { "AstroChat" }
                 };
-                us.IntegrateMods(args[0], args[1]);
+                us.IntegrateMods(args[0], args[1], args.Length > 2 ? args[2] : null, args.Length > 3 ? args[3] : null);
                 stopWatch.Stop();
 
                 Console.WriteLine("Finished integrating! Took " + ((double)stopWatch.Elapsed.Ticks / TimeSpan.TicksPerMillisecond) + " ms in total.");
