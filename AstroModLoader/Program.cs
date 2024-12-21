@@ -1,4 +1,5 @@
 ﻿using CommandLine;
+using Microsoft.Win32;
 using System;
 using System.Drawing;
 using System.IO;
@@ -20,6 +21,12 @@ namespace AstroModLoader
 
         [Option("next_launch_path", Required = false, HelpText = "Specifies a path to a file to store as the launch script.")]
         public string NextLaunchPath { get; set; }
+
+        [Option("install_mod", Required = false, HelpText = "Specifies a path to a mod to install.")]
+        public string InstallMod { get; set; }
+
+        [Option("install_thunderstore", Required = false, HelpText = "Used for the ror2mm URL protocol.")]
+        public string InstallThunderstore { get; set; }
     }
 
     public static class Program
@@ -46,6 +53,39 @@ namespace AstroModLoader
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
                 Application.SetDefaultFont(new Font(new FontFamily("Microsoft Sans Serif"), 8.25f)); // default font changed in .NET Core 3.0
+
+                // if available, we want to accept the ror2mm url protocol; but if other software is installed that accepts it, we want them to override us
+                try
+                {
+                    string thunderstoreProtocol = "ror2mm";
+                    RegistryKey key = Registry.CurrentUser.OpenSubKey("Software\\Classes\\" + thunderstoreProtocol);
+                    bool canWeContinue = key == null;
+                    if (key != null)
+                    {
+                        var key2 = key.OpenSubKey(@"shell\open\command");
+                        if (key2.GetValue(string.Empty) is string blah && blah.Contains("AstroModLoader"))
+                        {
+                            canWeContinue = true;
+                        }
+                        key2.Close();
+                        key.Close();
+                    }
+                    if (canWeContinue)
+                    {
+                        key = Registry.CurrentUser.CreateSubKey("Software\\Classes\\" + thunderstoreProtocol);
+                        key.SetValue(string.Empty, "URL: " + thunderstoreProtocol);
+                        key.SetValue("URL Protocol", string.Empty);
+
+                        var key2 = key.CreateSubKey(@"shell\open\command");
+                        key2.SetValue(string.Empty, Application.ExecutablePath + " --install_thunderstore=" + "%1");
+                        key2.Close();
+                        key.Close();
+                    }
+                }
+                catch
+                {
+                    // no big deal if it doesn't work
+                }
 
                 Form1 f1 = new Form1();
                 Application.Run(f1);

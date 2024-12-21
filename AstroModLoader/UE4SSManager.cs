@@ -14,7 +14,7 @@ namespace AstroModLoader
     {
         public static bool Install(string binaryDir, string InstallPathLua, Form displayForm = null)
         {
-            string tempDownloadFolder = Path.Combine(Path.GetTempPath(), "AstroModLoader", "ZipDownloads");
+            string tempDownloadFolder = Path.Combine(Path.GetTempPath(), "AstroModLoader", "UE4SSDownload");
             string ue4ssZipPath = Path.Combine(tempDownloadFolder, "UE4SS.zip");
 
             try

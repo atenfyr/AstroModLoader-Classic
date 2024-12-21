@@ -812,6 +812,65 @@ namespace AstroModLoader
 
             UpdateVersionLabel();
             RefreshModInfoLabel();
+
+            Task.Run(() =>
+            {
+                if (!string.IsNullOrEmpty(Program.CommandLineOptions.InstallMod))
+                {
+                    InstallModFromPath(Program.CommandLineOptions.InstallMod, out _, out _, out _);
+                }
+                if (!string.IsNullOrEmpty(Program.CommandLineOptions.InstallThunderstore))
+                {
+                    string tstorePrefix = "ror2mm://v1/install/thunderstore.io/";
+                    if (Program.CommandLineOptions.InstallThunderstore.StartsWith(tstorePrefix))
+                    {
+                        var thing_split = Program.CommandLineOptions.InstallThunderstore.TrimEnd('/').Split("/");
+                        string mod_id = thing_split[thing_split.Length - 2];
+
+                        BasicButtonPopup basicButtonPrompt = null;
+                        AMLUtils.InvokeUI(() =>
+                        {
+                            basicButtonPrompt = AMLUtils.GetBasicButton(this, "Downloading " + mod_id + " from Thunderstore...", null, null, null);
+                            basicButtonPrompt.ControlBox = false;
+                            basicButtonPrompt.Show();
+                        });
+
+                        bool succeeded = true;
+                        string tempDownloadFolder = Path.Combine(Path.GetTempPath(), "AstroModLoader", "ThunderstoreDownload");
+                        try
+                        {
+                            try
+                            {
+                                Directory.CreateDirectory(tempDownloadFolder);
+                                string zipPath = Path.Combine(tempDownloadFolder, "mod.zip");
+                                using (var wb = new WebClient())
+                                {
+                                    wb.Headers[HttpRequestHeader.UserAgent] = AMLUtils.UserAgent;
+                                    wb.DownloadFile(new Uri("https://thunderstore.io/package/download/" + Program.CommandLineOptions.InstallThunderstore.Substring(tstorePrefix.Length)), zipPath);
+                                }
+                                InstallModFromPath(zipPath, out _, out _, out _);
+                            }
+                            catch
+                            {
+                                AMLUtils.InvokeUI(() => this.ShowBasicButton("Failed to install " + mod_id + " from Thunderstore!", "OK", null, null));
+                                succeeded = false;
+                            }
+                        }
+                        finally
+                        {
+                            Directory.Delete(tempDownloadFolder, true);
+                            if (succeeded) AMLUtils.InvokeUI(() =>
+                            {
+                                basicButtonPrompt.Close();
+                                this.ShowBasicButton("Successfully installed " + mod_id + " from Thunderstore.", "OK", null, null);
+                            }); 
+                        }
+                    }
+                }
+            }).ContinueWith(res =>
+            {
+                AMLUtils.InvokeUI(FullRefresh);
+            });
         }
 
         private async void playButton_Click(object sender, EventArgs e)
