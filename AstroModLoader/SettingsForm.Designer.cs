@@ -28,251 +28,288 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.label1 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
-            this.gamePathBox = new System.Windows.Forms.TextBox();
-            this.label3 = new System.Windows.Forms.Label();
-            this.accentComboBox = new System.Windows.Forms.ComboBox();
-            this.themeComboBox = new System.Windows.Forms.ComboBox();
-            this.label4 = new System.Windows.Forms.Label();
-            this.label5 = new System.Windows.Forms.Label();
-            this.platformComboBox = new System.Windows.Forms.ComboBox();
-            this.exitButton = new AstroModLoader.CoolButton();
-            this.setPathButton = new AstroModLoader.CoolButton();
-            this.localPathBox = new System.Windows.Forms.TextBox();
-            this.label6 = new System.Windows.Forms.Label();
-            this.setPathButton2 = new AstroModLoader.CoolButton();
-            this.versionLabel = new System.Windows.Forms.Label();
-            this.refuseMismatchedConnectionsCheckbox = new System.Windows.Forms.CheckBox();
-            this.aboutButton = new AstroModLoader.CoolButton();
-            this.SuspendLayout();
+            label1 = new System.Windows.Forms.Label();
+            label2 = new System.Windows.Forms.Label();
+            gamePathBox = new System.Windows.Forms.TextBox();
+            label3 = new System.Windows.Forms.Label();
+            accentComboBox = new System.Windows.Forms.ComboBox();
+            themeComboBox = new System.Windows.Forms.ComboBox();
+            label4 = new System.Windows.Forms.Label();
+            label5 = new System.Windows.Forms.Label();
+            platformComboBox = new System.Windows.Forms.ComboBox();
+            exitButton = new CoolButton();
+            setPathButton = new CoolButton();
+            localPathBox = new System.Windows.Forms.TextBox();
+            label6 = new System.Windows.Forms.Label();
+            setPathButton2 = new CoolButton();
+            versionLabel = new System.Windows.Forms.Label();
+            refuseMismatchedConnectionsCheckbox = new System.Windows.Forms.CheckBox();
+            aboutButton = new CoolButton();
+            ue4ssButton = new CoolButton();
+            SuspendLayout();
             // 
             // label1
             // 
-            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F);
-            this.label1.Location = new System.Drawing.Point(13, 9);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(388, 21);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "Settings:";
-            this.label1.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F);
+            label1.Location = new System.Drawing.Point(15, 10);
+            label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            label1.Name = "label1";
+            label1.Size = new System.Drawing.Size(453, 24);
+            label1.TabIndex = 0;
+            label1.Text = "Settings:";
+            label1.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             // 
             // label2
             // 
-            this.label2.AutoSize = true;
-            this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F);
-            this.label2.Location = new System.Drawing.Point(13, 70);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(134, 15);
-            this.label2.TabIndex = 1;
-            this.label2.Text = "Game Installation Path:";
+            label2.AutoSize = true;
+            label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F);
+            label2.Location = new System.Drawing.Point(15, 81);
+            label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            label2.Name = "label2";
+            label2.Size = new System.Drawing.Size(134, 15);
+            label2.TabIndex = 1;
+            label2.Text = "Game Installation Path:";
             // 
             // gamePathBox
             // 
-            this.gamePathBox.Location = new System.Drawing.Point(153, 69);
-            this.gamePathBox.Name = "gamePathBox";
-            this.gamePathBox.Size = new System.Drawing.Size(202, 20);
-            this.gamePathBox.TabIndex = 2;
+            gamePathBox.Location = new System.Drawing.Point(178, 80);
+            gamePathBox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            gamePathBox.Name = "gamePathBox";
+            gamePathBox.Size = new System.Drawing.Size(235, 23);
+            gamePathBox.TabIndex = 2;
             // 
             // label3
             // 
-            this.label3.AutoSize = true;
-            this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F);
-            this.label3.Location = new System.Drawing.Point(69, 149);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(78, 15);
-            this.label3.TabIndex = 6;
-            this.label3.Text = "Accent Color:";
+            label3.AutoSize = true;
+            label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F);
+            label3.Location = new System.Drawing.Point(80, 172);
+            label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            label3.Name = "label3";
+            label3.Size = new System.Drawing.Size(78, 15);
+            label3.TabIndex = 6;
+            label3.Text = "Accent Color:";
             // 
             // accentComboBox
             // 
-            this.accentComboBox.FormattingEnabled = true;
-            this.accentComboBox.Location = new System.Drawing.Point(153, 148);
-            this.accentComboBox.Name = "accentComboBox";
-            this.accentComboBox.Size = new System.Drawing.Size(151, 21);
-            this.accentComboBox.TabIndex = 7;
-            this.accentComboBox.SelectedIndexChanged += new System.EventHandler(this.accentComboBox_UpdateColor);
-            this.accentComboBox.Leave += new System.EventHandler(this.accentComboBox_UpdateColor);
+            accentComboBox.FormattingEnabled = true;
+            accentComboBox.Location = new System.Drawing.Point(178, 171);
+            accentComboBox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            accentComboBox.Name = "accentComboBox";
+            accentComboBox.Size = new System.Drawing.Size(176, 23);
+            accentComboBox.TabIndex = 7;
+            accentComboBox.SelectedIndexChanged += accentComboBox_UpdateColor;
+            accentComboBox.Leave += accentComboBox_UpdateColor;
             // 
             // themeComboBox
             // 
-            this.themeComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.themeComboBox.FormattingEnabled = true;
-            this.themeComboBox.Location = new System.Drawing.Point(153, 121);
-            this.themeComboBox.Name = "themeComboBox";
-            this.themeComboBox.Size = new System.Drawing.Size(151, 21);
-            this.themeComboBox.TabIndex = 6;
-            this.themeComboBox.SelectedIndexChanged += new System.EventHandler(this.themeBox_SelectedIndexChanged);
+            themeComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            themeComboBox.FormattingEnabled = true;
+            themeComboBox.Location = new System.Drawing.Point(178, 140);
+            themeComboBox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            themeComboBox.Name = "themeComboBox";
+            themeComboBox.Size = new System.Drawing.Size(176, 23);
+            themeComboBox.TabIndex = 6;
+            themeComboBox.SelectedIndexChanged += themeBox_SelectedIndexChanged;
             // 
             // label4
             // 
-            this.label4.AutoSize = true;
-            this.label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F);
-            this.label4.Location = new System.Drawing.Point(98, 122);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(49, 15);
-            this.label4.TabIndex = 4;
-            this.label4.Text = "Theme:";
+            label4.AutoSize = true;
+            label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F);
+            label4.Location = new System.Drawing.Point(114, 141);
+            label4.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            label4.Name = "label4";
+            label4.Size = new System.Drawing.Size(49, 15);
+            label4.TabIndex = 4;
+            label4.Text = "Theme:";
             // 
             // label5
             // 
-            this.label5.AutoSize = true;
-            this.label5.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F);
-            this.label5.Location = new System.Drawing.Point(91, 43);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(56, 15);
-            this.label5.TabIndex = 1;
-            this.label5.Text = "Platform:";
+            label5.AutoSize = true;
+            label5.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F);
+            label5.Location = new System.Drawing.Point(106, 50);
+            label5.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            label5.Name = "label5";
+            label5.Size = new System.Drawing.Size(56, 15);
+            label5.TabIndex = 1;
+            label5.Text = "Platform:";
             // 
             // platformComboBox
             // 
-            this.platformComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.platformComboBox.FormattingEnabled = true;
-            this.platformComboBox.Location = new System.Drawing.Point(153, 42);
-            this.platformComboBox.Name = "platformComboBox";
-            this.platformComboBox.Size = new System.Drawing.Size(151, 21);
-            this.platformComboBox.TabIndex = 1;
-            this.platformComboBox.SelectedIndexChanged += new System.EventHandler(this.platformComboBox_SelectedIndexChanged);
+            platformComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            platformComboBox.FormattingEnabled = true;
+            platformComboBox.Location = new System.Drawing.Point(178, 48);
+            platformComboBox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            platformComboBox.Name = "platformComboBox";
+            platformComboBox.Size = new System.Drawing.Size(176, 23);
+            platformComboBox.TabIndex = 1;
+            platformComboBox.SelectedIndexChanged += platformComboBox_SelectedIndexChanged;
             // 
             // exitButton
             // 
-            this.exitButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.exitButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(51)))), ((int)(((byte)(51)))), ((int)(((byte)(51)))));
-            this.exitButton.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(231)))), ((int)(((byte)(149)))));
-            this.exitButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.exitButton.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.exitButton.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(225)))), ((int)(((byte)(225)))), ((int)(((byte)(225)))));
-            this.exitButton.Location = new System.Drawing.Point(12, 211);
-            this.exitButton.MinimumSize = new System.Drawing.Size(0, 26);
-            this.exitButton.Name = "exitButton";
-            this.exitButton.Size = new System.Drawing.Size(75, 26);
-            this.exitButton.TabIndex = 9;
-            this.exitButton.Text = "Close";
-            this.exitButton.UseVisualStyleBackColor = false;
-            this.exitButton.Click += new System.EventHandler(this.exitButton_Click);
+            exitButton.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left;
+            exitButton.BackColor = System.Drawing.Color.FromArgb(51, 51, 51);
+            exitButton.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(255, 231, 149);
+            exitButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            exitButton.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+            exitButton.ForeColor = System.Drawing.Color.FromArgb(225, 225, 225);
+            exitButton.Location = new System.Drawing.Point(14, 243);
+            exitButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            exitButton.MinimumSize = new System.Drawing.Size(0, 30);
+            exitButton.Name = "exitButton";
+            exitButton.Size = new System.Drawing.Size(88, 30);
+            exitButton.TabIndex = 9;
+            exitButton.Text = "Close";
+            exitButton.UseVisualStyleBackColor = false;
+            exitButton.Click += exitButton_Click;
             // 
             // setPathButton
             // 
-            this.setPathButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.setPathButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(51)))), ((int)(((byte)(51)))), ((int)(((byte)(51)))));
-            this.setPathButton.FlatAppearance.BorderColor = System.Drawing.Color.Black;
-            this.setPathButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.setPathButton.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.setPathButton.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(225)))), ((int)(((byte)(225)))), ((int)(((byte)(225)))));
-            this.setPathButton.Location = new System.Drawing.Point(361, 63);
-            this.setPathButton.MinimumSize = new System.Drawing.Size(0, 26);
-            this.setPathButton.Name = "setPathButton";
-            this.setPathButton.Size = new System.Drawing.Size(40, 26);
-            this.setPathButton.TabIndex = 3;
-            this.setPathButton.Text = "Set";
-            this.setPathButton.UseVisualStyleBackColor = false;
-            this.setPathButton.Click += new System.EventHandler(this.UpdatePathing);
+            setPathButton.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+            setPathButton.BackColor = System.Drawing.Color.FromArgb(51, 51, 51);
+            setPathButton.FlatAppearance.BorderColor = System.Drawing.Color.Black;
+            setPathButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            setPathButton.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+            setPathButton.ForeColor = System.Drawing.Color.FromArgb(225, 225, 225);
+            setPathButton.Location = new System.Drawing.Point(421, 73);
+            setPathButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            setPathButton.MinimumSize = new System.Drawing.Size(0, 30);
+            setPathButton.Name = "setPathButton";
+            setPathButton.Size = new System.Drawing.Size(47, 30);
+            setPathButton.TabIndex = 3;
+            setPathButton.Text = "Set";
+            setPathButton.UseVisualStyleBackColor = false;
+            setPathButton.Click += UpdatePathing;
             // 
             // localPathBox
             // 
-            this.localPathBox.Location = new System.Drawing.Point(153, 95);
-            this.localPathBox.Name = "localPathBox";
-            this.localPathBox.Size = new System.Drawing.Size(202, 20);
-            this.localPathBox.TabIndex = 4;
+            localPathBox.Location = new System.Drawing.Point(178, 110);
+            localPathBox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            localPathBox.Name = "localPathBox";
+            localPathBox.Size = new System.Drawing.Size(235, 23);
+            localPathBox.TabIndex = 4;
             // 
             // label6
             // 
-            this.label6.AutoSize = true;
-            this.label6.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F);
-            this.label6.Location = new System.Drawing.Point(50, 96);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(97, 15);
-            this.label6.TabIndex = 12;
-            this.label6.Text = "Local Data Path:";
+            label6.AutoSize = true;
+            label6.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F);
+            label6.Location = new System.Drawing.Point(58, 111);
+            label6.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            label6.Name = "label6";
+            label6.Size = new System.Drawing.Size(97, 15);
+            label6.TabIndex = 12;
+            label6.Text = "Local Data Path:";
             // 
             // setPathButton2
             // 
-            this.setPathButton2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.setPathButton2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(51)))), ((int)(((byte)(51)))), ((int)(((byte)(51)))));
-            this.setPathButton2.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(231)))), ((int)(((byte)(149)))));
-            this.setPathButton2.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.setPathButton2.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.setPathButton2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(225)))), ((int)(((byte)(225)))), ((int)(((byte)(225)))));
-            this.setPathButton2.Location = new System.Drawing.Point(361, 92);
-            this.setPathButton2.MinimumSize = new System.Drawing.Size(0, 26);
-            this.setPathButton2.Name = "setPathButton2";
-            this.setPathButton2.Size = new System.Drawing.Size(40, 26);
-            this.setPathButton2.TabIndex = 5;
-            this.setPathButton2.Text = "Set";
-            this.setPathButton2.UseVisualStyleBackColor = false;
-            this.setPathButton2.Click += new System.EventHandler(this.UpdatePathing);
+            setPathButton2.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+            setPathButton2.BackColor = System.Drawing.Color.FromArgb(51, 51, 51);
+            setPathButton2.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(255, 231, 149);
+            setPathButton2.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            setPathButton2.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+            setPathButton2.ForeColor = System.Drawing.Color.FromArgb(225, 225, 225);
+            setPathButton2.Location = new System.Drawing.Point(421, 106);
+            setPathButton2.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            setPathButton2.MinimumSize = new System.Drawing.Size(0, 30);
+            setPathButton2.Name = "setPathButton2";
+            setPathButton2.Size = new System.Drawing.Size(47, 30);
+            setPathButton2.TabIndex = 5;
+            setPathButton2.Text = "Set";
+            setPathButton2.UseVisualStyleBackColor = false;
+            setPathButton2.Click += UpdatePathing;
             // 
             // versionLabel
             // 
-            this.versionLabel.AutoSize = true;
-            this.versionLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F);
-            this.versionLabel.Location = new System.Drawing.Point(13, 9);
-            this.versionLabel.Name = "versionLabel";
-            this.versionLabel.Size = new System.Drawing.Size(58, 15);
-            this.versionLabel.TabIndex = 14;
-            this.versionLabel.Text = "1.17.89.0";
+            versionLabel.AutoSize = true;
+            versionLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F);
+            versionLabel.Location = new System.Drawing.Point(15, 10);
+            versionLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            versionLabel.Name = "versionLabel";
+            versionLabel.Size = new System.Drawing.Size(58, 15);
+            versionLabel.TabIndex = 14;
+            versionLabel.Text = "1.17.89.0";
             // 
             // refuseMismatchedConnectionsCheckbox
             // 
-            this.refuseMismatchedConnectionsCheckbox.AutoSize = true;
-            this.refuseMismatchedConnectionsCheckbox.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F);
-            this.refuseMismatchedConnectionsCheckbox.Location = new System.Drawing.Point(153, 175);
-            this.refuseMismatchedConnectionsCheckbox.Name = "refuseMismatchedConnectionsCheckbox";
-            this.refuseMismatchedConnectionsCheckbox.Size = new System.Drawing.Size(205, 19);
-            this.refuseMismatchedConnectionsCheckbox.TabIndex = 8;
-            this.refuseMismatchedConnectionsCheckbox.Text = "Refuse mismatched connections";
-            this.refuseMismatchedConnectionsCheckbox.UseVisualStyleBackColor = true;
-            this.refuseMismatchedConnectionsCheckbox.CheckedChanged += new System.EventHandler(this.refuseMismatchedConnectionsCheckbox_CheckedChanged);
+            refuseMismatchedConnectionsCheckbox.AutoSize = true;
+            refuseMismatchedConnectionsCheckbox.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F);
+            refuseMismatchedConnectionsCheckbox.Location = new System.Drawing.Point(178, 202);
+            refuseMismatchedConnectionsCheckbox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            refuseMismatchedConnectionsCheckbox.Name = "refuseMismatchedConnectionsCheckbox";
+            refuseMismatchedConnectionsCheckbox.Size = new System.Drawing.Size(205, 19);
+            refuseMismatchedConnectionsCheckbox.TabIndex = 8;
+            refuseMismatchedConnectionsCheckbox.Text = "Refuse mismatched connections";
+            refuseMismatchedConnectionsCheckbox.UseVisualStyleBackColor = true;
+            refuseMismatchedConnectionsCheckbox.CheckedChanged += refuseMismatchedConnectionsCheckbox_CheckedChanged;
             // 
             // aboutButton
             // 
-            this.aboutButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.aboutButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(51)))), ((int)(((byte)(51)))), ((int)(((byte)(51)))));
-            this.aboutButton.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(231)))), ((int)(((byte)(149)))));
-            this.aboutButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.aboutButton.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.aboutButton.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(225)))), ((int)(((byte)(225)))), ((int)(((byte)(225)))));
-            this.aboutButton.Location = new System.Drawing.Point(326, 211);
-            this.aboutButton.MinimumSize = new System.Drawing.Size(0, 26);
-            this.aboutButton.Name = "aboutButton";
-            this.aboutButton.Size = new System.Drawing.Size(75, 26);
-            this.aboutButton.TabIndex = 10;
-            this.aboutButton.Text = "About...";
-            this.aboutButton.UseVisualStyleBackColor = false;
-            this.aboutButton.Click += new System.EventHandler(this.aboutButton_Click);
+            aboutButton.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
+            aboutButton.BackColor = System.Drawing.Color.FromArgb(51, 51, 51);
+            aboutButton.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(255, 231, 149);
+            aboutButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            aboutButton.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+            aboutButton.ForeColor = System.Drawing.Color.FromArgb(225, 225, 225);
+            aboutButton.Location = new System.Drawing.Point(380, 243);
+            aboutButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            aboutButton.MinimumSize = new System.Drawing.Size(0, 30);
+            aboutButton.Name = "aboutButton";
+            aboutButton.Size = new System.Drawing.Size(88, 30);
+            aboutButton.TabIndex = 10;
+            aboutButton.Text = "About...";
+            aboutButton.UseVisualStyleBackColor = false;
+            aboutButton.Click += aboutButton_Click;
+            // 
+            // ue4ssButton
+            // 
+            ue4ssButton.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
+            ue4ssButton.BackColor = System.Drawing.Color.FromArgb(51, 51, 51);
+            ue4ssButton.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(255, 231, 149);
+            ue4ssButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            ue4ssButton.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+            ue4ssButton.ForeColor = System.Drawing.Color.FromArgb(225, 225, 225);
+            ue4ssButton.Location = new System.Drawing.Point(244, 243);
+            ue4ssButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            ue4ssButton.MinimumSize = new System.Drawing.Size(0, 30);
+            ue4ssButton.Name = "ue4ssButton";
+            ue4ssButton.Size = new System.Drawing.Size(128, 30);
+            ue4ssButton.TabIndex = 15;
+            ue4ssButton.Text = "Uninstall UE4SS...";
+            ue4ssButton.UseVisualStyleBackColor = false;
+            ue4ssButton.Click += ue4ssButton_Click;
             // 
             // SettingsForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(42)))), ((int)(((byte)(45)))));
-            this.ClientSize = new System.Drawing.Size(413, 249);
-            this.Controls.Add(this.aboutButton);
-            this.Controls.Add(this.refuseMismatchedConnectionsCheckbox);
-            this.Controls.Add(this.versionLabel);
-            this.Controls.Add(this.setPathButton2);
-            this.Controls.Add(this.label6);
-            this.Controls.Add(this.localPathBox);
-            this.Controls.Add(this.platformComboBox);
-            this.Controls.Add(this.label5);
-            this.Controls.Add(this.label4);
-            this.Controls.Add(this.themeComboBox);
-            this.Controls.Add(this.accentComboBox);
-            this.Controls.Add(this.exitButton);
-            this.Controls.Add(this.setPathButton);
-            this.Controls.Add(this.label3);
-            this.Controls.Add(this.gamePathBox);
-            this.Controls.Add(this.label2);
-            this.Controls.Add(this.label1);
-            this.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(225)))), ((int)(((byte)(225)))), ((int)(((byte)(225)))));
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.MaximizeBox = false;
-            this.Name = "SettingsForm";
-            this.Text = "Settings";
-            this.Load += new System.EventHandler(this.SettingsForm_Load);
-            this.ResumeLayout(false);
-            this.PerformLayout();
-
+            AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            BackColor = System.Drawing.Color.FromArgb(40, 42, 45);
+            ClientSize = new System.Drawing.Size(482, 287);
+            Controls.Add(ue4ssButton);
+            Controls.Add(aboutButton);
+            Controls.Add(refuseMismatchedConnectionsCheckbox);
+            Controls.Add(versionLabel);
+            Controls.Add(setPathButton2);
+            Controls.Add(label6);
+            Controls.Add(localPathBox);
+            Controls.Add(platformComboBox);
+            Controls.Add(label5);
+            Controls.Add(label4);
+            Controls.Add(themeComboBox);
+            Controls.Add(accentComboBox);
+            Controls.Add(exitButton);
+            Controls.Add(setPathButton);
+            Controls.Add(label3);
+            Controls.Add(gamePathBox);
+            Controls.Add(label2);
+            Controls.Add(label1);
+            ForeColor = System.Drawing.Color.FromArgb(225, 225, 225);
+            FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            MaximizeBox = false;
+            Name = "SettingsForm";
+            Text = "Settings";
+            Load += SettingsForm_Load;
+            ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
@@ -294,5 +331,6 @@
         private System.Windows.Forms.Label versionLabel;
         private System.Windows.Forms.CheckBox refuseMismatchedConnectionsCheckbox;
         private CoolButton aboutButton;
+        private CoolButton ue4ssButton;
     }
 }

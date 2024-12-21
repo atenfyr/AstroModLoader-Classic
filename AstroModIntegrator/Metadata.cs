@@ -252,6 +252,10 @@ namespace AstroModIntegrator
         [DefaultValue("")]
         public string Homepage;
 
+        [JsonProperty("enable_ue4ss")]
+        [DefaultValue(false)]
+        public bool EnableUE4SS;
+
         [JsonProperty("download")]
         public DownloadInfo Download;
 

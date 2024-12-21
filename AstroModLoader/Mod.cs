@@ -167,7 +167,7 @@ namespace AstroModLoader
 
         public static volatile string ThunderstoreFetched = null;
 
-        public IndexFile GetIndexFile(List<string> duplicateURLs)
+        public IndexFile GetIndexFile(Dictionary<string, string> cachedUrls)
         {
             DownloadInfo di = CurrentModData.Download;
             if (di == null) return null;
@@ -176,14 +176,22 @@ namespace AstroModLoader
             {
                 if (di.Type == DownloadMode.IndexFile && !string.IsNullOrEmpty(di.URL))
                 {
-                    if (duplicateURLs != null && duplicateURLs.Contains(di.URL)) return null;
-                    string rawIndexFileData = "";
-                    using (var wb = new WebClient())
+                    string rawIndexFileData = null;
+                    if (cachedUrls != null && cachedUrls.ContainsKey(di.URL))
                     {
-                        wb.Headers[HttpRequestHeader.UserAgent] = AMLUtils.UserAgent;
-                        rawIndexFileData = wb.DownloadString(di.URL);
+                        rawIndexFileData = cachedUrls[di.URL];
+                    }
+                    else
+                    {
+                        using (var wb = new WebClient())
+                        {
+                            wb.Headers[HttpRequestHeader.UserAgent] = AMLUtils.UserAgent;
+                            rawIndexFileData = wb.DownloadString(di.URL);
+                        }
                     }
                     if (string.IsNullOrEmpty(rawIndexFileData)) return null;
+
+                    cachedUrls[di.URL] = rawIndexFileData;
 
                     IndexFile indexFile = JsonConvert.DeserializeObject<IndexFile>(rawIndexFileData);
                     indexFile.OriginalURL = di.URL;

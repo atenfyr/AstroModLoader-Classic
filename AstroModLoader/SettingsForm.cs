@@ -51,6 +51,13 @@ namespace AstroModLoader
             refuseMismatchedConnectionsCheckbox.Checked = ModHandler.OurIntegrator.RefuseMismatchedConnections;
         }
 
+        private void UpdateUE4SSButtonText()
+        {
+            if (BaseForm == null) return;
+            BaseForm.ModManager.CheckUE4SSInstalled();
+            this.ue4ssButton.Text = BaseForm.ModManager.UE4SSInstalled ? "Uninstall UE4SS..." : "Install UE4SS...";
+        }
+
         private Form1 BaseForm;
         private bool _readyToUpdateTheme = false;
         private void SettingsForm_Load(object sender, EventArgs e)
@@ -61,6 +68,8 @@ namespace AstroModLoader
                 AMLPalette.RefreshTheme(BaseForm);
                 this.UpdateLabels();
                 UpdateColorBoxText();
+
+                UpdateUE4SSButtonText();
             }
             themeComboBox.DataSource = Enum.GetValues(typeof(ModLoaderTheme));
             themeComboBox.SelectedIndex = (int)AMLPalette.CurrentTheme;
@@ -151,6 +160,26 @@ namespace AstroModLoader
             BaseForm.SwitchPlatform(PlatformType.Custom);
 
             this.UpdateLabels();
+        }
+
+        private void ue4ssButton_Click(object sender, EventArgs e)
+        {
+            if (BaseForm == null) return;
+            if (BaseForm.ModManager.UE4SSInstalled)
+            {
+                if (UE4SSManager.Uninstall(BaseForm.ModManager.GetBinaryDir(), BaseForm))
+                {
+                    AMLUtils.InvokeUI(() => this.ShowBasicButton("Successfully uninstalled UE4SS.", "OK", null, null));
+                }
+            }
+            else
+            {
+                if (UE4SSManager.Install(BaseForm.ModManager.GetBinaryDir(), BaseForm.ModManager.InstallPathLua, BaseForm))
+                {
+                    AMLUtils.InvokeUI(() => this.ShowBasicButton("Successfully installed UE4SS.", "OK", null, null));
+                }
+            }
+            this.UpdateUE4SSButtonText();
         }
 
         private void refuseMismatchedConnectionsCheckbox_CheckedChanged(object sender, EventArgs e)

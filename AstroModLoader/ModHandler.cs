@@ -21,6 +21,7 @@ namespace AstroModLoader
         internal string CustomBasePath = "";
         internal string BasePath;
         internal string DownloadPath;
+        internal string InstallPathLua;
         internal string InstallPath;
         internal string GamePath;
         internal string LaunchCommand;
@@ -36,6 +37,7 @@ namespace AstroModLoader
         public Dictionary<string, IndexMod> GlobalIndexFile;
         public Version InstalledAstroBuild = null;
         public volatile bool IsReadOnly = false;
+        public volatile bool UE4SSInstalled = false;
 
         public ModHandler(Form1 baseForm)
         {
@@ -473,6 +475,8 @@ namespace AstroModLoader
                 Directory.CreateDirectory(DownloadPath);
                 InstallPath = Path.Combine(BasePath, "Saved", "Paks");
                 Directory.CreateDirectory(InstallPath);
+                InstallPathLua = Path.Combine(InstallPath, "Lua"); // may not exist
+                //Directory.CreateDirectory(InstallPathLua);
             }
             catch (UnauthorizedAccessException)
             {
@@ -529,25 +533,25 @@ namespace AstroModLoader
             IsUpdatingAvailableVersionsFromIndexFilesWaitHandler.Set();
         }
 
-        private List<string> DuplicateURLs = new List<string>();
+        private Dictionary<string, string> CachedURLs = new Dictionary<string, string>();
 
         public void ResetGlobalIndexFile()
         {
-            GlobalIndexFile = new Dictionary<string, IndexMod>();
-            DuplicateURLs = new List<string>();
+            if (GlobalIndexFile == null) GlobalIndexFile = new Dictionary<string, IndexMod>();
+            GlobalIndexFile.Clear();
+            CachedURLs.Clear();
         }
 
         public void AggregateIndexFiles()
         {
-            if (GlobalIndexFile == null) GlobalIndexFile = new Dictionary<string, IndexMod>();
-            Mod.ThunderstoreFetched = null;
+            if (GlobalIndexFile == null) ResetGlobalIndexFile();
+
             foreach (Mod mod in Mods)
             {
-                IndexFile thisIndexFile = mod.GetIndexFile(DuplicateURLs);
+                IndexFile thisIndexFile = mod.GetIndexFile(CachedURLs);
                 if (thisIndexFile != null)
                 {
-                    thisIndexFile.Mods.ToList().ForEach(x => GlobalIndexFile[x.Key] = x.Value);
-                    DuplicateURLs.Add(thisIndexFile.OriginalURL);
+                    GlobalIndexFile[mod.CurrentModData.ModID] = thisIndexFile.Mods[mod.CurrentModData.ModID];
                 }
             }
 
@@ -990,7 +994,7 @@ namespace AstroModLoader
                 }
 
                 if (TableHandler.ShouldContainOptionalColumn()) OurIntegrator.OptionalModIDs = optionalMods;
-                OurIntegrator.IntegrateMods(InstallPath, Path.Combine(GamePath, "Astro", "Content", "Paks"));
+                OurIntegrator.IntegrateMods(InstallPath, Path.Combine(GamePath, "Astro", "Content", "Paks"), null, null, true);
 
                 sw.Stop();
                 string tm = sw.Elapsed.TotalMilliseconds.ToString("#.##");
@@ -1064,6 +1068,16 @@ namespace AstroModLoader
             }
         }
 
+        public string GetBinaryDir()
+        {
+            return Directory.GetDirectories(Path.Combine(GamePath, "Astro", "Binaries"))[0];
+        }
+
+        public void CheckUE4SSInstalled()
+        {
+            UE4SSInstalled = File.Exists(Path.Combine(GetBinaryDir(), "UE4SS.dll"));
+        }
+
         private Semaphore fullUpdateSemaphore = new Semaphore(1, 1);
         public Task FullUpdate()
         {
@@ -1086,6 +1100,8 @@ namespace AstroModLoader
                 {
                     try { File.Delete(Path.Combine(InstallPath, path)); } catch { }
                 }
+
+                CheckUE4SSInstalled();
 
                 SyncConfigToDisk();
                 SyncModsToDisk();

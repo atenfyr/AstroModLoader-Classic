@@ -816,6 +816,38 @@ namespace AstroModLoader
 
         private async void playButton_Click(object sender, EventArgs e)
         {
+            // check, do we need UE4SS?
+            bool needUE4SS = false;
+            List<string> modsNeedUE4SS = new List<string>();
+            foreach (var mod in ModManager.Mods)
+            {
+                if (mod.Enabled && mod.CurrentModData.EnableUE4SS)
+                {
+                    needUE4SS = true;
+                    modsNeedUE4SS.Add(mod.CurrentModData.Name);
+                }
+            }
+
+            if (!ModManager.UE4SSInstalled && needUE4SS)
+            {
+                int dialogRes = this.ShowBasicButton("The following mods use UE4SS:\n\n" + string.Join(", ", modsNeedUE4SS) + "\n\nYou do not currently have UE4SS installed.\nThese mods may not operate as expected.\n\nWould you like to install UE4SS now?", "Install", "Play anyways", "Cancel");
+                switch(dialogRes)
+                {
+                    case 0:
+                        // install
+                        if (!UE4SSManager.Install(ModManager.GetBinaryDir(), ModManager.InstallPathLua, this)) return;
+                        AMLUtils.InvokeUI(() => this.ShowBasicButton("Successfully installed UE4SS.", "OK", null, null));
+                        ModManager.CheckUE4SSInstalled();
+                        break;
+                    case 1:
+                        // nothing
+                        break;
+                    case 2:
+                        // cancel
+                        return;
+                }
+            }
+
             ModManager.IsUpdatingAvailableVersionsFromIndexFilesWaitHandler.WaitOne(3000);
 
             await ModManager.FullUpdate();

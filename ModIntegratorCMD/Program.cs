@@ -127,7 +127,7 @@ namespace ModIntegratorCMD
                     RefuseMismatchedConnections = true,
                     //OptionalModIDs = new List<string> { "AstroChat" }
                 };
-                us.IntegrateMods(args[0], args[1], args.Length > 2 ? args[2] : null, args.Length > 3 ? args[3] : null);
+                us.IntegrateMods(args[0], args[1], args.Length > 2 ? args[2] : null, args.Length > 3 ? args[3] : null, args.Length > 4 ? (args[4].ToLowerInvariant() == "true") : false);
                 stopWatch.Stop();
 
                 Console.WriteLine("Finished integrating! Took " + ((double)stopWatch.Elapsed.Ticks / TimeSpan.TicksPerMillisecond) + " ms in total.");
