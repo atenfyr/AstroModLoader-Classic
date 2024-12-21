@@ -73,6 +73,16 @@ namespace AstroModIntegrator.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] AstroHelpers {
+            get {
+                object obj = ResourceManager.GetObject("AstroHelpers", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] IntegratorStaticAssets {
             get {
                 object obj = ResourceManager.GetObject("IntegratorStaticAssets", resourceCulture);
@@ -86,6 +96,16 @@ namespace AstroModIntegrator.Properties {
         internal static byte[] LevelTemplate {
             get {
                 object obj = ResourceManager.GetObject("LevelTemplate", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] UEHelpers {
+            get {
+                object obj = ResourceManager.GetObject("UEHelpers", resourceCulture);
                 return ((byte[])(obj));
             }
         }

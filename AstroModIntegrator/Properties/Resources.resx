@@ -121,10 +121,16 @@
   <data name="ActorTemplate" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\ActorTemplate.uasset;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="AstroHelpers" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AstroHelpers.lua;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="IntegratorStaticAssets" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\IntegratorStaticAssets.pak;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="LevelTemplate" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\LevelTemplate.umap;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="UEHelpers" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\UEHelpers.lua;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>
