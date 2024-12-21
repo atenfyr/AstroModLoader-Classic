@@ -3,7 +3,10 @@ using Microsoft.Win32;
 using System;
 using System.Drawing;
 using System.IO;
+using System.IO.Pipes;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace AstroModLoader
@@ -87,8 +90,52 @@ namespace AstroModLoader
                     // no big deal if it doesn't work
                 }
 
-                Form1 f1 = new Form1();
-                Application.Run(f1);
+                string uniq_id = "AstroModLoader-Classic-192637418";
+                using (Mutex mutex = new Mutex(false, uniq_id))
+                {
+                    if (!mutex.WaitOne(0, false))
+                    {
+                        // program already running, let's communicate our InstallThunderstore to them if needed
+                        if (!string.IsNullOrEmpty(Program.CommandLineOptions.InstallThunderstore))
+                        {
+                            try
+                            {
+                                using (var client = new NamedPipeClientStream(".", uniq_id, PipeDirection.Out))
+                                {
+                                    client.Connect(10);
+
+                                    using (var writer = new StreamWriter(client))
+                                    {
+                                        writer.AutoFlush = true;
+                                        writer.WriteLine("InstallThunderstore:" + Program.CommandLineOptions.InstallThunderstore);
+                                    }
+                                }
+                            }
+                            catch { } // if failed to connect, that's OK, but we need to make sure the process ends
+                        }
+                        return;
+                    }
+
+                    Form1 f1 = new Form1();
+
+                    // open named pipe server
+                    Task.Factory.StartNew(() =>
+                    {
+                        while (true)
+                        {
+                            using (var server = new NamedPipeServerStream(uniq_id))
+                            {
+                                server.WaitForConnection();
+
+                                using (var reader = new StreamReader(server))
+                                {
+                                    f1.ReceivePipe(reader.ReadLine());
+                                }
+                            }
+                        }
+                    });
+                    Application.Run(f1);
+                }
             });
         }
     }

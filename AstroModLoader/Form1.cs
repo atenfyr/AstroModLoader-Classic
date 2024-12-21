@@ -818,13 +818,37 @@ namespace AstroModLoader
                 if (!string.IsNullOrEmpty(Program.CommandLineOptions.InstallMod))
                 {
                     InstallModFromPath(Program.CommandLineOptions.InstallMod, out _, out _, out _);
+                    AMLUtils.InvokeUI(FullRefresh);
                 }
-                if (!string.IsNullOrEmpty(Program.CommandLineOptions.InstallThunderstore))
+            });
+
+            HandleThunderstoreCommandLineParameters(Program.CommandLineOptions.InstallThunderstore);
+        }
+
+        internal void ReceivePipe(string txt)
+        {
+            string[] parts = txt.Split(":");
+            string cmd = parts[0];
+            string data = string.Join(":", parts.Skip(1));
+            
+            switch(cmd)
+            {
+                case "InstallThunderstore":
+                    HandleThunderstoreCommandLineParameters(data);
+                    break;
+            }
+        }
+
+        private void HandleThunderstoreCommandLineParameters(string installParams)
+        {
+            Task.Run(() =>
+            {
+                if (!string.IsNullOrEmpty(installParams))
                 {
                     string tstorePrefix = "ror2mm://v1/install/thunderstore.io/";
-                    if (Program.CommandLineOptions.InstallThunderstore.StartsWith(tstorePrefix))
+                    if (installParams.StartsWith(tstorePrefix))
                     {
-                        var thing_split = Program.CommandLineOptions.InstallThunderstore.TrimEnd('/').Split("/");
+                        var thing_split = installParams.TrimEnd().TrimEnd('/').Split("/");
                         string mod_id = thing_split[thing_split.Length - 2];
 
                         BasicButtonPopup basicButtonPrompt = null;
@@ -846,7 +870,7 @@ namespace AstroModLoader
                                 using (var wb = new WebClient())
                                 {
                                     wb.Headers[HttpRequestHeader.UserAgent] = AMLUtils.UserAgent;
-                                    wb.DownloadFile(new Uri("https://thunderstore.io/package/download/" + Program.CommandLineOptions.InstallThunderstore.Substring(tstorePrefix.Length)), zipPath);
+                                    wb.DownloadFile(new Uri("https://thunderstore.io/package/download/" + installParams.Substring(tstorePrefix.Length)), zipPath);
                                 }
                                 InstallModFromPath(zipPath, out _, out _, out _);
                             }
@@ -863,7 +887,7 @@ namespace AstroModLoader
                             {
                                 basicButtonPrompt.Close();
                                 this.ShowBasicButton("Successfully installed " + mod_id + " from Thunderstore.", "OK", null, null);
-                            }); 
+                            });
                         }
                     }
                 }
