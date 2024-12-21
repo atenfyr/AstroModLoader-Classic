@@ -8,6 +8,7 @@
     <Copyright>Copyright ©  2020</Copyright>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
+    <AssemblyName>ModIntegrator</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\AstroModIntegrator\AstroModIntegrator.csproj" />
