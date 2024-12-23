@@ -46,6 +46,7 @@
             refuseMismatchedConnectionsCheckbox = new System.Windows.Forms.CheckBox();
             aboutButton = new CoolButton();
             ue4ssButton = new CoolButton();
+            cleanLuaBox = new System.Windows.Forms.CheckBox();
             SuspendLayout();
             // 
             // label1
@@ -152,7 +153,7 @@
             exitButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             exitButton.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
             exitButton.ForeColor = System.Drawing.Color.FromArgb(225, 225, 225);
-            exitButton.Location = new System.Drawing.Point(14, 243);
+            exitButton.Location = new System.Drawing.Point(14, 259);
             exitButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             exitButton.MinimumSize = new System.Drawing.Size(0, 30);
             exitButton.Name = "exitButton";
@@ -249,7 +250,7 @@
             aboutButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             aboutButton.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
             aboutButton.ForeColor = System.Drawing.Color.FromArgb(225, 225, 225);
-            aboutButton.Location = new System.Drawing.Point(380, 243);
+            aboutButton.Location = new System.Drawing.Point(380, 259);
             aboutButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             aboutButton.MinimumSize = new System.Drawing.Size(0, 30);
             aboutButton.Name = "aboutButton";
@@ -267,7 +268,7 @@
             ue4ssButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             ue4ssButton.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
             ue4ssButton.ForeColor = System.Drawing.Color.FromArgb(225, 225, 225);
-            ue4ssButton.Location = new System.Drawing.Point(244, 243);
+            ue4ssButton.Location = new System.Drawing.Point(244, 259);
             ue4ssButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             ue4ssButton.MinimumSize = new System.Drawing.Size(0, 30);
             ue4ssButton.Name = "ue4ssButton";
@@ -277,12 +278,26 @@
             ue4ssButton.UseVisualStyleBackColor = false;
             ue4ssButton.Click += ue4ssButton_Click;
             // 
+            // cleanLuaBox
+            // 
+            cleanLuaBox.AutoSize = true;
+            cleanLuaBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F);
+            cleanLuaBox.Location = new System.Drawing.Point(178, 227);
+            cleanLuaBox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            cleanLuaBox.Name = "cleanLuaBox";
+            cleanLuaBox.Size = new System.Drawing.Size(240, 19);
+            cleanLuaBox.TabIndex = 16;
+            cleanLuaBox.Text = "Disable Lua clean-up (for mod makers)";
+            cleanLuaBox.UseVisualStyleBackColor = true;
+            cleanLuaBox.CheckedChanged += cleanLuaBox_CheckedChanged;
+            // 
             // SettingsForm
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             BackColor = System.Drawing.Color.FromArgb(40, 42, 45);
-            ClientSize = new System.Drawing.Size(482, 287);
+            ClientSize = new System.Drawing.Size(482, 303);
+            Controls.Add(cleanLuaBox);
             Controls.Add(ue4ssButton);
             Controls.Add(aboutButton);
             Controls.Add(refuseMismatchedConnectionsCheckbox);
@@ -332,5 +347,6 @@
         private System.Windows.Forms.CheckBox refuseMismatchedConnectionsCheckbox;
         private CoolButton aboutButton;
         private CoolButton ue4ssButton;
+        private System.Windows.Forms.CheckBox cleanLuaBox;
     }
 }

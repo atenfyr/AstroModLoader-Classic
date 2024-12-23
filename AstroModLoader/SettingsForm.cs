@@ -49,6 +49,7 @@ namespace AstroModLoader
             }
 
             refuseMismatchedConnectionsCheckbox.Checked = ModHandler.OurIntegrator.RefuseMismatchedConnections;
+            cleanLuaBox.Checked = BaseForm.ModManager.DisableLuaCleanup;
         }
 
         private void UpdateUE4SSButtonText()
@@ -215,6 +216,18 @@ namespace AstroModLoader
 
             AMLPalette.RefreshTheme(formPopup);
             formPopup.ShowDialog(this);
+        }
+
+        private void cleanLuaBox_CheckedChanged(object sender, EventArgs e)
+        {
+            AMLUtils.InvokeUI(() =>
+            {
+                BaseForm.ModManager.DisableLuaCleanup = cleanLuaBox.Checked;
+            });
+            BaseForm.ModManager.SyncDependentConfigToDisk();
+            AMLUtils.InvokeUI(BaseForm.TableManager.Refresh);
+
+            this.UpdateLabels();
         }
     }
 }

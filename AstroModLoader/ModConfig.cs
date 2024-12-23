@@ -22,6 +22,10 @@ namespace AstroModLoader
         [DefaultValue(true)]
         public bool RefuseMismatchedConnections;
 
+        [JsonProperty("disable_lua_cleanup", DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(false)]
+        public bool DisableLuaCleanup;
+
         [JsonProperty("current")]
         public ModProfile ModsOnDisk;
 

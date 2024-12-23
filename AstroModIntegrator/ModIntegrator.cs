@@ -97,7 +97,7 @@ namespace AstroModIntegrator
 
         private Dictionary<string, byte[]> CreatedPakData;
 
-        public void IntegrateMods(string paksPath, string installPath, string outputFolder = null, string mountPoint = null, bool extractLua = false) // @"C:\Users\<CLIENT USERNAME>\AppData\Local\Astro\Saved\Paks", @"C:\Program Files (x86)\Steam\steamapps\common\ASTRONEER\Astro\Content\Paks"
+        public void IntegrateMods(string paksPath, string installPath, string outputFolder = null, string mountPoint = null, bool extractLua = false, bool cleanLua = true) // @"C:\Users\<CLIENT USERNAME>\AppData\Local\Astro\Saved\Paks", @"C:\Program Files (x86)\Steam\steamapps\common\ASTRONEER\Astro\Content\Paks"
         {
             Directory.CreateDirectory(paksPath);
             string[] files = Directory.GetFiles(paksPath, "*_P.pak", SearchOption.TopDirectoryOnly);
@@ -339,11 +339,14 @@ namespace AstroModIntegrator
             if (extractLua)
             {
                 string luaDir = Path.Combine(outputFolder, "Lua");
-                try
+                if (cleanLua)
                 {
-                    Directory.Delete(luaDir, true);
+                    try
+                    {
+                        Directory.Delete(luaDir, true);
+                    }
+                    catch { }
                 }
-                catch { }
 
                 foreach (string file in files)
                 {

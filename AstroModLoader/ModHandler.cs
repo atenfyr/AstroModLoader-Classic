@@ -38,6 +38,7 @@ namespace AstroModLoader
         public Version InstalledAstroBuild = null;
         public volatile bool IsReadOnly = false;
         public volatile bool UE4SSInstalled = false;
+        public bool DisableLuaCleanup = false;
 
         public ModHandler(Form1 baseForm)
         {
@@ -874,6 +875,7 @@ namespace AstroModLoader
                 if (ProfileList == null) ProfileList = new Dictionary<string, ModProfile>();
                 if (!string.IsNullOrEmpty(diskConfig.LaunchCommand)) LaunchCommand = diskConfig.LaunchCommand;
                 OurIntegrator.RefuseMismatchedConnections = diskConfig.RefuseMismatchedConnections;
+                this.DisableLuaCleanup = diskConfig.DisableLuaCleanup;
                 if (includeGamePath)
                 {
                     if (!string.IsNullOrEmpty(diskConfig.GamePath)) GamePath = diskConfig.GamePath;
@@ -954,6 +956,7 @@ namespace AstroModLoader
             var newConfig = new ModConfig();
             newConfig.GamePath = GamePath;
             newConfig.LaunchCommand = LaunchCommand;
+            newConfig.DisableLuaCleanup = DisableLuaCleanup;
             newConfig.RefuseMismatchedConnections = OurIntegrator.RefuseMismatchedConnections;
             newConfig.Profiles = ProfileList;
             newConfig.ModsOnDisk = GenerateProfile();
@@ -994,7 +997,7 @@ namespace AstroModLoader
                 }
 
                 if (TableHandler.ShouldContainOptionalColumn()) OurIntegrator.OptionalModIDs = optionalMods;
-                OurIntegrator.IntegrateMods(InstallPath, Path.Combine(GamePath, "Astro", "Content", "Paks"), null, null, true);
+                OurIntegrator.IntegrateMods(InstallPath, Path.Combine(GamePath, "Astro", "Content", "Paks"), null, null, true, !DisableLuaCleanup);
 
                 sw.Stop();
                 string tm = sw.Elapsed.TotalMilliseconds.ToString("#.##");
