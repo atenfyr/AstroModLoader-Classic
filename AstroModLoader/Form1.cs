@@ -155,31 +155,46 @@ namespace AstroModLoader
                 if (ModManager.IsReadOnly) return;
 
                 if (!updateCellsSemaphore.WaitOne(5000)) return;
-                foreach (DataGridViewRow row in this.dataGridView1.Rows)
-                {
-                    if (row.Tag is Mod taggedMod)
-                    {
-                        if (taggedMod.CannotCurrentlyUpdate) continue;
-                        taggedMod.Enabled = (bool)row.Cells[0].Value;
-                        if (TableHandler.ShouldContainOptionalColumn()) taggedMod.IsOptional = (bool)row.Cells[5].Value;
-                        if (row.Cells[2].Value is string strVal)
-                        {
-                            Version changingVer = null;
-                            if (strVal.Contains("Latest"))
-                            {
-                                taggedMod.ForceLatest = true;
-                                changingVer = taggedMod.AvailableVersions[0];
-                            }
-                            else
-                            {
-                                taggedMod.ForceLatest = false;
-                                changingVer = new Version(strVal);
-                            }
 
-                            SwitchVersionSync(taggedMod, changingVer);
+                List<Mod> mods = new List<Mod>();
+                List<string> strVals = new List<string>();
+                AMLUtils.InvokeUI(() =>
+                {
+                    foreach (DataGridViewRow row in this.dataGridView1.Rows)
+                    {
+                        if (row.Tag is Mod taggedMod)
+                        {
+                            if (taggedMod.CannotCurrentlyUpdate) continue;
+                            taggedMod.Enabled = (bool)row.Cells[0].Value;
+                            if (TableHandler.ShouldContainOptionalColumn()) taggedMod.IsOptional = (bool)row.Cells[5].Value;
+                            mods.Add(taggedMod);
+                            strVals.Add(row.Cells[2].Value as string);
                         }
                     }
+                });
+
+                for (int i = 0; i < mods.Count; i++)
+                {
+                    Mod taggedMod = mods[i];
+                    if (strVals[i] != null)
+                    {
+                        string strVal = strVals[i];
+                        Version changingVer = null;
+                        if (strVal.Contains("Latest"))
+                        {
+                            taggedMod.ForceLatest = true;
+                            changingVer = taggedMod.AvailableVersions[0];
+                        }
+                        else
+                        {
+                            taggedMod.ForceLatest = false;
+                            changingVer = new Version(strVal);
+                        }
+
+                        SwitchVersionSync(taggedMod, changingVer);
+                    }
                 }
+
                 ModManager.FullUpdate();
                 updateCellsSemaphore.Release();
             }).ContinueWith(res =>
@@ -520,9 +535,12 @@ namespace AstroModLoader
             if (e.RowIndex == -1) return;
             if (AMLUtils.IsLinux) return;
 
-            Type t = dataGridView1?.GetType()?.BaseType;
-            FieldInfo viewSetter = t?.GetField("latestEditingControl", BindingFlags.Default | BindingFlags.NonPublic | BindingFlags.Instance);
-            viewSetter?.SetValue(dataGridView1, null);
+            AMLUtils.InvokeUI(() =>
+            {
+                Type t = dataGridView1?.GetType()?.BaseType;
+                FieldInfo viewSetter = t?.GetField("latestEditingControl", BindingFlags.Default | BindingFlags.NonPublic | BindingFlags.Instance);
+                viewSetter?.SetValue(dataGridView1, null);
+            });
         }
 
         private void DataGridView1_DataError(object sender, DataGridViewDataErrorEventArgs anError)
@@ -540,41 +558,47 @@ namespace AstroModLoader
 
         private void DataGridView1_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
         {
-            foreach (DataGridViewColumn column in dataGridView1.Columns)
+            AMLUtils.InvokeUI(() =>
             {
-                column.SortMode = DataGridViewColumnSortMode.NotSortable;
-                column.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-                if (column is DataGridViewCheckBoxColumn)
+                foreach (DataGridViewColumn column in dataGridView1.Columns)
                 {
-                    column.ReadOnly = false;
-                    column.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCellsExceptHeader;
+                    column.SortMode = DataGridViewColumnSortMode.NotSortable;
+                    column.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                    if (column is DataGridViewCheckBoxColumn)
+                    {
+                        column.ReadOnly = false;
+                        column.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCellsExceptHeader;
+                    }
                 }
-            }
 
-            ForceResize();
-            ModManager.RefreshAllPriorites();
+                ForceResize();
+                ModManager.RefreshAllPriorites();
+            });
         }
 
         private void DataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
-            dataGridView1.EndEdit();
-            dataGridView1.CommitEdit(DataGridViewDataErrorContexts.Commit);
+            AMLUtils.InvokeUI(() =>
+            {
+                dataGridView1.EndEdit();
+                dataGridView1.CommitEdit(DataGridViewDataErrorContexts.Commit);
+            });
         }
 
         private Mod previouslySelectedMod;
         private bool canAdjustOrder = true;
         private void DataGridView1_SelectionChanged(object sender, EventArgs e)
         {
-            Mod selectedMod = TableManager.GetCurrentlySelectedMod();
-            if (dataGridView1.SelectedRows.Count == 1 && !ModManager.IsReadOnly)
+            AMLUtils.InvokeUI(() =>
             {
-                DataGridViewRow selectedRow = dataGridView1.SelectedRows[0];
-                int newModIndex = selectedRow.Index;
-
-                // If shift is held, that means we are changing the order
-                if (canAdjustOrder && ModifierKeys == Keys.Shift && selectedMod != null && previouslySelectedMod != null && previouslySelectedMod != selectedMod)
+                Mod selectedMod = TableManager.GetCurrentlySelectedMod();
+                if (dataGridView1.SelectedRows.Count == 1 && !ModManager.IsReadOnly)
                 {
-                    AMLUtils.InvokeUI(() =>
+                    DataGridViewRow selectedRow = dataGridView1.SelectedRows[0];
+                    int newModIndex = selectedRow.Index;
+
+                    // If shift is held, that means we are changing the order
+                    if (canAdjustOrder && ModifierKeys == Keys.Shift && selectedMod != null && previouslySelectedMod != null && previouslySelectedMod != selectedMod)
                     {
                         ModManager.SwapMod(previouslySelectedMod, newModIndex, false);
                         previouslySelectedMod = null;
@@ -589,65 +613,68 @@ namespace AstroModLoader
 
                         foreach (Mod mod in ModManager.Mods) mod.Dirty = true; // Update all the priorities on disk to be safe
                         ModManager.FullUpdate();
-                    });
+                    }
                 }
-            }
 
-            previouslySelectedMod = selectedMod;
+                previouslySelectedMod = selectedMod;
 
-            RefreshModInfoLabel();
+                RefreshModInfoLabel();
+            });
         }
 
         private void dataGridView1_KeyDown(object sender, KeyEventArgs e)
         {
-            Mod selectedMod = TableManager.GetCurrentlySelectedMod();
-
-            switch(e.KeyCode)
+            AMLUtils.InvokeUI(() =>
             {
-                case Keys.Delete:
-                    if (selectedMod != null && !ModManager.IsReadOnly)
-                    {
-                        if (e.Alt)
-                        {
-                            selectedMod.AvailableVersions.Sort();
-                            selectedMod.AvailableVersions.Reverse();
+                Mod selectedMod = TableManager.GetCurrentlySelectedMod();
 
-                            List<Version> badVersions = new List<Version>();
-                            foreach (Version testingVersion in selectedMod.AvailableVersions)
+                switch (e.KeyCode)
+                {
+                    case Keys.Delete:
+                        if (selectedMod != null && !ModManager.IsReadOnly)
+                        {
+                            if (e.Alt)
                             {
-                                if (testingVersion != selectedMod.AvailableVersions[0] && selectedMod.AllModData.ContainsKey(testingVersion)) badVersions.Add(testingVersion);
-                            }
-                            if (badVersions.Count == 0)
-                            {
-                                this.ShowBasicButton("You have no old versions of this mod on disk to clean!", "OK", null, null);
+                                selectedMod.AvailableVersions.Sort();
+                                selectedMod.AvailableVersions.Reverse();
+
+                                List<Version> badVersions = new List<Version>();
+                                foreach (Version testingVersion in selectedMod.AvailableVersions)
+                                {
+                                    if (testingVersion != selectedMod.AvailableVersions[0] && selectedMod.AllModData.ContainsKey(testingVersion)) badVersions.Add(testingVersion);
+                                }
+                                if (badVersions.Count == 0)
+                                {
+                                    this.ShowBasicButton("You have no old versions of this mod on disk to clean!", "OK", null, null);
+                                }
+                                else
+                                {
+                                    int dialogRes = this.ShowBasicButton("Are you sure you want to clean \"" + selectedMod.CurrentModData.Name + "\"?\nThese versions will be deleted from disk: " + string.Join(", ", badVersions.Select(v => v.ToString()).ToArray()), "Yes", "No", null);
+                                    if (dialogRes == 0)
+                                    {
+                                        ModManager.EviscerateMod(selectedMod, badVersions);
+                                        FullRefresh();
+                                        selectedMod.InstalledVersion = selectedMod.AvailableVersions[0];
+                                        this.ShowBasicButton("Successfully cleaned \"" + selectedMod.CurrentModData.Name + "\".", "OK", null, null);
+                                    }
+                                }
                             }
                             else
                             {
-                                int dialogRes = this.ShowBasicButton("Are you sure you want to clean \"" + selectedMod.CurrentModData.Name + "\"?\nThese versions will be deleted from disk: " + string.Join(", ", badVersions.Select(v => v.ToString()).ToArray()), "Yes", "No", null);
+                                int dialogRes = this.ShowBasicButton("Are you sure you want to completely delete \"" + selectedMod.CurrentModData.Name + "\"?", "Yes", "No", null);
                                 if (dialogRes == 0)
                                 {
-                                    ModManager.EviscerateMod(selectedMod, badVersions);
+                                    ModManager.EviscerateMod(selectedMod);
                                     FullRefresh();
-                                    selectedMod.InstalledVersion = selectedMod.AvailableVersions[0];
-                                    this.ShowBasicButton("Successfully cleaned \"" + selectedMod.CurrentModData.Name + "\".", "OK", null, null);
                                 }
                             }
                         }
-                        else
-                        {
-                            int dialogRes = this.ShowBasicButton("Are you sure you want to completely delete \"" + selectedMod.CurrentModData.Name + "\"?", "Yes", "No", null);
-                            if (dialogRes == 0)
-                            {
-                                ModManager.EviscerateMod(selectedMod);
-                                FullRefresh();
-                            }
-                        }
-                    }
-                    break;
-                case Keys.Escape:
-                    dataGridView1.ClearSelection();
-                    break;
-            }
+                        break;
+                    case Keys.Escape:
+                        dataGridView1.ClearSelection();
+                        break;
+                }
+            });
         }
 
         private void RefreshModInfoLabel()
