@@ -861,6 +861,11 @@ namespace AstroModLoader
             switch(cmd)
             {
                 case "InstallThunderstore":
+                    AMLUtils.InvokeUI(() =>
+                    {
+                        this.BringToFront();
+                        this.Activate();
+                    });
                     HandleThunderstoreCommandLineParameters(data);
                     break;
             }
@@ -881,7 +886,7 @@ namespace AstroModLoader
                         BasicButtonPopup basicButtonPrompt = null;
                         AMLUtils.InvokeUI(() =>
                         {
-                            basicButtonPrompt = AMLUtils.GetBasicButton(this, "Downloading " + mod_id + " from Thunderstore...", null, null, null);
+                            basicButtonPrompt = AMLUtils.GetBasicButton(this, "Installing " + mod_id + " from Thunderstore...", null, null, null);
                             basicButtonPrompt.ControlBox = false;
                             basicButtonPrompt.Show();
                         });
@@ -899,22 +904,35 @@ namespace AstroModLoader
                                     wb.Headers[HttpRequestHeader.UserAgent] = AMLUtils.UserAgent;
                                     wb.DownloadFile(new Uri("https://thunderstore.io/package/download/" + installParams.Substring(tstorePrefix.Length)), zipPath);
                                 }
-                                InstallModFromPath(zipPath, out _, out _, out _);
+                                List<Mod> installedMods = InstallModFromPath(zipPath, out _, out _, out _);
+                                foreach (var mod in installedMods)
+                                {
+                                    mod.Enabled = true;
+                                    mod.Dirty = true;
+                                }
+                                ModManager.FullUpdate();
                             }
                             catch
                             {
-                                AMLUtils.InvokeUI(() => this.ShowBasicButton("Failed to install " + mod_id + " from Thunderstore!", "OK", null, null));
+                                AMLUtils.InvokeUI(() =>
+                                {
+                                    basicButtonPrompt.Close();
+                                    this.ShowBasicButton("Failed to install " + mod_id + " from Thunderstore!", "OK", null, null);
+                                });
                                 succeeded = false;
                             }
                         }
                         finally
                         {
                             Directory.Delete(tempDownloadFolder, true);
-                            if (succeeded) AMLUtils.InvokeUI(() =>
+                            if (succeeded)
                             {
-                                basicButtonPrompt.Close();
-                                this.ShowBasicButton("Successfully installed " + mod_id + " from Thunderstore.", "OK", null, null);
-                            });
+                                AMLUtils.InvokeUI(() =>
+                                {
+                                    basicButtonPrompt.Close();
+                                    this.ShowBasicButton("Successfully installed " + mod_id + " from Thunderstore.", "OK", null, null);
+                                });
+                            }
                         }
                     }
                 }
