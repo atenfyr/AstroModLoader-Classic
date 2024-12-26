@@ -29,7 +29,21 @@ namespace AstroModLoader
 
     public class TableHandler
     {
-        private DataGridView GridView;
+        private DataGridView _gv;
+
+        private DataGridView GridView
+        {
+            get
+            {
+                if (AMLUtils.InvokeRequired()) throw new InvalidOperationException("Attempt to get TableHandler.GridView outside of UI thread");
+                return _gv;
+            }
+            set
+            {
+                if (AMLUtils.InvokeRequired()) throw new InvalidOperationException("Attempt to set TableHandler.GridView outside of UI thread");
+                _gv = value;
+            }
+        }
         private ModHandler ModManager;
 
         public TableHandler(DataGridView gridView, ModHandler modManager)

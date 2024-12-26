@@ -18,10 +18,23 @@ namespace AstroModLoader
 {
     public partial class Form1 : Form
     {
+        private CoolDataGridView _dgv1;
+
         public ModHandler ModManager;
         public TableHandler TableManager;
-
-        public CoolDataGridView dataGridView1;
+        public CoolDataGridView dataGridView1
+        {
+            get
+            {
+                if (AMLUtils.InvokeRequired()) throw new InvalidOperationException("Attempt to get Form1.dataGridView1 outside of UI thread");
+                return _dgv1;
+            }
+            set
+            {
+                if (AMLUtils.InvokeRequired()) throw new InvalidOperationException("Attempt to set Form1.dataGridView1 outside of UI thread");
+                _dgv1 = value;
+            }
+        }
         public Panel footerPanel;
 
         public string InformationalVersion;

@@ -293,6 +293,7 @@ namespace AstroModLoader
 
         public static bool InvokeRequired()
         {
+            if (internalForm == null) return false;
             return internalForm.InvokeRequired;
         }
 
