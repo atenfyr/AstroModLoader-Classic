@@ -94,8 +94,20 @@ namespace AstroModLoader
 
         public Mod GetCurrentlySelectedMod()
         {
-            if (GridView == null || GridView.SelectedRows == null || GridView.SelectedRows.Count == 0 || GridView.SelectedRows[0].Index < 0 || GridView.SelectedRows[0].Index >= ModManager.Mods.Count) return null;
-            return ModManager.Mods[GridView.SelectedRows[0].Index];
+            int idx = -1;
+            AMLUtils.InvokeUI(() =>
+            {
+                if (GridView == null || GridView.SelectedRows == null || GridView.SelectedRows.Count == 0 || GridView.SelectedRows[0].Index < 0 || GridView.SelectedRows[0].Index >= ModManager.Mods.Count)
+                {
+                    idx = -1;
+                }
+                else
+                {
+                    idx = GridView.SelectedRows[0].Index;
+                }
+            });
+            if (idx < 0) return null;
+            return ModManager.Mods[idx];
         }
 
         public void Refresh()

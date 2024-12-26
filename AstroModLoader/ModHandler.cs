@@ -975,7 +975,7 @@ namespace AstroModLoader
 
         public static ModIntegrator OurIntegrator;
         private volatile bool currentlyIntegrating = false;
-        public void IntegrateMods()
+        public void IntegrateMods(bool hasLooped = false)
         {
             if (IsReadOnly || GamePath == null || InstallPath == null || currentlyIntegrating) return;
 
@@ -1009,10 +1009,18 @@ namespace AstroModLoader
             }
             catch
             {
-                AMLUtils.InvokeUI(() =>
+                if (hasLooped)
                 {
-                    if (BaseForm.integratingLabel != null) BaseForm.integratingLabel.Text = "Failed to integrate!";
-                });
+                    AMLUtils.InvokeUI(() =>
+                    {
+                        if (BaseForm.integratingLabel != null) BaseForm.integratingLabel.Text = "Failed to integrate!";
+                    });
+                }
+                else
+                {
+                    currentlyIntegrating = false;
+                    IntegrateMods(true);
+                }
             }
             finally
             {

@@ -232,43 +232,53 @@ namespace AstroModLoader
 
         public void AdjustModInfoText(string txt, string linkText = "")
         {
-            if (txt == "")
+            AMLUtils.InvokeUI(() =>
             {
-                AdjustModInfoText("Drop a .pak or .zip file onto this window to install a mod.\n\nOnce you're ready to use your enabled mods, press the \"Play\" button below to apply your mods and start playing.");
-                return;
-            }
+                if (txt == "")
+                {
+                    AdjustModInfoText("Drop a .pak or .zip file onto this window to install a mod.\n\nOnce you're ready to use your enabled mods, press the \"Play\" button below to apply your mods and start playing.");
+                    return;
+                }
 
-            string newTextFull = txt + linkText;
-            var newLinkArea = new LinkArea(txt.Length, linkText.Length);
-            if (this.modInfo.Text == newTextFull && this.modInfo.LinkArea.Start == newLinkArea.Start && this.modInfo.LinkArea.Length == newLinkArea.Length) return; // Partial fix for winforms rendering issue
+                string newTextFull = txt + linkText;
+                var newLinkArea = new LinkArea(txt.Length, linkText.Length);
+                if (this.modInfo.Text == newTextFull && this.modInfo.LinkArea.Start == newLinkArea.Start && this.modInfo.LinkArea.Length == newLinkArea.Length) return; // Partial fix for winforms rendering issue
 
-            this.modInfo.Text = newTextFull;
-            this.modInfo.LinkArea = newLinkArea;
+                this.modInfo.Text = newTextFull;
+                this.modInfo.LinkArea = newLinkArea;
+            });
         }
 
         public void UpdateVersionLabel()
         {
-            if (ModManager == null) return;
-            headerLabel.Text = "Mods (" + (ModManager.InstalledAstroBuild?.ToString() ?? "Unknown") + (ModManager.MismatchedSteamworksDLL ? " Pirated?" : "") + "):";
-            headerLabel.ForeColor = ModManager.MismatchedSteamworksDLL ? AMLPalette.WarningColor : AMLPalette.ForeColor;
+            AMLUtils.InvokeUI(() =>
+            {
+                if (ModManager == null) return;
+                headerLabel.Text = "Mods (" + (ModManager.InstalledAstroBuild?.ToString() ?? "Unknown") + (ModManager.MismatchedSteamworksDLL ? " Pirated?" : "") + "):";
+                headerLabel.ForeColor = ModManager.MismatchedSteamworksDLL ? AMLPalette.WarningColor : AMLPalette.ForeColor;
+            });
         }
 
         public void SwitchPlatform(PlatformType newPlatform)
         {
-            if (!ModManager.ValidPlatformTypesToPaths.ContainsKey(newPlatform)) return;
-            ModManager.GamePath = null;
-            ModManager.Platform = newPlatform;
-            ModManager.DeterminePaths();
-            ModManager.GamePath = ModManager.ValidPlatformTypesToPaths[newPlatform];
-            ModManager.VerifyGamePath();
-            ModManager.ApplyGamePathDerivatives();
-            ModManager.VerifyIntegrity();
-            ModManager.SyncIndependentConfigToDisk();
-            ModManager.SyncModsFromDisk();
-            ModManager.SyncDependentConfigFromDisk(false);
-            ModManager.SyncDependentConfigToDisk();
-            FullRefresh();
-            UpdateVersionLabel();
+            AMLUtils.InvokeUI(() =>
+            {
+                if (!ModManager.ValidPlatformTypesToPaths.ContainsKey(newPlatform)) return;
+                ModManager.GamePath = null;
+                ModManager.Platform = newPlatform;
+                ModManager.DeterminePaths();
+                ModManager.GamePath = ModManager.ValidPlatformTypesToPaths[newPlatform];
+                ModManager.VerifyGamePath();
+                ModManager.ApplyGamePathDerivatives();
+                ModManager.VerifyIntegrity();
+                ModManager.SyncIndependentConfigToDisk();
+                ModManager.SyncModsFromDisk();
+                ModManager.SyncDependentConfigFromDisk(false);
+                ModManager.SyncDependentConfigToDisk();
+
+                FullRefresh();
+                UpdateVersionLabel();
+            });
         }
 
         private void Form1_DragEnter(object sender, DragEventArgs e)
@@ -532,11 +542,11 @@ namespace AstroModLoader
 
         private void DataGridView1_CellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.RowIndex == -1) return;
-            if (AMLUtils.IsLinux) return;
-
             AMLUtils.InvokeUI(() =>
             {
+                if (e.RowIndex == -1) return;
+                if (AMLUtils.IsLinux) return;
+
                 Type t = dataGridView1?.GetType()?.BaseType;
                 FieldInfo viewSetter = t?.GetField("latestEditingControl", BindingFlags.Default | BindingFlags.NonPublic | BindingFlags.Instance);
                 viewSetter?.SetValue(dataGridView1, null);
@@ -545,7 +555,7 @@ namespace AstroModLoader
 
         private void DataGridView1_DataError(object sender, DataGridViewDataErrorEventArgs anError)
         {
-            MessageBox.Show("DataError happened! Please report this! " + anError.Context.ToString());
+            AMLUtils.InvokeUI(() => MessageBox.Show("DataError happened! Please report this! " + anError.Context.ToString()));
         }
 
         private void Footer_Paint(object sender, PaintEventArgs e)
@@ -774,20 +784,20 @@ namespace AstroModLoader
 
         public void FullRefresh()
         {
-            if (ModManager != null)
-            {
-                Directory.CreateDirectory(ModManager.DownloadPath);
-                Directory.CreateDirectory(ModManager.InstallPath);
-
-                ModManager.SyncModsFromDisk();
-                ModManager.SyncConfigFromDisk();
-                ModManager.UpdateReadOnlyStatus();
-                ModManager.SortMods();
-                if (!autoUpdater.IsBusy) autoUpdater.RunWorkerAsync();
-            }
-
             AMLUtils.InvokeUI(() =>
             {
+                if (ModManager != null)
+                {
+                    Directory.CreateDirectory(ModManager.DownloadPath);
+                    Directory.CreateDirectory(ModManager.InstallPath);
+
+                    ModManager.SyncModsFromDisk();
+                    ModManager.SyncConfigFromDisk();
+                    ModManager.UpdateReadOnlyStatus();
+                    ModManager.SortMods();
+                    if (!autoUpdater.IsBusy) autoUpdater.RunWorkerAsync();
+                }
+
                 if (TableManager != null) TableManager.Refresh();
                 AMLPalette.RefreshTheme(this);
                 RefreshModInfoLabel();
@@ -796,7 +806,7 @@ namespace AstroModLoader
 
         private void Form1_SizeChanged(object sender, EventArgs e)
         {
-            ForceResize();
+            AMLUtils.InvokeUI(ForceResize);
         }
 
         private void refresh_Click(object sender, EventArgs e)
@@ -808,7 +818,7 @@ namespace AstroModLoader
         private Version latestOnlineVersion = null;
         private void Form1_Load(object sender, EventArgs e)
         {
-            dataGridView1.ClearSelection();
+            AMLUtils.InvokeUI(dataGridView1.ClearSelection);
 
             if (!string.IsNullOrEmpty(Program.CommandLineOptions.NextLaunchPath))
             {
@@ -845,7 +855,7 @@ namespace AstroModLoader
                 if (!string.IsNullOrEmpty(Program.CommandLineOptions.InstallMod))
                 {
                     InstallModFromPath(Program.CommandLineOptions.InstallMod, out _, out _, out _);
-                    AMLUtils.InvokeUI(FullRefresh);
+                    FullRefresh();
                 }
             });
 
@@ -938,7 +948,7 @@ namespace AstroModLoader
                 }
             }).ContinueWith(res =>
             {
-                AMLUtils.InvokeUI(FullRefresh);
+                FullRefresh();
             });
         }
 
@@ -958,7 +968,8 @@ namespace AstroModLoader
 
             if (!ModManager.UE4SSInstalled && needUE4SS)
             {
-                int dialogRes = this.ShowBasicButton("The following mods use UE4SS:\n\n" + string.Join(", ", modsNeedUE4SS) + "\n\nYou do not currently have UE4SS installed.\nThese mods may not operate as expected.\n\nWould you like to install UE4SS now?", "Install", "Play anyways", "Cancel");
+                int dialogRes = -1;
+                AMLUtils.InvokeUI(() => dialogRes = this.ShowBasicButton("The following mods use UE4SS:\n\n" + string.Join(", ", modsNeedUE4SS) + "\n\nYou do not currently have UE4SS installed.\nThese mods may not operate as expected.\n\nWould you like to automatically install UE4SS now?", "Install", "Play anyways", "Cancel"));
                 switch(dialogRes)
                 {
                     case 0:
@@ -995,15 +1006,19 @@ namespace AstroModLoader
 
             if ((Program.CommandLineOptions.ServerMode || AMLUtils.IsLinux || string.IsNullOrEmpty(ModManager.BinaryFilePath)) && string.IsNullOrEmpty(ModManager.LaunchCommand))
             {
-                TextPrompt initialPathPrompt = new TextPrompt
+                TextPrompt initialPathPrompt = null;
+                AMLUtils.InvokeUI(() =>
                 {
-                    StartPosition = FormStartPosition.CenterScreen,
-                    DisplayText = "Select a file to run:",
-                    AllowBrowse = true,
-                    BrowseMode = BrowseMode.File
-                };
+                    initialPathPrompt = new TextPrompt
+                    {
+                        StartPosition = FormStartPosition.CenterScreen,
+                        DisplayText = "Select a file to run:",
+                        AllowBrowse = true,
+                        BrowseMode = BrowseMode.File
+                    };
+                });
 
-                if (initialPathPrompt.ShowDialog(this) == DialogResult.OK)
+                if (initialPathPrompt?.ShowDialog(this) == DialogResult.OK)
                 {
                     ModManager.LaunchCommand = initialPathPrompt.OutputText;
                     ModManager.SyncConfigToDisk();
@@ -1028,7 +1043,7 @@ namespace AstroModLoader
                 }
                 catch
                 {
-                    this.ShowBasicButton("Invalid path to file: \"" + ModManager.LaunchCommand + "\"", "OK", null, null);
+                    AMLUtils.InvokeUI(() => this.ShowBasicButton("Invalid path to file: \"" + ModManager.LaunchCommand + "\"", "OK", null, null));
                     ModManager.LaunchCommand = null;
                     ModManager.SyncConfigToDisk();
                 }
