@@ -84,7 +84,7 @@ namespace AstroModLoader
 
         private void Simple_Refresh_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            if (System.Threading.SynchronizationContext.Current != null)
+            if (!AMLUtils.InvokeRequired())
             {
                 TableManager.Refresh();
                 ModManager.FullUpdate();

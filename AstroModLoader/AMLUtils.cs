@@ -291,6 +291,11 @@ namespace AstroModLoader
             internalForm = control;
         }
 
+        public static bool InvokeRequired()
+        {
+            return internalForm.InvokeRequired;
+        }
+
         public static void InvokeUI(Action act)
         {
             if (internalForm.InvokeRequired)

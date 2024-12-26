@@ -438,30 +438,35 @@ namespace AstroModLoader
                     else
                     {
                         // If the regular Steam or Microsoft Store base paths do exist, they're probably what the user actually wants, but we still want to give them the option to change it here so we just put it in as prefilled text
+                        AMLUtils.InvokeUI(() =>
+                        {
+                            TextPrompt initialPathPrompt = new TextPrompt
+                            {
+                                StartPosition = FormStartPosition.CenterScreen,
+                                DisplayText = "Select your local application data directory",
+                                PrefilledText = Directory.Exists(normalSteamBasePath) ? normalSteamBasePath : (Directory.Exists(normalMicrosoftStoreBasePath) ? normalMicrosoftStoreBasePath : null),
+                                VerifyMode = VerifyPathMode.Base
+                            };
 
-                        TextPrompt initialPathPrompt = new TextPrompt
-                        {
-                            StartPosition = FormStartPosition.CenterScreen,
-                            DisplayText = "Select your local application data directory",
-                            PrefilledText = Directory.Exists(normalSteamBasePath) ? normalSteamBasePath : (Directory.Exists(normalMicrosoftStoreBasePath) ? normalMicrosoftStoreBasePath : null),
-                            VerifyMode = VerifyPathMode.Base
-                        };
-
-                        if (initialPathPrompt.ShowDialog(BaseForm) == DialogResult.OK)
-                        {
-                            CustomBasePath = initialPathPrompt.OutputText;
-                            BasePath = CustomBasePath;
-                        }
-                        else
-                        {
-                            Environment.Exit(0);
-                        }
+                            if (initialPathPrompt.ShowDialog(BaseForm) == DialogResult.OK)
+                            {
+                                CustomBasePath = initialPathPrompt.OutputText;
+                                BasePath = CustomBasePath;
+                            }
+                            else
+                            {
+                                Environment.Exit(0);
+                            }
+                        });
                     }
                 }
                 else
                 {
-                    MessageBox.Show("Unable to find the local application data directory. If you have never created an Astroneer save file within the game on this computer before, please do so and then re-open AstroModLoader. Otherwise, please specify a local application data directory with the --data parameter.", "Uh oh!");
-                    Environment.Exit(0);
+                    AMLUtils.InvokeUI(() =>
+                    {
+                        MessageBox.Show("Unable to find the local application data directory. If you have never created an Astroneer save file within the game on this computer before, please do so and then re-open AstroModLoader. Otherwise, please specify a local application data directory with the --data parameter.", "Uh oh!");
+                        Environment.Exit(0);
+                    });
                 }
             }
 
