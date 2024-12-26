@@ -3,15 +3,13 @@ using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
 using System.Runtime.Serialization;
 
 namespace AstroModIntegrator
 {
+    // modified so that no error is thrown on failure
     // adapted from Json.NET: https://github.com/JamesNK/Newtonsoft.Json/blob/master/Src/Newtonsoft.Json/Converters/VersionConverter.cs
     // see NOTICE.md
-
-    // modified so that no error is thrown on failure
     public class VersionConverter2 : JsonConverter
     {
         public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
@@ -65,18 +63,39 @@ namespace AstroModIntegrator
         }
     }
 
+    // modified to allow unknown enum values
+    public class StringEnumConverter2 : StringEnumConverter
+    {
+        public static readonly List<string> ValidDownloadModes = new List<string>() { "index_file", "thunderstore" };
+
+        public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
+        {
+            if (reader.TokenType == JsonToken.String)
+            {
+                string enumText = reader.Value.ToString();
+                if (string.IsNullOrEmpty(enumText) || !ValidDownloadModes.Contains(enumText))
+                {
+                    return Enum.Parse(objectType, "Unknown");
+                }
+            }
+            return base.ReadJson(reader, objectType, existingValue, serializer);
+        }
+    }
+
     public enum DownloadMode
     {
         [EnumMember(Value = "index_file")]
         IndexFile,
         [EnumMember(Value = "thunderstore")]
-        Thunderstore
+        Thunderstore,
+        [EnumMember(Value = "unknown")]
+        Unknown
     }
 
     public class DownloadInfo
     {
         [JsonProperty("type")]
-        [JsonConverter(typeof(StringEnumConverter))]
+        [JsonConverter(typeof(StringEnumConverter2))]
         public DownloadMode Type;
 
         [JsonProperty("url")]
