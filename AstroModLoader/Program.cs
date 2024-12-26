@@ -102,12 +102,29 @@ namespace AstroModLoader
                             {
                                 using (var client = new NamedPipeClientStream(".", uniq_id, PipeDirection.Out))
                                 {
-                                    client.Connect(10);
+                                    client.Connect(5);
 
                                     using (var writer = new StreamWriter(client))
                                     {
                                         writer.AutoFlush = true;
                                         writer.WriteLine("InstallThunderstore:" + Program.CommandLineOptions.InstallThunderstore);
+                                    }
+                                }
+                            }
+                            catch { } // if failed to connect, that's OK, but we need to make sure the process ends
+                        }
+                        else
+                        {
+                            try
+                            {
+                                using (var client = new NamedPipeClientStream(".", uniq_id, PipeDirection.Out))
+                                {
+                                    client.Connect(5);
+
+                                    using (var writer = new StreamWriter(client))
+                                    {
+                                        writer.AutoFlush = true;
+                                        writer.WriteLine("Focus");
                                     }
                                 }
                             }

@@ -886,10 +886,17 @@ namespace AstroModLoader
                 case "InstallThunderstore":
                     AMLUtils.InvokeUI(() =>
                     {
-                        this.BringToFront();
                         this.Activate();
+                        this.WindowState = FormWindowState.Normal;
                     });
                     HandleThunderstoreCommandLineParameters(data);
+                    break;
+                case "Focus":
+                    AMLUtils.InvokeUI(() =>
+                    {
+                        this.Activate();
+                        this.WindowState = FormWindowState.Normal;
+                    });
                     break;
             }
         }

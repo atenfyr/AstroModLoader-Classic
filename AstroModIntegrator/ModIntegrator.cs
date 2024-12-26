@@ -187,8 +187,7 @@ namespace AstroModIntegrator
                     List<string> thesePersistentActors = us.IntegratorEntries.PersistentActors;
                     if (thesePersistentActors != null)
                     {
-                        List<string> mapPaths = us.IntegratorEntries.PersistentActorMaps ?? DefaultMapPaths.ToList();
-                        foreach (string mapPath in mapPaths)
+                        foreach (string mapPath in DefaultMapPaths)
                         {
                             if (!newPersistentActors.ContainsKey(mapPath)) newPersistentActors[mapPath] = new List<string>();
                             newPersistentActors[mapPath].AddRange(thesePersistentActors);
