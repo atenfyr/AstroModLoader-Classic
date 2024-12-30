@@ -119,7 +119,7 @@ namespace AstroModIntegrator
                     for (int i = 0; i < foundDataReader.Exports.Count; i++)
                     {
                         Export foundCategory = foundDataReader.Exports[i];
-                        string nm = foundCategory.ClassIndex.IsImport() ? foundCategory.ClassIndex.ToImport(y).ObjectName.Value.Value : string.Empty;
+                        string nm = foundCategory.ClassIndex.IsImport() ? foundCategory.ClassIndex.ToImport(y)?.ObjectName?.Value?.Value : string.Empty;
                         switch (nm)
                         {
                             case "SimpleConstructionScript":

@@ -216,6 +216,9 @@ namespace AstroModIntegrator
         [JsonProperty("persistent_actors")]
         public List<string> PersistentActors;
 
+        [JsonProperty("persistent_actor_maps")]
+        public List<string> PersistentActorMaps;
+
         [JsonProperty("mission_trailheads")]
         public List<string> MissionTrailheads;
 

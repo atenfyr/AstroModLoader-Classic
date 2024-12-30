@@ -155,13 +155,13 @@ namespace AstroModIntegrator
         }
 
         public static readonly Regex GameRegex = new Regex(@"^\/Game\/", RegexOptions.Compiled);
-        public static string ConvertGamePathToAbsolutePath(this string gamePath)
+        public static string ConvertGamePathToAbsolutePath(this string gamePath, string targetExtension = ".uasset")
         {
             if (!GameRegex.IsMatch(gamePath)) return string.Empty;
             string newPath = GameRegex.Replace(gamePath, "Astro/Content/", 1);
 
             if (Path.HasExtension(newPath)) return newPath;
-            return Path.ChangeExtension(newPath, ".uasset");
+            return Path.ChangeExtension(newPath, targetExtension);
         }
 
         public static string GetEnumMemberAttrValue(this object enumVal)

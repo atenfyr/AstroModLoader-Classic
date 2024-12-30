@@ -111,10 +111,11 @@ namespace AstroModIntegrator
             int modCount = 0;
             Dictionary<string, List<string>> newComponents = new Dictionary<string, List<string>>();
             Dictionary<string, Dictionary<string, List<string>>> newItems = new Dictionary<string, Dictionary<string, List<string>>>();
-            Dictionary<string, List<string>> newPersistentActors = new Dictionary<string, List<string>>();
+            List<string> newPersistentActors = new List<string>();
             List<string> newTrailheads = new List<string>();
             List<PlacementModifier> biomePlacementModifiers = new List<PlacementModifier>();
             List<Metadata> allMods = new List<Metadata>();
+            List<string> allPersistentActorMaps = DefaultMapPaths.ToList();
             foreach (string file in files)
             {
                 using (FileStream f = new FileStream(file, FileMode.Open, FileAccess.Read))
@@ -187,11 +188,13 @@ namespace AstroModIntegrator
                     List<string> thesePersistentActors = us.IntegratorEntries.PersistentActors;
                     if (thesePersistentActors != null)
                     {
-                        foreach (string mapPath in DefaultMapPaths)
-                        {
-                            if (!newPersistentActors.ContainsKey(mapPath)) newPersistentActors[mapPath] = new List<string>();
-                            newPersistentActors[mapPath].AddRange(thesePersistentActors);
-                        }
+                        newPersistentActors.AddRange(thesePersistentActors);
+                    }
+
+                    List<string> thesePersistentActorMaps = us.IntegratorEntries.PersistentActorMaps;
+                    if (thesePersistentActorMaps != null)
+                    {
+                        allPersistentActorMaps.AddRange(thesePersistentActorMaps);
                     }
 
                     List<string> theseTrailheads = us.IntegratorEntries.MissionTrailheads;
@@ -207,6 +210,15 @@ namespace AstroModIntegrator
                     }
                 }
             }
+
+            // correct any package names in allPersistentActorsMap
+            for (int i = 0; i < allPersistentActorMaps.Count; i++)
+            {
+                string corrected = IntegratorUtils.ConvertGamePathToAbsolutePath(allPersistentActorMaps[i], ".umap");
+                if (!string.IsNullOrEmpty(corrected)) allPersistentActorMaps[i] = corrected;
+            }
+            // remove duplicates
+            allPersistentActorMaps = allPersistentActorMaps.Distinct().ToList();
 
             CreatedPakData = new Dictionary<string, byte[]>
             {
@@ -268,10 +280,10 @@ namespace AstroModIntegrator
                             byte[] mapPathData1 = FindFile(path, ourExtractor);
                             byte[] mapPathData2 = FindFile(Path.ChangeExtension(path, ".uexp"), ourExtractor) ?? Array.Empty<byte>();
                             UAsset baked = bpmBaker.Bake(biomePlacementModifiers, newTrailheads.ToArray(), IntegratorUtils.Concatenate(mapPathData1, mapPathData2), out AssetBinaryReader mapReader);
-                            if (newPersistentActors.ContainsKey(path))
+                            if (allPersistentActorMaps.Contains(path))
                             {
-                                baked = levelBaker.Bake(newPersistentActors[path].ToArray(), baked, mapReader);
-                                newPersistentActors.Remove(path); // avoid re-visiting this map again later
+                                baked = levelBaker.Bake(newPersistentActors.ToArray(), baked, mapReader);
+                                allPersistentActorMaps.Remove(path); // avoid re-visiting this map again later
                                 mapReader.Dispose();
                             }
                             if (mapPathData1 != null) IntegratorUtils.SplitExportFiles(baked, path, CreatedPakData);
@@ -279,13 +291,13 @@ namespace AstroModIntegrator
                     }
 
                     // Patch levels for remaining persistent actors
-                    if (newPersistentActors.Count > 0)
+                    if (allPersistentActorMaps.Count > 0)
                     {
-                        foreach (KeyValuePair<string, List<string>> entry in newPersistentActors)
+                        foreach (string mapPath in allPersistentActorMaps)
                         {
-                            byte[] mapPathData1 = FindFile(entry.Key, ourExtractor);
-                            byte[] mapPathData2 = FindFile(Path.ChangeExtension(entry.Key, ".uexp"), ourExtractor) ?? Array.Empty<byte>();
-                            if (mapPathData1 != null) IntegratorUtils.SplitExportFiles(levelBaker.Bake(entry.Value.ToArray(), IntegratorUtils.Concatenate(mapPathData1, mapPathData2)), entry.Key, CreatedPakData);
+                            byte[] mapPathData1 = FindFile(mapPath, ourExtractor);
+                            byte[] mapPathData2 = FindFile(Path.ChangeExtension(mapPath, ".uexp"), ourExtractor) ?? Array.Empty<byte>();
+                            if (mapPathData1 != null) IntegratorUtils.SplitExportFiles(levelBaker.Bake(newPersistentActors.ToArray(), IntegratorUtils.Concatenate(mapPathData1, mapPathData2)), mapPath, CreatedPakData);
                         }
                     }
 
