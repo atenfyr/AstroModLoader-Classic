@@ -349,7 +349,7 @@ namespace AstroModIntegrator
 
             if (extractLua)
             {
-                string luaDir = Path.Combine(outputFolder, "Lua");
+                string luaDir = Path.Combine(outputFolder, "UE4SS");
                 if (cleanLua)
                 {
                     try
@@ -381,7 +381,7 @@ namespace AstroModIntegrator
                         {
                             if (subPath.StartsWith("UE4SS/"))
                             {
-                                string newPath = Path.Combine(outputFolder, "Lua", mtd.ModID, subPath.Substring(6));
+                                string newPath = Path.Combine(outputFolder, "UE4SS", mtd.ModID, subPath.Substring(6));
                                 Directory.CreateDirectory(Path.GetDirectoryName(newPath));
                                 File.WriteAllBytes(newPath, us.ReadRaw(subPath));
                             }

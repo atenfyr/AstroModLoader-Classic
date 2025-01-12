@@ -481,7 +481,7 @@ namespace AstroModLoader
                 Directory.CreateDirectory(DownloadPath);
                 InstallPath = Path.Combine(BasePath, "Saved", "Paks");
                 Directory.CreateDirectory(InstallPath);
-                InstallPathLua = Path.Combine(InstallPath, "Lua"); // may not exist
+                InstallPathLua = Path.Combine(InstallPath, "UE4SS"); // may not exist
                 //Directory.CreateDirectory(InstallPathLua);
             }
             catch (UnauthorizedAccessException)
