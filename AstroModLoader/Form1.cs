@@ -354,6 +354,12 @@ namespace AstroModLoader
             return null;
         }
 
+        private bool PullDependency(string modID, Dependency dependency)
+        {
+            // TODO
+            return false;
+        }
+
         private List<Mod> InstallModFromPath(string newInstallingMod, out int numClientOnly, out int numMalformatted, out int numNewProfiles)
         {
             numClientOnly = 0;
@@ -446,7 +452,16 @@ namespace AstroModLoader
                     if (!string.IsNullOrEmpty(newPath))
                     {
                         Mod nextMod = ModManager.SyncSingleModFromDisk(newPath, out bool wasClientOnly, false);
-                        if (nextMod != null) outputs.Add(nextMod);
+                        if (nextMod != null)
+                        {
+                            outputs.Add(nextMod);
+                            // check for dependencies
+                            if (nextMod.CurrentModData.Dependencies != null && nextMod.CurrentModData.Dependencies.Count > 0)
+                            {
+                                var parsedDeps = nextMod.CurrentModData.ParseDependencies();
+                                foreach (KeyValuePair<string, Dependency> entry in parsedDeps) PullDependency(entry.Key, entry.Value);
+                            }
+                        }
                         if (wasClientOnly)
                         {
                             numClientOnly++;

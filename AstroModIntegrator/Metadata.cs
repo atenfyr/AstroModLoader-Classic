@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -79,6 +80,20 @@ namespace AstroModIntegrator
                 }
             }
             return base.ReadJson(reader, objectType, existingValue, serializer);
+        }
+    }
+
+    public class Dependency
+    {
+        [JsonProperty("version")]
+        public string Version;
+        [JsonProperty("download")]
+        public DownloadInfo Download;
+
+        public Dependency(string version, DownloadInfo download)
+        {
+            this.Version = version;
+            this.Download = download;
         }
     }
 
@@ -278,10 +293,28 @@ namespace AstroModIntegrator
         [JsonProperty("integrator")]
         public IntegratorEntries IntegratorEntries;
 
-        // for now, unimplemented
         // standard is ambiguous as to whether or not this field is optional, but it is de facto
         [JsonProperty("dependencies")]
         public Dictionary<string, object> Dependencies;
+
+        public Dictionary<string, Dependency> ParseDependencies()
+        {
+            if (Dependencies == null) return null;
+
+            Dictionary<string, Dependency> res = new Dictionary<string, Dependency>();
+            foreach (KeyValuePair<string, object> dependency in Dependencies)
+            {
+                if (dependency.Value is JObject obj)
+                {
+                    res[dependency.Key] = obj.ToObject<Dependency>();
+                }
+                else if (dependency.Value is string str)
+                {
+                    res[dependency.Key] = new Dependency(str, null);
+                }
+            }
+            return res;
+        }
 
         public object Clone()
         {
