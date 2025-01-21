@@ -178,9 +178,25 @@ namespace AstroModLoader
         }
 
         public static volatile string ThunderstoreFetched = null;
+        private static string InitThunderstoreFetched()
+        {
+            string origUrl = "https://thunderstore.io/c/astroneer/api/v1/package/";
+            if (ThunderstoreFetched == null)
+            {
+                using (var wb = new WebClient())
+                {
+                    wb.Headers[HttpRequestHeader.UserAgent] = AMLUtils.UserAgent;
+                    ThunderstoreFetched = wb.DownloadString(origUrl);
+                }
+            }
+            return origUrl;
+        }
+
 
         public static IndexFile GetIndexFileFromDownloadInfo(DownloadInfo di, string modId, Dictionary<string, string> cachedUrls)
         {
+            if (di == null) return null;
+
             try
             {
                 if (di.Type == DownloadMode.IndexFile && !string.IsNullOrEmpty(di.URL))
@@ -233,16 +249,7 @@ namespace AstroModLoader
                 }
                 else if (di.Type == DownloadMode.Thunderstore && !string.IsNullOrEmpty(di.ThunderstoreNamespace) && !string.IsNullOrEmpty(di.ThunderstoreName))
                 {
-                    string origUrl = "https://thunderstore.io/c/astroneer/api/v1/package/";
-                    if (ThunderstoreFetched == null)
-                    {
-                        using (var wb = new WebClient())
-                        {
-                            wb.Headers[HttpRequestHeader.UserAgent] = AMLUtils.UserAgent;
-                            ThunderstoreFetched = wb.DownloadString(origUrl);
-                        }
-                    }
-
+                    string origUrl = InitThunderstoreFetched();
                     if (string.IsNullOrEmpty(ThunderstoreFetched)) return null;
 
                     IndexFile indexFile = new IndexFile();

@@ -371,7 +371,6 @@ namespace AstroModLoader
 
         private bool PullDependency(string modID, Dependency dependency)
         {
-            if (dependency.Download == null) return false;
             IndexFile idxFile = Mod.GetIndexFileFromDownloadInfo(dependency.Download, modID, null);
             if (idxFile == null) return false;
             if (!idxFile.Mods.ContainsKey(modID)) return false;
