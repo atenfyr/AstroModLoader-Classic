@@ -1,5 +1,6 @@
 ﻿using AstroModIntegrator;
 using Newtonsoft.Json;
+using Semver;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -104,25 +105,39 @@ namespace AstroModLoader
             }
         }
 
-        public bool DownloadVersionSync(Mod thisMod, Version newVersion)
+        public bool DownloadVersionSync(Mod thisMod, Version newVersion, IndexVersionData desiredVersionData = null, bool enableByDefault = false)
         {
             try
             {
-                if (!ModManager.GlobalIndexFile.ContainsKey(thisMod.CurrentModData.ModID)) throw new IndexFileException("Can't find index file entry for mod: " + thisMod.CurrentModData.ModID);
-                Dictionary<Version, IndexVersionData> allVerData = ModManager.GlobalIndexFile[thisMod.CurrentModData.ModID].AllVersions;
-                if (!allVerData.ContainsKey(newVersion)) throw new IndexFileException("Failed to find the requested version in the mod's index file: " + thisMod.CurrentModData.ModID + " v" + newVersion);
+                if (desiredVersionData == null)
+                {
+                    if (!ModManager.GlobalIndexFile.ContainsKey(thisMod.CurrentModData.ModID)) throw new IndexFileException("Can't find index file entry for mod: " + thisMod.CurrentModData.ModID);
+                    Dictionary<Version, IndexVersionData> allVerData = ModManager.GlobalIndexFile[thisMod.CurrentModData.ModID].AllVersions;
+                    if (!allVerData.ContainsKey(newVersion)) throw new IndexFileException("Failed to find the requested version in the mod's index file: " + thisMod.CurrentModData.ModID + " v" + newVersion);
+                    desiredVersionData = allVerData[newVersion];
+                }
 
                 using (var wb = new WebClient())
                 {
                     wb.Headers[HttpRequestHeader.UserAgent] = AMLUtils.UserAgent;
 
-                    string kosherFileName = AMLUtils.SanitizeFilename(allVerData[newVersion].Filename);
+                    string kosherFileName = AMLUtils.SanitizeFilename(desiredVersionData.Filename);
 
                     string tempDownloadFolder = Path.Combine(Path.GetTempPath(), "AstroModLoader", "Downloads");
                     Directory.CreateDirectory(tempDownloadFolder);
-                    wb.DownloadFile(allVerData[newVersion].URL, Path.Combine(tempDownloadFolder, kosherFileName));
-                    InstallModFromPath(Path.Combine(tempDownloadFolder, kosherFileName), out _, out int numMalformatted, out _);
+                    wb.DownloadFile(desiredVersionData.URL, Path.Combine(tempDownloadFolder, kosherFileName));
+
+                    var installedMods = InstallModFromPath(Path.Combine(tempDownloadFolder, kosherFileName), out _, out int numMalformatted, out _, out _);
+                    if (enableByDefault)
+                    {
+                        foreach (var mod in installedMods)
+                        {
+                            mod.Enabled = true;
+                            mod.Dirty = true;
+                        }
+                    }
                     if (numMalformatted > 0) throw new FormatException(numMalformatted + " mods were malformatted");
+
                     ModManager.SortVersions();
                     ModManager.SortMods();
                     Directory.Delete(tempDownloadFolder, true);
@@ -356,15 +371,51 @@ namespace AstroModLoader
 
         private bool PullDependency(string modID, Dependency dependency)
         {
-            // TODO
-            return false;
+            if (dependency.Download == null) return false;
+            IndexFile idxFile = Mod.GetIndexFileFromDownloadInfo(dependency.Download, modID, null);
+            if (idxFile == null) return false;
+            if (!idxFile.Mods.ContainsKey(modID)) return false;
+            IndexMod idxMod = idxFile.Mods[modID];
+
+            // we use NPM syntax altered so that e.g. "1.0.0" = "^1.0.0", hopefully this approximates Cargo semver syntax well enough?
+            string alteredVersion = dependency.Version;
+            if ("0123456789".Contains(alteredVersion[0]))
+            {
+                alteredVersion = "^" + alteredVersion;
+            }
+
+            List<SemVersion> allVersions = idxMod.AllVersions.Keys.Select(e => SemVersion.Parse(e.ToString())).OrderBy(e => e, SemVersion.PrecedenceComparer).Reverse().ToList();
+            var satisfiesRange = SemVersionRange.ParseNpm(alteredVersion);
+
+            SemVersion desiredVersion = null;
+            foreach (SemVersion version in allVersions)
+            {
+                if (satisfiesRange.Contains(version))
+                {
+                    desiredVersion = version;
+                    break;
+                }
+            }
+
+            if (desiredVersion == null) return false;
+
+            // got desired version, now download
+            Version desiredVersionRaw = desiredVersion.ToVersion();
+            if (!idxMod.AllVersions.ContainsKey(desiredVersionRaw)) return false;
+            IndexVersionData desiredVersionData = idxMod.AllVersions[desiredVersionRaw];
+            if (desiredVersionData == null) return false;
+
+            bool success = DownloadVersionSync(null, desiredVersionRaw, desiredVersionData, true);
+            //if (success) ModManager.FullUpdate();
+            return success;
         }
 
-        private List<Mod> InstallModFromPath(string newInstallingMod, out int numClientOnly, out int numMalformatted, out int numNewProfiles)
+        private List<Mod> InstallModFromPath(string newInstallingMod, out int numClientOnly, out int numMalformatted, out int numNewProfiles, out List<string> newDeps)
         {
             numClientOnly = 0;
             numMalformatted = 0;
             numNewProfiles = 0;
+            newDeps = null;
             string ext = Path.GetExtension(newInstallingMod);
             if (!AllowedModExtensions.Contains(ext)) return null;
 
@@ -444,6 +495,7 @@ namespace AstroModLoader
             }
 
             List<Mod> outputs = new List<Mod>();
+            newDeps = new List<string>();
 
             foreach (string newPath in newPaths)
             {
@@ -459,7 +511,14 @@ namespace AstroModLoader
                             if (nextMod.CurrentModData.Dependencies != null && nextMod.CurrentModData.Dependencies.Count > 0)
                             {
                                 var parsedDeps = nextMod.CurrentModData.ParseDependencies();
-                                foreach (KeyValuePair<string, Dependency> entry in parsedDeps) PullDependency(entry.Key, entry.Value);
+                                foreach (KeyValuePair<string, Dependency> entry in parsedDeps)
+                                {
+                                    bool pulledSuccessfully = PullDependency(entry.Key, entry.Value);
+                                    if (pulledSuccessfully)
+                                    {
+                                        newDeps.Add(entry.Key);
+                                    }
+                                }
                             }
                         }
                         if (wasClientOnly)
@@ -486,6 +545,7 @@ namespace AstroModLoader
                 int newProfileCount = 0;
                 int invalidExtensionCount = 0;
                 int wasFolderCount = 0;
+                List<string> newDeps = new List<string>();
                 foreach (string newInstallingMod in installingModPaths)
                 {
                     if (!File.Exists(newInstallingMod))
@@ -499,7 +559,7 @@ namespace AstroModLoader
                         continue;
                     }
 
-                    List<Mod> resMods = InstallModFromPath(newInstallingMod, out int thisClientOnlyCount, out int thisNumMalformatted, out int thisNumNewProfiles);
+                    List<Mod> resMods = InstallModFromPath(newInstallingMod, out int thisClientOnlyCount, out int thisNumMalformatted, out int thisNumNewProfiles, out List<string> thisNewDeps);
                     if (resMods == null) continue;
                     foreach (Mod resMod in resMods)
                     {
@@ -510,6 +570,7 @@ namespace AstroModLoader
                     clientOnlyCount += thisClientOnlyCount;
                     malformattedCount += thisNumMalformatted;
                     newProfileCount += thisNumNewProfiles;
+                    if (thisNewDeps != null) newDeps.AddRange(thisNewDeps);
                 }
 
                 //ModManager.SyncModsFromDisk(true);
@@ -563,6 +624,11 @@ namespace AstroModLoader
                     if (newProfileCount > 0)
                     {
                         this.ShowBasicButton(newProfileCount + " new profile" + (newProfileCount == 1 ? " was" : "s were") + " included with the file" + (installingModPaths.Length == 1 ? "" : "s") + " you installed.\n" + (newProfileCount == 1 ? "It has" : "They have") + " been added to your list of profiles.", "OK", null, null);
+                    }
+
+                    if (newDeps.Count > 0)
+                    {
+                        this.ShowBasicButton(newDeps.Count + " new " + (newDeps.Count == 1 ? "dependency was" : "dependencies were") + " installed alongside the mod" + (installingModPaths.Length == 1 ? "" : "s") + " you installed.\n" + (newDeps.Count == 1 ? "It has" : "They have") + " been enabled by default.\n\n" + (string.Join(", ", newDeps)), "OK", null, null);
                     }
                 });
             }
@@ -882,7 +948,7 @@ namespace AstroModLoader
             {
                 if (!string.IsNullOrEmpty(Program.CommandLineOptions.InstallMod))
                 {
-                    InstallModFromPath(Program.CommandLineOptions.InstallMod, out _, out _, out _);
+                    InstallModFromPath(Program.CommandLineOptions.InstallMod, out _, out _, out _, out _);
                     FullRefresh();
                 }
             });
@@ -937,6 +1003,7 @@ namespace AstroModLoader
                         });
 
                         bool succeeded = true;
+                        List<string> newDeps = null;
                         string tempDownloadFolder = Path.Combine(Path.GetTempPath(), "AstroModLoader", "ThunderstoreDownload");
                         try
                         {
@@ -949,7 +1016,7 @@ namespace AstroModLoader
                                     wb.Headers[HttpRequestHeader.UserAgent] = AMLUtils.UserAgent;
                                     wb.DownloadFile(new Uri("https://thunderstore.io/package/download/" + installParams.Substring(tstorePrefix.Length)), zipPath);
                                 }
-                                List<Mod> installedMods = InstallModFromPath(zipPath, out _, out _, out _);
+                                List<Mod> installedMods = InstallModFromPath(zipPath, out _, out _, out _, out newDeps);
                                 foreach (var mod in installedMods)
                                 {
                                     mod.Enabled = true;
@@ -975,7 +1042,7 @@ namespace AstroModLoader
                                 AMLUtils.InvokeUI(() =>
                                 {
                                     basicButtonPrompt.Close();
-                                    this.ShowBasicButton("Successfully installed " + mod_id + " from Thunderstore.", "OK", null, null);
+                                    this.ShowBasicButton("Successfully installed " + mod_id + " from Thunderstore." + ((newDeps != null && newDeps.Count > 0) ? ("\n\n" + newDeps.Count + " new " + (newDeps.Count == 1 ? "dependency was" : " dependencies were") + " added as well:\n" + string.Join(", ", newDeps)) : ""), "OK", null, null);
                                 });
                             }
                         }
@@ -1025,6 +1092,43 @@ namespace AstroModLoader
             ModManager.IsUpdatingAvailableVersionsFromIndexFilesWaitHandler.WaitOne(3000);
 
             await ModManager.FullUpdate();
+
+            // ok, now check: do we meet all dependencies?
+            // we only actually check presence of dependency, not version, for simplicity
+            List<string> missingDependencies = new List<string>();
+            HashSet<string> allModIDs = ModManager.Mods.Select(x => x.CurrentModData.ModID).ToHashSet();
+            foreach (var mod in ModManager.Mods)
+            {
+                if (mod.Enabled && mod.CurrentModData.Dependencies != null && mod.CurrentModData.Dependencies.Count > 0)
+                {
+                    var parsedDeps = mod.CurrentModData.ParseDependencies();
+                    foreach (KeyValuePair<string, Dependency> entry in parsedDeps)
+                    {
+                        if (!allModIDs.Contains(entry.Key))
+                        {
+                            missingDependencies.Add(entry.Key);
+                            continue;
+                        }
+                    }
+                }
+            }
+
+            if (missingDependencies.Count > 0)
+            {
+                int dialogRes = -1;
+                AMLUtils.InvokeUI(() => dialogRes = this.ShowBasicButton("One or more of your mods require the following missing dependencies:\n\n" + string.Join(", ", missingDependencies) + "\n\nThese mods may not operate as expected without these dependencies.\nWould you like to continue anyways?", "Play", "Cancel", null));
+                switch (dialogRes)
+                {
+                    case 0:
+                        // nothing
+                        break;
+                    case 1:
+                    case 2:
+                        // cancel
+                        return;
+                }
+            }
+
             if (!Program.CommandLineOptions.ServerMode)
             {
                 if (ModManager.Platform == PlatformType.Steam)

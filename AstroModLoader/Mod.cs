@@ -77,6 +77,8 @@ namespace AstroModLoader
         [JsonIgnore]
         internal bool CannotCurrentlyUpdate = false;
 
+        public Mod() { }
+
         public Mod(Metadata modData, string nameOnDisk)
         {
             if (modData == null && nameOnDisk == null) return;
@@ -113,18 +115,17 @@ namespace AstroModLoader
             if (AllModData[InstalledVersion].Name.Length > 32) AllModData[InstalledVersion].Name = AllModData[InstalledVersion].Name.Substring(0, 32);
         }
 
-        // . is informally allowed in mod IDs these days, to include author name
-        // this violates the specification, but it is a de facto standard
+        // . is allowed in mod IDs these days, to include author name
         private static readonly Regex ModIDFilterRegex = new Regex(@"[^A-Za-z0-9\.]", RegexOptions.Compiled);
         public string ConstructName(int forcePriority = -1)
         {
             return AMLUtils.GeneratePriorityFromPositionInList(forcePriority >= 0 ? forcePriority : Priority) + "-" + ModIDFilterRegex.Replace(CurrentModData.ModID, "") + "-" + InstalledVersion + "_P.pak";
         }
 
-        private int newPriority;
-        private string newModID;
-        private Version newModVersion;
-        private void PerformNameAnalysis()
+        internal int newPriority;
+        internal string newModID;
+        internal Version newModVersion;
+        internal void PerformNameAnalysis()
         {
             if (NameOnDisk == null) NameOnDisk = "";
             List<string> nameData = NameOnDisk.Split('_')[0].Split('-').ToList();
@@ -165,17 +166,50 @@ namespace AstroModLoader
             }
         }
 
+        public static bool DissectModName(string NameOnDisk, out int newPriority, out string newModID, out Version newModVersion)
+        {
+            var test = new Mod();
+            test.NameOnDisk = NameOnDisk;
+            test.PerformNameAnalysis();
+            newPriority = test.newPriority;
+            newModID = test.newModID;
+            newModVersion = test.newModVersion;
+            return true;
+        }
+
         public static volatile string ThunderstoreFetched = null;
 
-        public IndexFile GetIndexFile(Dictionary<string, string> cachedUrls)
+        public static IndexFile GetIndexFileFromDownloadInfo(DownloadInfo di, string modId, Dictionary<string, string> cachedUrls)
         {
-            DownloadInfo di = CurrentModData.Download;
-            if (di == null) return null;
-
             try
             {
                 if (di.Type == DownloadMode.IndexFile && !string.IsNullOrEmpty(di.URL))
                 {
+                    // what if the URL just ends in ".pak?" in that case we'll just have a failsafe and interpret it as an index file with just one version
+                    // this sucks; avoid if possible
+                    if (di.URL.EndsWith(".pak"))
+                    {
+                        var splitted = di.URL.Split("/");
+                        string failsafeFileName = splitted[splitted.Length - 1];
+                        DissectModName(failsafeFileName, out int failsafePriority, out string failsafeModID, out Version failsafeModVersion);
+
+                        var idxModFailsafe = new IndexFile();
+                        idxModFailsafe.OriginalURL = di.URL;
+
+                        var failsafeVersionData = new IndexVersionData();
+                        failsafeVersionData.URL = di.URL;
+                        failsafeVersionData.Filename = failsafeFileName;
+
+                        var idxMod = new IndexMod();
+                        idxMod.AllVersions = new Dictionary<Version, IndexVersionData>();
+                        idxMod.AllVersions[failsafeModVersion] = failsafeVersionData;
+                        idxMod.LatestVersion = failsafeModVersion;
+
+                        idxModFailsafe.Mods = new Dictionary<string, IndexMod>();
+                        idxModFailsafe.Mods[failsafeModID] = idxMod;
+                        return idxModFailsafe;
+                    }
+
                     string rawIndexFileData = null;
                     if (cachedUrls != null && cachedUrls.ContainsKey(di.URL))
                     {
@@ -191,7 +225,7 @@ namespace AstroModLoader
                     }
                     if (string.IsNullOrEmpty(rawIndexFileData)) return null;
 
-                    cachedUrls[di.URL] = rawIndexFileData;
+                    if (cachedUrls != null) cachedUrls[di.URL] = rawIndexFileData;
 
                     IndexFile indexFile = JsonConvert.DeserializeObject<IndexFile>(rawIndexFileData);
                     indexFile.OriginalURL = di.URL;
@@ -237,10 +271,10 @@ namespace AstroModLoader
                         if (idxMod.LatestVersion == null || ver > idxMod.LatestVersion) idxMod.LatestVersion = ver;
                         idxMod.AllVersions[ver] = new IndexVersionData();
                         idxMod.AllVersions[ver].URL = version["download_url"].Value;
-                        idxMod.AllVersions[ver].Filename = CurrentModData.ModID + "-" + ver.ToString() + ".zip";
+                        idxMod.AllVersions[ver].Filename = modId + "-" + ver.ToString() + ".zip";
                     }
 
-                    indexFile.Mods[CurrentModData.ModID] = idxMod;
+                    indexFile.Mods[modId] = idxMod;
 
                     return indexFile;
                 }
@@ -252,6 +286,14 @@ namespace AstroModLoader
             }
 
             return null;
+        }
+
+        public IndexFile GetIndexFile(Dictionary<string, string> cachedUrls)
+        {
+            DownloadInfo di = CurrentModData.Download;
+            if (di == null) return null;
+
+            return GetIndexFileFromDownloadInfo(di, CurrentModData.ModID, cachedUrls);
         }
 
         public override bool Equals(object obj)
