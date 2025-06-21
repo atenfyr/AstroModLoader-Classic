@@ -53,7 +53,7 @@ namespace AstroModIntegrator
                         y.ParseExport(reader, i);
                         break;
                     case "SCS_Node":
-                        nodeOffset++;
+                        nodeOffset = Math.Max(nodeOffset, baseUs.ObjectName.Number);
                         break;
                 }
                 if (baseUs.ObjectFlags.HasFlag(EObjectFlags.RF_ClassDefaultObject))
