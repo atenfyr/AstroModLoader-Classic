@@ -297,8 +297,9 @@ namespace AstroModLoader
             return internalForm.InvokeRequired;
         }
 
-        public static void InvokeUI(Action act)
+        public static bool InvokeUI(Action act)
         {
+            if (internalForm == null) return false; // should never occur except in a few crazy race conditions...
             if (internalForm.InvokeRequired)
             {
                 internalForm.Invoke(act);
@@ -307,6 +308,7 @@ namespace AstroModLoader
             {
                 act();
             }
+            return true;
         }
     }
 }
