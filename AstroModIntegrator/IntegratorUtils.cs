@@ -29,13 +29,30 @@ namespace AstroModIntegrator
 
     public static class IntegratorUtils
     {
-        public static readonly EngineVersion EngineVersion = EngineVersion.VER_UE4_27;
         public static readonly Version CurrentVersion = new Version(1, 7, 4, 0);
+        public static readonly EngineVersion MainEngineVersion = EngineVersion.VER_UE4_27;
         public static readonly string[] IgnoredModIDs = new string[]
         {
             "AstroModIntegrator",
             "ModIntegrator"
         };
+
+        //public static bool CompatibilityMode = false;
+
+        public static EngineVersion GetEngineVersionFromAstroBuild(Version AstroBuild)
+        {
+            if (AstroBuild == null) return MainEngineVersion;
+
+            if (AstroBuild.CompareTo(new Version(1, 24, 0, 0)) < 0)
+            {
+                return EngineVersion.VER_UE4_18;
+            }
+            if (AstroBuild.CompareTo(new Version(1, 36, 0, 0)) < 0)
+            {
+                return EngineVersion.VER_UE4_23;
+            }
+            return MainEngineVersion;
+        }
 
         internal static void CopySplitUp(Stream input, Stream output, int start, int leng)
         {

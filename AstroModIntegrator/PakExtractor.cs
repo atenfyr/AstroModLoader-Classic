@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using UAssetAPI;
@@ -188,13 +189,12 @@ namespace AstroModIntegrator
         private PakVersion fileVersion;
         private BinaryReader reader;
         private Stream internal_stream;
-        public Dictionary<string, long> PathToOffset;
 
-        public PakExtractor(BinaryReader reader)
-        {
-            this.reader = reader;
-            BuildDict();
-        }
+        public Dictionary<string, long> PathToOffset;
+        public bool RepakBacked = false;
+        private PakReader pakReader;
+
+        public string MountPoint;
 
         public PakExtractor(Stream stream)
         {
@@ -205,11 +205,14 @@ namespace AstroModIntegrator
 
         public void Dispose()
         {
-            reader.Dispose();
+            pakReader?.Dispose();
+            reader?.Dispose();
         }
 
         private void BuildDict()
         {
+            if (RepakBacked) return;
+
             PathToOffset = new Dictionary<string, long>();
 
             reader.BaseStream.Seek(-44, SeekOrigin.End); // First we head straight to the footer
@@ -223,6 +226,20 @@ namespace AstroModIntegrator
             }
 
             fileVersion = (PakVersion)reader.ReadUInt32();
+            if (fileVersion > (PakVersion)5)
+            {
+                // use repak
+                RepakBacked = true;
+                // discard binary reader, but don't dispose because we need to keep the stream open
+                reader = null;
+
+                internal_stream.Seek(0, SeekOrigin.Begin);
+                pakReader = new PakBuilder().Reader(internal_stream);
+
+                MountPoint = pakReader.GetMountPoint();
+                return;
+            }
+
             ulong indexOffset = reader.ReadUInt64();
             ulong indexSize = reader.ReadUInt64();
 
@@ -234,7 +251,7 @@ namespace AstroModIntegrator
 
             // Start reading the proper index
             reader.BaseStream.Seek((long)indexOffset, SeekOrigin.Begin);
-            string mountPoint = reader.ReadUString();
+            MountPoint = reader.ReadUString();
             int recordCount = reader.ReadInt32();
 
             for (int i = 0; i < recordCount; i++)
@@ -247,23 +264,27 @@ namespace AstroModIntegrator
 
         public IReadOnlyList<string> GetAllPaths()
         {
+            if (RepakBacked) return pakReader.Files().ToList().AsReadOnly();
             return new List<string>(PathToOffset.Keys).AsReadOnly();
         }
 
         public bool HasPath(string searchPath)
         {
+            if (RepakBacked) return this.GetAllPaths().Contains(searchPath);
             return PathToOffset.ContainsKey(searchPath);
         }
 
         public byte[] ReadRaw(string searchPath, bool verifyChecksums = false)
         {
-            if (!HasPath(searchPath)) return new byte[0];
+            if (!HasPath(searchPath)) return Array.Empty<byte>();
+            if (RepakBacked) return pakReader.Get(internal_stream, searchPath);
             long fullOffset = PathToOffset[searchPath];
             return ReadRaw(fullOffset, verifyChecksums);
         }
 
-        public byte[] ReadRaw(long fullOffset, bool verifyChecksums = false)
+        private byte[] ReadRaw(long fullOffset, bool verifyChecksums = false)
         {
+            if (RepakBacked) throw new InvalidOperationException("Cannot pass offset into ReadRaw when RepakBacked");
             reader.BaseStream.Seek(fullOffset, SeekOrigin.Begin);
             var rec2 = new Record();
             rec2.Read(reader, fileVersion, false);

@@ -47,9 +47,9 @@ namespace AstroModIntegrator
 
     public class BiomePlacementModifiersBaker
     {
-        public UAsset Bake(List<PlacementModifier> modifiers, string[] newTrailheads, byte[] mapData, out AssetBinaryReader reader)
+        public UAsset Bake(List<PlacementModifier> modifiers, string[] newTrailheads, byte[] mapData, EngineVersion engVer, out AssetBinaryReader reader)
         {
-            UAsset y = new UAsset(IntegratorUtils.EngineVersion);
+            UAsset y = new UAsset(engVer);
             y.UseSeparateBulkDataFiles = true;
             y.CustomSerializationFlags = CustomSerializationFlags.SkipParsingBytecode | CustomSerializationFlags.SkipPreloadDependencyLoading | CustomSerializationFlags.SkipParsingExports;
             reader = new AssetBinaryReader(new MemoryStream(mapData), y);

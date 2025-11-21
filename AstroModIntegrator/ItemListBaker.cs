@@ -18,9 +18,9 @@ namespace AstroModIntegrator
 
         }
 
-        public UAsset Bake(Dictionary<string, List<string>> newItems, byte[] superRawData)
+        public UAsset Bake(Dictionary<string, List<string>> newItems, byte[] superRawData, EngineVersion engVer)
         {
-            UAsset y = new UAsset(IntegratorUtils.EngineVersion);
+            UAsset y = new UAsset(engVer);
             y.UseSeparateBulkDataFiles = true;
             y.CustomSerializationFlags = CustomSerializationFlags.SkipParsingBytecode | CustomSerializationFlags.SkipPreloadDependencyLoading;
             y.Read(new AssetBinaryReader(new MemoryStream(superRawData), y));

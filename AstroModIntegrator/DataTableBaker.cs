@@ -19,9 +19,9 @@ namespace AstroModIntegrator
             this.ParentIntegrator = ParentIntegrator;
         }
 
-        public UAsset Bake(Metadata[] allMods, List<string> optionalModIDs, byte[] superRawData)
+        public UAsset Bake(Metadata[] allMods, List<string> optionalModIDs, byte[] superRawData, EngineVersion engVer)
         {
-            UAsset y = new UAsset(IntegratorUtils.EngineVersion);
+            UAsset y = new UAsset(engVer);
             y.UseSeparateBulkDataFiles = true;
             y.CustomSerializationFlags = CustomSerializationFlags.SkipParsingBytecode | CustomSerializationFlags.SkipPreloadDependencyLoading;
             y.Read(new AssetBinaryReader(new MemoryStream(superRawData), y));
@@ -108,9 +108,9 @@ namespace AstroModIntegrator
             return y;
         }
 
-        public UAsset Bake2(byte[] superRawData)
+        public UAsset Bake2(byte[] superRawData, EngineVersion engVer)
         {
-            UAsset y = new UAsset(IntegratorUtils.EngineVersion);
+            UAsset y = new UAsset(engVer);
             y.UseSeparateBulkDataFiles = true;
             y.Read(new AssetBinaryReader(new MemoryStream(superRawData), y));
 
@@ -140,9 +140,9 @@ namespace AstroModIntegrator
             return y;
         }
 
-        public UAsset Bake3(byte[] superRawData)
+        public UAsset Bake3(byte[] superRawData, EngineVersion engVer)
         {
-            UAsset y = new UAsset(IntegratorUtils.EngineVersion);
+            UAsset y = new UAsset(engVer);
             y.UseSeparateBulkDataFiles = true;
             y.Read(new AssetBinaryReader(new MemoryStream(superRawData), y));
 

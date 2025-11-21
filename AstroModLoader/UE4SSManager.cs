@@ -54,8 +54,9 @@ namespace AstroModLoader
                     }
                     catch { }
 
-                    Directory.CreateDirectory(Path.Combine(binaryDir, "UE4SS_Signatures"));
-                    File.WriteAllText(Path.Combine(binaryDir, "UE4SS_Signatures", "GUObjectArray.lua"), "function Register()\n    return \"8B 05 ?? ?? ?? ?? 3B 05 ?? ?? ?? ?? 75 ?? 48 8D 15 ?? ?? ?? ?? 48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 8D 05\"\nend\n\nfunction OnMatchFound(MatchAddress)\n    local JmpInstr = MatchAddress + 24\n    return JmpInstr + DerefToInt32(JmpInstr) + 4\nend");
+                    // custom signature no longer necessary on 4.27
+                    //Directory.CreateDirectory(Path.Combine(binaryDir, "UE4SS_Signatures"));
+                    //File.WriteAllText(Path.Combine(binaryDir, "UE4SS_Signatures", "GUObjectArray.lua"), "function Register()\n    return \"8B 05 ?? ?? ?? ?? 3B 05 ?? ?? ?? ?? 75 ?? 48 8D 15 ?? ?? ?? ?? 48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 8D 05\"\nend\n\nfunction OnMatchFound(MatchAddress)\n    local JmpInstr = MatchAddress + 24\n    return JmpInstr + DerefToInt32(JmpInstr) + 4\nend");
 
                     string modifiedText = File.ReadAllText(Path.Combine(binaryDir, "UE4SS-settings.ini")).Replace("ModsFolderPath =", "ModsFolderPath = " + InstallPathLua);
                     File.WriteAllText(Path.Combine(binaryDir, "UE4SS-settings.ini"), modifiedText);
@@ -88,7 +89,7 @@ namespace AstroModLoader
                 foreach (string path in allPaths)
                 {
                     string fileName = new FileInfo(path).Name.ToLower();
-                    if (!fileName.StartsWith("astro"))
+                    if (!fileName.StartsWith("astro") && !fileName.StartsWith("openimagedenoise") && !fileName.StartsWith("tbb12"))
                     {
                         try
                         {

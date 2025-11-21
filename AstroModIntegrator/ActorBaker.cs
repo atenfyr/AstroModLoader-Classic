@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using UAssetAPI;
 using UAssetAPI.ExportTypes;
+using UAssetAPI.FieldTypes;
 using UAssetAPI.PropertyTypes.Objects;
 using UAssetAPI.PropertyTypes.Structs;
 using UAssetAPI.UnrealTypes;
@@ -25,9 +26,9 @@ namespace AstroModIntegrator
             refData3B = y.Exports[10];
         }
 
-        public UAsset Bake(string[] newComponents, byte[] superRawData)
+        public UAsset Bake(string[] newComponents, byte[] superRawData, EngineVersion engVer)
         {
-            UAsset y = new UAsset(IntegratorUtils.EngineVersion);
+            UAsset y = new UAsset(engVer);
             y.UseSeparateBulkDataFiles = true;
             y.CustomSerializationFlags = CustomSerializationFlags.SkipParsingBytecode | CustomSerializationFlags.SkipPreloadDependencyLoading | CustomSerializationFlags.SkipParsingExports;
             var reader = new AssetBinaryReader(new MemoryStream(superRawData), y);
@@ -158,19 +159,19 @@ namespace AstroModIntegrator
                 cdoCategory.SerializationBeforeSerializationDependencies.Add(FPackageIndex.FromRawIndex(y.Exports.Count));
 
                 // Then the ObjectProperty category
-                RawExport objectCat = refData1.ConvertToChildExport<RawExport>();
+                /*RawExport objectCat = refData1.ConvertToChildExport<RawExport>();
                 objectCat.CreateBeforeSerializationDependencies.Add(bigNewLink);
                 objectCat.CreateBeforeCreateDependencies.Add(FPackageIndex.FromRawIndex(bgcLocation + 1));
                 objectCat.Extras = Array.Empty<byte>();
                 objectCat.Data = rawData.ToArray();
-                y.Exports.Add(objectCat);
+                y.Exports.Add(objectCat);*/
 
                 // Then the SCS_Node
                 NormalExport scsCat = refData3.ConvertToChildExport<NormalExport>();
                 scsCat.ObjectName = new FName(y, "SCS_Node", ++nodeOffset);
                 scsCat.Extras = Array.Empty<byte>();
                 scsCat.CreateBeforeSerializationDependencies.Add(bigNewLink);
-                scsCat.CreateBeforeSerializationDependencies.Add(FPackageIndex.FromRawIndex(y.Exports.Count - 1));
+                scsCat.CreateBeforeSerializationDependencies.Add(FPackageIndex.FromRawIndex(y.Exports.Count));
                 scsCat.SerializationBeforeCreateDependencies.Add(FPackageIndex.FromRawIndex(scsNodeLink));
                 scsCat.SerializationBeforeCreateDependencies.Add(FPackageIndex.FromRawIndex(scsNodeLink2));
                 scsCat.CreateBeforeCreateDependencies.Add(FPackageIndex.FromRawIndex(scsLocation + 1));
@@ -182,7 +183,7 @@ namespace AstroModIntegrator
                     },
                     new ObjectPropertyData(new FName(y, "ComponentTemplate"))
                     {
-                        Value = FPackageIndex.FromRawIndex(y.Exports.Count - 1) // the first NormalCategory
+                        Value = FPackageIndex.FromRawIndex(y.Exports.Count) // the first NormalCategory
                     },
                     new StructPropertyData(new FName(y, "VariableGuid"), new FName(y, "Guid"))
                     {
@@ -202,11 +203,33 @@ namespace AstroModIntegrator
                 y.Exports.Add(scsCat);
 
                 // We update the BlueprintGeneratedClass data to include our new ActorComponent
-                FPackageIndex[] oldData = ((StructExport)y.Exports[bgcLocation]).Children;
+
+                // 4.23
+                /*FPackageIndex[] oldData = ((StructExport)y.Exports[bgcLocation]).Children;
                 FPackageIndex[] newData = new FPackageIndex[oldData.Length + 1];
                 Array.Copy(oldData, 0, newData, 0, oldData.Length);
                 newData[oldData.Length] = FPackageIndex.FromRawIndex(y.Exports.Count - 1); // the RawCategory
-                ((StructExport)y.Exports[bgcLocation]).Children = newData;
+                ((StructExport)y.Exports[bgcLocation]).Children = newData;*/
+
+                // 4.27
+                FObjectProperty newFProp = new FObjectProperty();
+                newFProp.PropertyClass = bigNewLink;
+                newFProp.SerializedType = new FName(y, "ObjectProperty");
+                newFProp.Name = new FName(y, component);
+                newFProp.ArrayDim = EArrayDim.TArray;
+                newFProp.ElementSize = 8;
+                newFProp.PropertyFlags = EPropertyFlags.CPF_BlueprintVisible | EPropertyFlags.CPF_InstancedReference | EPropertyFlags.CPF_NonTransactional;
+                newFProp.RepIndex = 0;
+                newFProp.RepNotifyFunc = new FName(y, "None");
+                newFProp.BlueprintReplicationCondition = ELifetimeCondition.COND_None;
+                newFProp.Flags = EObjectFlags.RF_Public | EObjectFlags.RF_LoadCompleted;
+                newFProp.MetaDataMap = null;
+
+                FProperty[] oldData = ((StructExport)y.Exports[bgcLocation]).LoadedProperties;
+                FProperty[] newData = new FProperty[oldData.Length + 1];
+                Array.Copy(oldData, 0, newData, 0, oldData.Length);
+                newData[oldData.Length] = newFProp;
+                ((StructExport)y.Exports[bgcLocation]).LoadedProperties = newData;
 
                 // Here we update the SimpleConstructionScript so that the parser constructs our new ActorComponent
                 NormalExport scsCategory = (NormalExport)y.Exports[scsLocation];

@@ -34,9 +34,9 @@ namespace AstroModIntegrator
             refData2B = y.Exports[11];
         }
 
-        public UAsset Bake(string[] newComponents, byte[] superRawData)
+        public UAsset Bake(string[] newComponents, byte[] superRawData, EngineVersion engVer)
         {
-            UAsset y = new UAsset(IntegratorUtils.EngineVersion);
+            UAsset y = new UAsset(engVer);
             y.UseSeparateBulkDataFiles = true;
             y.CustomSerializationFlags = CustomSerializationFlags.SkipParsingBytecode | CustomSerializationFlags.SkipPreloadDependencyLoading | CustomSerializationFlags.SkipParsingExports;
             var reader = new AssetBinaryReader(new MemoryStream(superRawData), y);
@@ -104,13 +104,13 @@ namespace AstroModIntegrator
 
                 // First we see if we can find the actual asset it's referring to
                 List<SCS_Node> allBlueprintCreatedComponents = new List<SCS_Node>();
-                byte[] foundData1 = ParentIntegrator.SearchInAllPaksForPath(componentPath.ConvertGamePathToAbsolutePath(), Extractor);
-                byte[] foundData2 = ParentIntegrator.SearchInAllPaksForPath(Path.ChangeExtension(componentPath.ConvertGamePathToAbsolutePath(), ".uexp"), Extractor) ?? new byte[0];
+                byte[] foundData1 = ParentIntegrator.SearchInAllPaksForPath(componentPath.ConvertGamePathToAbsolutePath(), Extractor, true, out EngineVersion engVer);
+                byte[] foundData2 = ParentIntegrator.SearchInAllPaksForPath(Path.ChangeExtension(componentPath.ConvertGamePathToAbsolutePath(), ".uexp"), Extractor, true, out EngineVersion _) ?? Array.Empty<byte>();
                 byte[] foundData = null; if (foundData1 != null) foundData = IntegratorUtils.Concatenate(foundData1, foundData2);
                 if (foundData != null && foundData.Length > 0)
                 {
                     // If we can find the asset, then we read the asset and hop straight to the SimpleConstructionScript
-                    UAsset foundDataReader = new UAsset(IntegratorUtils.EngineVersion);
+                    UAsset foundDataReader = new UAsset(engVer);
                     foundDataReader.CustomSerializationFlags = CustomSerializationFlags.SkipParsingBytecode | CustomSerializationFlags.SkipPreloadDependencyLoading | CustomSerializationFlags.SkipParsingExports;
                     var fbReader = new AssetBinaryReader(new MemoryStream(foundData), foundDataReader);
                     foundDataReader.Read(fbReader);
