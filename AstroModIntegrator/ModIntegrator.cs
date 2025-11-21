@@ -104,7 +104,7 @@ namespace AstroModIntegrator
 
             string[] realPakPaths = Directory.GetFiles(installPath, "*.pak", SearchOption.TopDirectoryOnly);
             if (realPakPaths.Length == 0) throw new FileNotFoundException("Failed to locate any game installation pak files");
-            string realPakPath = Directory.GetFiles(installPath, "Astro-*.pak", SearchOption.TopDirectoryOnly)[0];
+            string realPakPath = Directory.GetFiles(installPath, "pakchunk0-*.pak", SearchOption.TopDirectoryOnly)[0];
 
             InitializeSearch(paksPath);
 

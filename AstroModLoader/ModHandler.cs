@@ -584,7 +584,8 @@ namespace AstroModLoader
 
         // It's counterproductive to try and combat piracy, but it's a good idea to have some visible marker of it to serve as an explanation for the problems people with pirated copies may face
         public bool MismatchedSteamworksDLL = false;
-        private static readonly byte[] steamsworksDLLHash = new byte[] { 231, 116, 51, 9, 76, 86, 67, 54, 133, 166, 138, 68, 54, 232, 27, 118, 195, 181, 225, 245 };
+        private static readonly byte[] steamsworksDLLHash1 = new byte[] { 231, 116, 51, 9, 76, 86, 67, 54, 133, 166, 138, 68, 54, 232, 27, 118, 195, 181, 225, 245 };
+        private static readonly byte[] steamsworksDLLHash2 = new byte[] { 35, 130, 67, 134, 123, 47, 45, 175, 84, 172, 13, 213, 243, 182, 143, 157, 153, 248, 171, 175 };
         public void VerifyIntegrity()
         {
             MismatchedSteamworksDLL = false;
@@ -599,7 +600,7 @@ namespace AstroModLoader
                     {
                         var data = File.ReadAllBytes(dllPaths[0]);
                         var hash = SHA1.Create().ComputeHash(data);
-                        if (!hash.SequenceEqual(steamsworksDLLHash)) MismatchedSteamworksDLL = true;
+                        if (!hash.SequenceEqual(steamsworksDLLHash1) && !hash.SequenceEqual(steamsworksDLLHash2)) MismatchedSteamworksDLL = true;
                     }
                 }
             }
