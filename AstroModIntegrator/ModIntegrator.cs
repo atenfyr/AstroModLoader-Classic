@@ -289,6 +289,10 @@ namespace AstroModIntegrator
                         {
                             theseItems["/Game/Items/ItemTypes/BaseGameInitialKnownItemList"] = theseItems["/Game/Items/ItemTypes/MasterItemList"];
                         }
+                        if (theseItems.ContainsKey("/Game/Items/ItemTypes/MasterItemList") && !theseItems.ContainsKey("/Game/U32_Expansion/GW_InitialUnlocks"))
+                        {
+                            theseItems["/Game/U32_Expansion/GW_InitialUnlocks"] = theseItems["/Game/Items/ItemTypes/MasterItemList"];
+                        }
 
                         // parse as normal
                         foreach (KeyValuePair<string, Dictionary<string, List<string>>> entry in theseItems)
