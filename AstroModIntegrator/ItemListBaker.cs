@@ -86,7 +86,7 @@ namespace AstroModIntegrator
                             case "ObjectProperty":
                                 if (bigNewLink.Index == 0)
                                 {
-                                    Import newLink = new Import("/Script/Engine", "BlueprintGeneratedClass", y.AddImport(new Import("/Script/CoreUObject", "Package", FPackageIndex.FromRawIndex(0), realName, false, y)), className, false, y);
+                                    Import newLink = new Import("/Script/Engine", "BlueprintGeneratedClass", y.AddImport(new Import(new FName(y, "/Script/CoreUObject"), new FName(y, "Package"), FPackageIndex.FromRawIndex(0), FName.FromString(y, realName), false)), className, false, y);
                                     bigNewLink = y.AddImport(newLink);
                                 }
 
