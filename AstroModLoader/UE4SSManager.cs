@@ -29,7 +29,7 @@ namespace AstroModLoader
                     using (var wb = new WebClient())
                     {
                         wb.Headers[HttpRequestHeader.UserAgent] = AMLUtils.UserAgent;
-                        wb.DownloadFile(new Uri("https://github.com/UE4SS-RE/RE-UE4SS/releases/download/experimental/UE4SS_v3.0.1-240-g1244004.zip"), ue4ssZipPath);
+                        wb.DownloadFile(new Uri("https://github.com/UE4SS-RE/RE-UE4SS/releases/download/cmake-experimental-latest/UE4SS_v3.0.1-692-gc4b5add.zip"), ue4ssZipPath);
                     }
                 }
                 catch

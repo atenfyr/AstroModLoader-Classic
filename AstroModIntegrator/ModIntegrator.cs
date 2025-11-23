@@ -34,10 +34,9 @@ namespace AstroModIntegrator
         }
 
         internal Dictionary<string, string> SearchLookup; // file to path --> pak you can find it in
-        internal void InitializeSearch(string installPath)
+        internal void InitializeSearch(string[] realPakPaths)
         {
             SearchLookup = new Dictionary<string, string>();
-            string[] realPakPaths = Directory.GetFiles(installPath, "*_P.pak", SearchOption.TopDirectoryOnly);
             foreach (string realPakPath in realPakPaths)
             {
                 using (FileStream f = new FileStream(realPakPath, FileMode.Open, FileAccess.Read))
@@ -219,23 +218,32 @@ namespace AstroModIntegrator
         }*/
 
         private Dictionary<string, byte[]> CreatedPakData;
-
         public void IntegrateMods(string paksPath, string installPath, string outputFolder = null, string mountPoint = null, bool extractLua = false, bool cleanLua = true) // @"C:\Users\<CLIENT USERNAME>\AppData\Local\Astro\Saved\Paks", @"C:\Program Files (x86)\Steam\steamapps\common\ASTRONEER\Astro\Content\Paks"
         {
-            Directory.CreateDirectory(paksPath);
+            IntegrateMods([paksPath], installPath, outputFolder, mountPoint, extractLua, cleanLua);
+        }
+
+        public void IntegrateMods(string[] paksPaths, string installPath, string outputFolder = null, string mountPoint = null, bool extractLua = false, bool cleanLua = true) // @"C:\Users\<CLIENT USERNAME>\AppData\Local\Astro\Saved\Paks", @"C:\Program Files (x86)\Steam\steamapps\common\ASTRONEER\Astro\Content\Paks"
+        {
+            foreach (string paksPath in paksPaths) Directory.CreateDirectory(paksPath);
 
             /*if (IntegratorUtils.CompatibilityMode)
             {
                 AttemptCompatibilityModeOnAll(paksPath);
             }*/
 
-            string[] files = Directory.GetFiles(paksPath, "*_P.pak", SearchOption.TopDirectoryOnly);
+            List<string> filesList = new List<string>();
+            foreach (string paksPath in paksPaths)
+            {
+                filesList.AddRange(Directory.GetFiles(paksPath, "*_P.pak", paksPath.Contains("LogicMods") ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly));
+            }
+            string[] files = filesList.ToArray();
 
             string[] realPakPaths = Directory.GetFiles(installPath, "*.pak", SearchOption.TopDirectoryOnly);
             if (realPakPaths.Length == 0) throw new FileNotFoundException("Failed to locate any game installation pak files");
             string realPakPath = Directory.GetFiles(installPath, "pakchunk0-*.pak", SearchOption.TopDirectoryOnly)[0];
 
-            InitializeSearch(paksPath);
+            InitializeSearch(files);
 
             int modCount = 0;
             Dictionary<string, List<string>> newComponents = new Dictionary<string, List<string>>();
@@ -474,7 +482,7 @@ namespace AstroModIntegrator
 
             byte[] pakData = PakBaker.Bake(CreatedPakData, mountPoint);
 
-            outputFolder = outputFolder ?? paksPath;
+            outputFolder = outputFolder ?? paksPaths[0];
             using (FileStream f = new FileStream(Path.Combine(outputFolder, @"999-AstroModIntegrator_P.pak"), FileMode.Create, FileAccess.Write))
             {
                 f.Write(pakData, 0, pakData.Length);

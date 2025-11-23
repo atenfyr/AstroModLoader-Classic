@@ -103,6 +103,12 @@ namespace ModIntegratorCMD
                 return;
             }
 
+            if (args.Length == 1 && args[0] == "version")
+            {
+                Console.WriteLine(IntegratorUtils.CurrentVersion.ToString());
+                return;
+            }
+
             if (args.Length < 2)
             {
                 string decidedPath = "C:\\Users\\YOU\\AppData\\Local\\Astro\\Saved\\Paks";
@@ -122,12 +128,32 @@ namespace ModIntegratorCMD
                 Stopwatch stopWatch = new Stopwatch();
                 stopWatch.Start();
 
+                int startOtherParams = 1;
+
+                List<string> paksPaths = [args[0]];
+                if (args[0] == "[")
+                {
+                    paksPaths.Clear();
+                    while (args[startOtherParams] != "]")
+                    {
+                        paksPaths.Add(args[startOtherParams]);
+                        startOtherParams++;
+                    }
+                    startOtherParams++;
+                }
+
+                if (args.Length <= startOtherParams)
+                {
+                    Console.WriteLine("Error: <game installation paks directory> not specified. Execute with no parameters to view help");
+                    Console.WriteLine("All active mod paks directories: " + string.Join(", ", paksPaths));
+                }
+
                 ModIntegrator us = new ModIntegrator()
                 {
                     RefuseMismatchedConnections = true,
                     //OptionalModIDs = new List<string> { "AstroChat" }
                 };
-                us.IntegrateMods(args[0], args[1], args.Length > 2 ? args[2] : null, args.Length > 3 ? args[3] : null, args.Length > 4 ? (args[4].ToLowerInvariant() == "true") : false);
+                us.IntegrateMods(paksPaths.ToArray(), args[startOtherParams], args.Length > startOtherParams+1 ? args[startOtherParams+1] : null, args.Length > (startOtherParams+2) ? args[startOtherParams+2] : null, args.Length > (startOtherParams+3) ? (args[startOtherParams+3].ToLowerInvariant() == "true") : false);
                 stopWatch.Stop();
 
                 Console.WriteLine("Finished integrating! Took " + ((double)stopWatch.Elapsed.Ticks / TimeSpan.TicksPerMillisecond) + " ms in total.");
