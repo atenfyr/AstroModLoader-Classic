@@ -789,6 +789,13 @@ namespace AstroModLoader
                 {
                     string destinedName = mod.ConstructName();
                     File.Delete(Path.Combine(InstallPath, mod.NameOnDisk));
+                    // delete any other ones with the same name
+                    if (mod.CurrentModData?.ModID != null && mod.NameOnDisk.Contains(mod.CurrentModData.ModID))
+                    {
+                        string[] allDuplicates = Directory.GetFiles(InstallPath, "*" + mod.CurrentModData.ModID + "*.pak", SearchOption.TopDirectoryOnly);
+                        foreach (string modPath in allDuplicates) File.Delete(modPath);
+                    }
+
                     if (mod.Enabled)
                     {
                         string copyingPath = null;
