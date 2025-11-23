@@ -301,6 +301,10 @@ namespace AstroModIntegrator
                         {
                             theseItems["/Game/U32_Expansion/Items/GW_InitialKnownItemList"] = theseItems["/Game/Items/ItemTypes/MasterItemList"];
                         }
+                        if (theseItems.ContainsKey("/Game/Items/ItemLists/BackpackPrinterItemList") && !theseItems.ContainsKey("/Game/Items/ItemLists/BackpackPrinterItemList_GW"))
+                        {
+                            theseItems["/Game/Items/ItemLists/BackpackPrinterItemList_GW"] = theseItems["/Game/Items/ItemLists/BackpackPrinterItemList"];
+                        }
 
                         // parse as normal
                         foreach (KeyValuePair<string, Dictionary<string, List<string>>> entry in theseItems)
