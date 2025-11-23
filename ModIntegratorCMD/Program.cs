@@ -112,7 +112,7 @@ namespace ModIntegratorCMD
                 }
                 catch {}
 
-                Console.WriteLine("AstroModIntegrator - Automatically integrates Astroneer .pak mods based on their metadata\n");
+                Console.WriteLine("AstroModIntegrator Classic " + IntegratorUtils.CurrentVersion.ToString() + ": Automatically integrates Astroneer .pak mods based on their metadata\n");
                 Console.WriteLine("Usage: modintegrator <active mod paks directory> <game installation paks directory> [folder to output to]\n");
                 Console.WriteLine("Example: modintegrator \"" + decidedPath + "\" \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\ASTRONEER\\Astro\\Content\\Paks\"");
                 return;
