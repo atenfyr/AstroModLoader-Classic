@@ -305,6 +305,14 @@ namespace AstroModIntegrator
                         {
                             theseItems["/Game/Items/ItemLists/BackpackPrinterItemList_GW"] = theseItems["/Game/Items/ItemLists/BackpackPrinterItemList"];
                         }
+                        if (theseItems.ContainsKey("/Game/Items/ItemLists/T1PrinterItemList") && !theseItems.ContainsKey("/Game/Items/ItemLists/T1PrinterItemList_GW"))
+                        {
+                            theseItems["/Game/Items/ItemLists/T1PrinterItemList_GW"] = theseItems["/Game/Items/ItemLists/T1PrinterItemList"];
+                        }
+                        if (theseItems.ContainsKey("/Game/Items/ItemLists/T2PrinterItemList") && !theseItems.ContainsKey("/Game/Items/ItemLists/T2PrinterItemList_GW"))
+                        {
+                            theseItems["/Game/Items/ItemLists/T2PrinterItemList_GW"] = theseItems["/Game/Items/ItemLists/T2PrinterItemList"];
+                        }
 
                         // parse as normal
                         foreach (KeyValuePair<string, Dictionary<string, List<string>>> entry in theseItems)
