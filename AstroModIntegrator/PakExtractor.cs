@@ -212,6 +212,7 @@ namespace AstroModIntegrator
         private void BuildDict()
         {
             if (RepakBacked) return;
+            _cachedAllPaths = null;
 
             PathToOffset = new Dictionary<string, long>();
 
@@ -262,10 +263,27 @@ namespace AstroModIntegrator
             }
         }
 
+        private IReadOnlyList<string> _cachedAllPaths = null;
         public IReadOnlyList<string> GetAllPaths()
         {
-            if (RepakBacked) return pakReader.Files().ToList().AsReadOnly();
-            return new List<string>(PathToOffset.Keys).AsReadOnly();
+            if (_cachedAllPaths != null) return _cachedAllPaths;
+
+            IReadOnlyList<string> output = null;
+            if (RepakBacked)
+            {
+                output = pakReader.Files().ToList().AsReadOnly();
+            }
+            else
+            {
+                output = new List<string>(PathToOffset.Keys).AsReadOnly();
+            }
+            _cachedAllPaths = output;
+            return output;
+        }
+
+        public void ClearGetAllPathsCache()
+        {
+            _cachedAllPaths = null;
         }
 
         public bool HasPath(string searchPath)

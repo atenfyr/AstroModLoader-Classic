@@ -146,6 +146,7 @@ namespace ModIntegratorCMD
                 {
                     Console.WriteLine("Error: <game installation paks directory> not specified. Execute with no parameters to view help");
                     Console.WriteLine("All active mod paks directories: " + string.Join(", ", paksPaths));
+                    return;
                 }
 
                 ModIntegrator us = new ModIntegrator()
