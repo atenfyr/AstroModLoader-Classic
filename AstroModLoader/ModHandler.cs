@@ -400,7 +400,7 @@ namespace AstroModLoader
         public void DeterminePaths()
         {
             string normalSteamBasePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Astro");
-            string normalMicrosoftStoreBasePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Packages", "SystemEraSoftworks.29415440E1269_ftk5pbg2rayv2", "LocalState", "Astro");
+            string normalMicrosoftStoreBasePath = normalSteamBasePath;// Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Packages", "SystemEraSoftworks.29415440E1269_ftk5pbg2rayv2", "LocalState", "Astro");
 
             BasePath = null;
             if (!string.IsNullOrEmpty(Program.CommandLineOptions.LocalDataPath))

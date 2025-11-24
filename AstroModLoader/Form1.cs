@@ -1137,7 +1137,7 @@ namespace AstroModLoader
                 }
                 else if (ModManager.Platform == PlatformType.Win10)
                 {
-                    if (!string.IsNullOrEmpty(ModManager.MicrosoftRuntimeID)) AMLUtils.OpenURL(@"shell:appsFolder\" + ModManager.MicrosoftRuntimeID + "!ASTRONEER");
+                    if (!string.IsNullOrEmpty(ModManager.MicrosoftRuntimeID)) AMLUtils.OpenURL(@"shell:appsFolder\" + ModManager.MicrosoftRuntimeID + "!AppSystemEraSoftworks29415440E1269Shipping");
                     return;
                 }
             }

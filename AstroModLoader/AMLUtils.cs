@@ -272,7 +272,17 @@ namespace AstroModLoader
 
         public static void OpenURL(string url)
         {
-            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            try
+            {
+                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                InvokeUI(() =>
+                {
+                    MessageBox.Show("Failed to start process: " + url + "!\n\n" + ex.Message);
+                });
+            }
         }
 
         public static void OpenDirectory(string dir)
