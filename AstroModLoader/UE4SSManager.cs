@@ -59,6 +59,8 @@ namespace AstroModLoader
                     //File.WriteAllText(Path.Combine(binaryDir, "UE4SS_Signatures", "GUObjectArray.lua"), "function Register()\n    return \"8B 05 ?? ?? ?? ?? 3B 05 ?? ?? ?? ?? 75 ?? 48 8D 15 ?? ?? ?? ?? 48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 8D 05\"\nend\n\nfunction OnMatchFound(MatchAddress)\n    local JmpInstr = MatchAddress + 24\n    return JmpInstr + DerefToInt32(JmpInstr) + 4\nend");
 
                     string modifiedText = File.ReadAllText(Path.Combine(binaryDir, "UE4SS-settings.ini")).Replace("ModsFolderPath =", "ModsFolderPath = " + InstallPathLua);
+                    modifiedText = modifiedText.Replace("MajorVersion =", "MajorVersion = 4");
+                    modifiedText = modifiedText.Replace("MinorVersion =", "MinorVersion = 27"); // have to override UE version for windows store version
                     File.WriteAllText(Path.Combine(binaryDir, "UE4SS-settings.ini"), modifiedText);
                 }
                 catch
@@ -81,6 +83,17 @@ namespace AstroModLoader
             return true;
         }
 
+        private static HashSet<string> DeletionExceptions = new HashSet<string>()
+        {
+            "astro",
+            "openimagedenoise",
+            "tbb12",
+            "gamechat",
+            "libhttpclient",
+            "party",
+            "xcurl"
+        };
+
         public static bool Uninstall(string binaryDir, Form displayForm = null)
         {
             try
@@ -89,7 +102,15 @@ namespace AstroModLoader
                 foreach (string path in allPaths)
                 {
                     string fileName = new FileInfo(path).Name.ToLower();
-                    if (!fileName.StartsWith("astro") && !fileName.StartsWith("openimagedenoise") && !fileName.StartsWith("tbb12"))
+
+                    bool isException = false;
+                    foreach (string exception in DeletionExceptions)
+                    {
+                        isException = fileName.StartsWith(exception);
+                        if (isException) break;
+                    }
+
+                    if (!isException)
                     {
                         try
                         {
