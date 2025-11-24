@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace AstroModLoader
@@ -59,8 +56,8 @@ namespace AstroModLoader
                     //File.WriteAllText(Path.Combine(binaryDir, "UE4SS_Signatures", "GUObjectArray.lua"), "function Register()\n    return \"8B 05 ?? ?? ?? ?? 3B 05 ?? ?? ?? ?? 75 ?? 48 8D 15 ?? ?? ?? ?? 48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 8D 05\"\nend\n\nfunction OnMatchFound(MatchAddress)\n    local JmpInstr = MatchAddress + 24\n    return JmpInstr + DerefToInt32(JmpInstr) + 4\nend");
 
                     string modifiedText = File.ReadAllText(Path.Combine(binaryDir, "UE4SS-settings.ini")).Replace("ModsFolderPath =", "ModsFolderPath = " + InstallPathLua);
-                    modifiedText = modifiedText.Replace("MajorVersion =", "MajorVersion = 4");
-                    modifiedText = modifiedText.Replace("MinorVersion =", "MinorVersion = 27"); // have to override UE version for windows store version
+                    modifiedText = Regex.Replace(modifiedText, "MajorVersion =.+\n", "MajorVersion = 4\n");
+                    modifiedText = Regex.Replace(modifiedText, "MinorVersion =.+\n", "MinorVersion = 27\n"); // have to override UE version for windows store version
                     File.WriteAllText(Path.Combine(binaryDir, "UE4SS-settings.ini"), modifiedText);
                 }
                 catch
