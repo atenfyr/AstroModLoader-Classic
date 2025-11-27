@@ -425,6 +425,16 @@ namespace AstroModIntegrator
                     var bpmBaker = new BiomePlacementModifiersBaker();
                     var levelBaker = new LevelBaker(ourExtractor, this);
 
+                    // add version to GUI
+                    var gmdoBaker = new GameMenuDisplayOptionsBaker(this);
+                    string gmdoPath = "Astro/Content/UI/PauseMenu/SubMenus/GameMenuOptionsSubmenu.uasset";
+                    byte[] gmdoData1 = FindFile(gmdoPath, ourExtractor, out EngineVersion gmdoEngVer);
+                    byte[] gmdoData2 = FindFile(Path.ChangeExtension(gmdoPath, ".uexp"), ourExtractor, out _);
+                    if (gmdoData1 != null && gmdoData2 != null && gmdoData1.Length != 0 && gmdoData2.Length != 0)
+                    {
+                        IntegratorUtils.SplitExportFiles(gmdoBaker.Bake(IntegratorUtils.Concatenate(gmdoData1, gmdoData2), gmdoEngVer), gmdoPath, CreatedPakData);
+                    }
+
                     // Patch levels for biome placement modifiers and missions, as well as persistent actors if we can just do that here to avoid reading twice
                     if (biomePlacementModifiers.Count > 0 || newTrailheads.Count > 0)
                     {
