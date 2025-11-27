@@ -3,7 +3,7 @@
 </p>
 <p align="center"><img src="https://i.imgur.com/uhGEgpS.png"></p>
 
-AstroModLoader Classic is a modern port of the original AstroModLoader, an open-source mod manager in C# for Astroneer .pak mods on Steam and the Microsoft Store, for modern versions of Astroneer (as of 2024). It includes support for mod profiles, automatic mod integration, and the ability to easily swap between multiple mod versions so that you can worry less about setup and more about playing.
+AstroModLoader Classic is a modern port of the original AstroModLoader, an open-source mod manager in C# for Astroneer .pak mods on Steam and the Microsoft Store, for modern versions of Astroneer (as of 2025). It includes support for mod profiles, automatic mod integration, and the ability to easily swap between multiple mod versions so that you can worry less about setup and more about playing.
 
 ## Features
 AstroModLoader Classic includes the following features and more:
@@ -23,8 +23,7 @@ To run a local copy of AstroModLoader Classic, visit the [Releases tab](https://
 ### Mod Installation
 To install mods, drag and drop the .zip or the .pak file of your mod onto the AstroModLoader Classic window while it is running.
 
-Alternatively, on Steam, you can also manually add mods for use with AstroModLoader Classic by placing them into the `%localappdata%\Astro\Saved\Mods` directory.
-On the Windows Store, you can place them into the `%localappdata%\Packages\SystemEraSoftworks.29415440E1269_ftk5pbg2rayv2\LocalState\Astro\Saved\Mods` directory.
+Alternatively, you can also manually add mods for use with AstroModLoader Classic by placing them into the `%localappdata%\Astro\Saved\Mods` directory. This path works for both Steam and Microsoft Store versions of the game.
 
 ### Usage Notes
 AstroModLoader Classic features a full set of hotkeys to control your list of mods. Below is a list of keyboard commands to manipulate the list of mods:

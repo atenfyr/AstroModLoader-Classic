@@ -6,8 +6,8 @@
     <AssemblyTitle>AstroModIntegrator</AssemblyTitle>
     <Product>AstroModIntegrator</Product>
     <Copyright>Copyright © AstroTechies, atenfyr 2025</Copyright>
-    <AssemblyVersion>1.7.3.0</AssemblyVersion>
-    <FileVersion>1.7.3.0</FileVersion>
+    <AssemblyVersion>1.7.6.0</AssemblyVersion>
+    <FileVersion>1.7.6.0</FileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <OutputPath>bin\x86\Debug\</OutputPath>
