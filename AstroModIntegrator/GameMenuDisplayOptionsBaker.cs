@@ -61,7 +61,7 @@ namespace AstroModIntegrator
                     TextPropertyData leftTextProperty = (TextPropertyData)rightTextProperty.Clone();
                     leftTextProperty.Name = FName.FromString(y, "LeftText");
 
-                    leftTextProperty.CultureInvariantString = FString.FromString("MOD LOADER");
+                    leftTextProperty.CultureInvariantString = FString.FromString("MOD INTEGRATOR");
                     rightTextProperty.CultureInvariantString = FString.FromString("Classic " + IntegratorUtils.CurrentVersion.ToString());
 
                     displayDataProperty.Value = [leftTextProperty, rightTextProperty];
@@ -94,12 +94,12 @@ namespace AstroModIntegrator
 
             if (doubleTextExport == null) throw new FormatException("Unable to find VersionNumber export");
             if (slotExport == null) throw new FormatException("Unable to find slot for VersionNumber export");
-            if (verticalBoxExport == null) throw new FormatException("Unable to find VerticalBoxSlot export");
+            if (verticalBoxExport == null) throw new FormatException("Unable to find VerticalBox export");
             slotExport.ObjectName = new FName(y, slotExport.ObjectName.Value, maxSlotExportNumber + 1);
 
             // now add reference to slot export in VerticalBox
             ArrayPropertyData slotsArr = verticalBoxExport["Slots"] as ArrayPropertyData;
-            if (slotsArr == null) throw new FormatException("Unable to find Slots array in VerticalBoxSlot export");
+            if (slotsArr == null) throw new FormatException("Unable to find Slots array in VerticalBox export");
 
             PropertyData[] oldDat = slotsArr.Value;
             PropertyData[] newDat = new PropertyData[oldDat.Length + 1];
@@ -109,7 +109,7 @@ namespace AstroModIntegrator
                 newDat[indexRightNow] = oldDat[i];
                 if (oldDat[i] is ObjectPropertyData oDat && oDat.Value.Index == packageIndexOfOldVersionSlotExport.Index)
                 {
-                    newDat[indexRightNow + 1] = new ObjectPropertyData(FName.DefineDummy(y, "-1")); // name is irrelevant because it's an array
+                    newDat[indexRightNow + 1] = new ObjectPropertyData(FName.DefineDummy(y, "-1")); // name is irrelevant because it's in an array
                     newDat[indexRightNow + 1].RawValue = FPackageIndex.FromRawIndex(y.Exports.Count + 2); // slotExport
                     indexRightNow++;
                 }
