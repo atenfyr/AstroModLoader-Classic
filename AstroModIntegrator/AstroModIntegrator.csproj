@@ -18,6 +18,14 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="LICENSE.md" />
+    <None Remove="NOTICE.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="LICENSE.md" />
+    <EmbeddedResource Include="NOTICE.md" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Update="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

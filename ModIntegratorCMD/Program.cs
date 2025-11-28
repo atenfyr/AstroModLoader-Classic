@@ -103,9 +103,48 @@ namespace ModIntegratorCMD
                 return;
             }
 
-            if (args.Length == 1 && args[0] == "version")
+            // single-argument options
+            if (args.Length >= 1 && args[0] == "version")
             {
                 Console.WriteLine(IntegratorUtils.CurrentVersion.ToString());
+                return;
+            }
+            if (args.Length >= 1 && args[0] == "license")
+            {
+                using (var resource = typeof(AstroModIntegrator.ModIntegrator).Assembly.GetManifestResourceStream("AstroModIntegrator.LICENSE.md"))
+                {
+                    if (resource != null)
+                    {
+                        using (StreamReader reader = new StreamReader(resource))
+                        {
+                            Console.WriteLine(reader.ReadToEnd());
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Failed to retrieve LICENSE.md. Please report this bug online on GitHub at https://github.com/atenfyr/AstroModLoader-Classic.\nYou may alternatively retrieve the LICENSE.md file online here: https://github.com/atenfyr/AstroModLoader-Classic/blob/master/AstroModIntegrator/LICENSE.md");
+                    }
+                }
+
+                return;
+            }
+            if (args.Length >= 1 && args[0] == "notice")
+            {
+                using (var resource = typeof(AstroModIntegrator.ModIntegrator).Assembly.GetManifestResourceStream("AstroModIntegrator.NOTICE.md"))
+                {
+                    if (resource != null)
+                    {
+                        using (StreamReader reader = new StreamReader(resource))
+                        {
+                            Console.WriteLine(reader.ReadToEnd());
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Failed to retrieve NOTICE.md. Please report this bug online on GitHub at https://github.com/atenfyr/AstroModLoader-Classic.\nYou may alternatively retrieve the NOTICE.md file online here: https://github.com/atenfyr/AstroModLoader-Classic/blob/master/AstroModIntegrator/NOTICE.md");
+                    }
+                }
+
                 return;
             }
 
@@ -121,6 +160,7 @@ namespace ModIntegratorCMD
                 Console.WriteLine("AstroModIntegrator Classic " + IntegratorUtils.CurrentVersion.ToString() + ": Automatically integrates Astroneer .pak mods based on their metadata\n");
                 Console.WriteLine("Usage: modintegrator <active mod paks directory> <game installation paks directory> [folder to output to]\n");
                 Console.WriteLine("Example: modintegrator \"" + decidedPath + "\" \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\ASTRONEER\\Astro\\Content\\Paks\"");
+                Console.WriteLine("\nExecute \"modintegrator license\" to receive a copy of the license agreement for this software.\nExecute \"modintegrator notice\" to receive a copy of the license agreements for the third-party material used in this software.");
                 return;
             }
 
