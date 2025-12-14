@@ -1099,7 +1099,7 @@ namespace AstroModLoader
 
         public void CheckUE4SSInstalled()
         {
-            UE4SSInstalled = File.Exists(Path.Combine(GetBinaryDir(), "UE4SS.dll"));
+            UE4SSInstalled = File.Exists(Path.Combine(GetBinaryDir(), "dwmapi.dll"));
         }
 
         private Semaphore fullUpdateSemaphore = new Semaphore(1, 1);

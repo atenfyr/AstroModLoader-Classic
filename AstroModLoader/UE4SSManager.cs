@@ -26,7 +26,7 @@ namespace AstroModLoader
                     using (var wb = new WebClient())
                     {
                         wb.Headers[HttpRequestHeader.UserAgent] = AMLUtils.UserAgent;
-                        wb.DownloadFile(new Uri("https://github.com/atenfyr/RE-UE4SS/releases/download/df2f401/UE4SS_v3.0.1-df2f401.zip"), ue4ssZipPath);
+                        wb.DownloadFile(new Uri("https://github.com/atenfyr/RE-UE4SS/releases/download/dcf8393/UE4SS_v3.0.1-1-dcf8393.zip"), ue4ssZipPath);
                     }
                 }
                 catch
@@ -39,26 +39,16 @@ namespace AstroModLoader
                 {
                     System.IO.Compression.ZipFile.ExtractToDirectory(ue4ssZipPath, binaryDir, true);
 
-                    // if the output has a directory called "ue4ss," move everything there to the root directory
-                    try
-                    {
-                        string[] filesWithinue4ssFolder = Directory.GetFiles(Path.Combine(binaryDir, "ue4ss"));
-                        foreach (string subPath in filesWithinue4ssFolder)
-                        {
-                            File.Move(subPath, Path.Combine(subPath, "..", "..", Path.GetFileName(subPath)), true);
-                        }
-                        Directory.Delete(Path.Combine(binaryDir, "ue4ss"), true);
-                    }
-                    catch { }
-
-                    // custom signature no longer necessary on 4.27
+                    // custom GUObjectArray signature no longer necessary on 4.27
                     //Directory.CreateDirectory(Path.Combine(binaryDir, "UE4SS_Signatures"));
                     //File.WriteAllText(Path.Combine(binaryDir, "UE4SS_Signatures", "GUObjectArray.lua"), "function Register()\n    return \"8B 05 ?? ?? ?? ?? 3B 05 ?? ?? ?? ?? 75 ?? 48 8D 15 ?? ?? ?? ?? 48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 8D 05\"\nend\n\nfunction OnMatchFound(MatchAddress)\n    local JmpInstr = MatchAddress + 24\n    return JmpInstr + DerefToInt32(JmpInstr) + 4\nend");
 
-                    string modifiedText = File.ReadAllText(Path.Combine(binaryDir, "UE4SS-settings.ini")).Replace("ModsFolderPath =", "ModsFolderPath = " + InstallPathLua);
+                    // custom FText signature IS necessary; bundled with .zip now on atenfyr/RE-UE4SS repository
+
+                    string modifiedText = File.ReadAllText(Path.Combine(binaryDir, "ue4ss", "UE4SS-settings.ini")).Replace("ModsFolderPath =", "ModsFolderPath = " + InstallPathLua);
                     modifiedText = Regex.Replace(modifiedText, "MajorVersion =.+\n", "MajorVersion = 4\n");
-                    modifiedText = Regex.Replace(modifiedText, "MinorVersion =.+\n", "MinorVersion = 27\n"); // have to override UE version for windows store version
-                    File.WriteAllText(Path.Combine(binaryDir, "UE4SS-settings.ini"), modifiedText);
+                    modifiedText = Regex.Replace(modifiedText, "MinorVersion =.+\n", "MinorVersion = 27\n"); // have to override UE version, although should be bundled with zip anyways
+                    File.WriteAllText(Path.Combine(binaryDir, "ue4ss", "UE4SS-settings.ini"), modifiedText);
                 }
                 catch
                 {
@@ -80,17 +70,6 @@ namespace AstroModLoader
             return true;
         }
 
-        private static HashSet<string> DeletionExceptions = new HashSet<string>()
-        {
-            "astro",
-            "openimagedenoise",
-            "tbb12",
-            "gamechat",
-            "libhttpclient",
-            "party",
-            "xcurl"
-        };
-
         public static bool Uninstall(string binaryDir, Form displayForm = null)
         {
             try
@@ -98,16 +77,8 @@ namespace AstroModLoader
                 string[] allPaths = Directory.GetFileSystemEntries(binaryDir);
                 foreach (string path in allPaths)
                 {
-                    string fileName = new FileInfo(path).Name.ToLower();
-
-                    bool isException = false;
-                    foreach (string exception in DeletionExceptions)
-                    {
-                        isException = fileName.StartsWith(exception);
-                        if (isException) break;
-                    }
-
-                    if (!isException)
+                    string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(path).ToLowerInvariant();
+                    if (fileNameWithoutExtension == "ue4ss" || fileNameWithoutExtension == "dwmapi")
                     {
                         try
                         {
@@ -129,7 +100,7 @@ namespace AstroModLoader
                 return false;
             }
 
-            if (File.Exists(Path.Combine(binaryDir, "UE4SS.dll")))
+            if (Directory.Exists(Path.Combine(binaryDir, "ue4ss")))
             {
                 if (displayForm != null) AMLUtils.InvokeUI(() => displayForm.ShowBasicButton("Failed to uninstall UE4SS!", "OK", null, null));
                 return false;
