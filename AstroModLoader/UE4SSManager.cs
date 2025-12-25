@@ -26,7 +26,7 @@ namespace AstroModLoader
                     using (var wb = new WebClient())
                     {
                         wb.Headers[HttpRequestHeader.UserAgent] = AMLUtils.UserAgent;
-                        wb.DownloadFile(new Uri("https://github.com/atenfyr/RE-UE4SS/releases/download/dcf8393/UE4SS_v3.0.1-1-dcf8393.zip"), ue4ssZipPath);
+                        wb.DownloadFile(new Uri("https://github.com/atenfyr/RE-UE4SS/releases/download/latest/latest.zip"), ue4ssZipPath);
                     }
                 }
                 catch
@@ -45,7 +45,7 @@ namespace AstroModLoader
 
                     // custom FText signature IS necessary; bundled with .zip now on atenfyr/RE-UE4SS repository
 
-                    string modifiedText = File.ReadAllText(Path.Combine(binaryDir, "ue4ss", "UE4SS-settings.ini")).Replace("ModsFolderPath =", "ModsFolderPath = " + InstallPathLua);
+                    string modifiedText = File.ReadAllText(Path.Combine(binaryDir, "ue4ss", "UE4SS-settings.ini")).Replace("[General]", "; AMLC\n+ModsFolderPaths = " + InstallPathLua + "\n\n[General]");
                     modifiedText = Regex.Replace(modifiedText, "MajorVersion =.+\n", "MajorVersion = 4\n");
                     modifiedText = Regex.Replace(modifiedText, "MinorVersion =.+\n", "MinorVersion = 27\n"); // have to override UE version, although should be bundled with zip anyways
                     File.WriteAllText(Path.Combine(binaryDir, "ue4ss", "UE4SS-settings.ini"), modifiedText);
