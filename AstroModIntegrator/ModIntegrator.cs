@@ -1,10 +1,12 @@
-﻿using System;
+﻿using DouglasDwyer.CasCore;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using UAssetAPI;
 using UAssetAPI.UnrealTypes;
 
@@ -82,9 +84,79 @@ namespace AstroModIntegrator
         /// <param name="prefixWithMod">Whether or not to prefix the message with the current mod name. Defaults to true.</param>
         /// <returns>Whether or not the operation succeeded.</returns>
         public bool LogToDisk(string text, bool prefixWithMod = true);
+        /// <summary>
+        /// Whether or not the custom routine should exit immediately. It is a good idea to check this method occasionally when executing large tasks.
+        /// </summary>
+        /// <returns>Whether or not the custom routine should exit immediately.</returns>
+        public bool ShouldExitNow();
     }
 
-    public class ModIntegrator : ICustomRoutineAPI
+    public class CustomRoutineAPIWrapper : ICustomRoutineAPI
+    {
+        private bool Enabled = true;
+        private ModIntegrator Integrator;
+
+        public UAsset FindFile(string target)
+        {
+            if (!Enabled) return null;
+            return Integrator.FindFile(target);
+        }
+        public byte[] FindFileRaw(string target)
+        {
+            if (!Enabled) return null;
+            return Integrator.FindFileRaw(target);
+        }
+        public byte[] FindFileRaw(string target, out EngineVersion engVer)
+        {
+            if (!Enabled)
+            {
+                engVer = EngineVersion.UNKNOWN;
+                return null;
+            }
+            return Integrator.FindFileRaw(target, out engVer);
+        }
+        public void AddFile(string outPath, UAsset outAsset)
+        {
+            if (!Enabled) return;
+            Integrator.AddFile(outPath, outAsset);
+        }
+        public void AddFileRaw(string outPath, byte[] rawData)
+        {
+            if (!Enabled) return;
+            Integrator.AddFileRaw(outPath, rawData);
+        }
+        public Metadata GetCurrentMod()
+        {
+            if (!Enabled) return null;
+            return Integrator.GetCurrentMod();
+        }
+        public IReadOnlyList<Metadata> GetAllMods()
+        {
+            if (!Enabled) return new List<Metadata>().AsReadOnly<Metadata>();
+            return Integrator.GetAllMods();
+        }
+        public bool LogToDisk(string text, bool prefixWithMod = true)
+        {
+            if (!Enabled) return false;
+            return Integrator.LogToDisk(text, prefixWithMod);
+        }
+        public bool ShouldExitNow()
+        {
+            return !Enabled;
+        }
+        internal void Disable()
+        {
+            Enabled = false;
+        }
+
+        internal CustomRoutineAPIWrapper(ModIntegrator integrator)
+        {
+            Enabled = true;
+            Integrator = integrator;
+        }
+    }
+
+    public class ModIntegrator
     {
         // Settings //
         public bool RefuseMismatchedConnections;
@@ -103,11 +175,41 @@ namespace AstroModIntegrator
         ];
 
         private Dictionary<string, byte[]> CreatedPakData;
+        private volatile Dictionary<string, byte[]> CreatedPakDataTemp;
         private volatile PakExtractor pakExtractorForCustomRoutines;
         private volatile Metadata currentMod = null;
         private volatile Dictionary<Guid, Metadata> customRoutineAssemblyToMetadata = null;
         private volatile bool isCurrentlyIntegrating = false;
+        private volatile bool hasLoggedOnceAlready = false;
 
+        // handle policy initialization
+        internal volatile static CasPolicy policy = null;
+        internal volatile static Thread policyInitThread = null;
+
+        static ModIntegrator()
+        {
+            if (policy == null)
+            {
+                policyInitThread = new Thread(() =>
+                {
+                    policy = new CasPolicyBuilder().WithDefaultSandbox()
+                        .Allow(new TypeBinding(typeof(ICustomRoutineAPI), Accessibility.Public))
+                        .Allow(new TypeBinding(typeof(CustomRoutineAPIWrapper), Accessibility.Public))
+                        .Allow(new TypeBinding(typeof(CustomRoutine), Accessibility.Private))
+                        .Allow(new TypeBinding(typeof(Metadata), Accessibility.Public))
+                        .Allow(new TypeBinding(typeof(IntegratorUtils), Accessibility.Public))
+                        .Allow(new AssemblyBinding(typeof(UAsset).Assembly, Accessibility.Public))
+                        .Deny(typeof(UAsset).GetMethods().Where(p => p.Name == "PathToStream" || p.Name == "Write" || p.Name == "SerializeJson" || p.Name == "SerializeJsonObject" || p.Name == "DeserializeJson" || p.Name == "DeserializeJsonObject" || p.Name == "PullSchemasFromAnotherAsset" || p.Name == "VerifyBinaryEquality"))
+                        .Deny(typeof(UAsset).GetConstructors())
+                        .Deny(new TypeBinding(typeof(UAssetAPI.Unversioned.Usmap), Accessibility.Private))
+                        .Deny(new TypeBinding(typeof(UAssetAPI.Unversioned.SaveGame), Accessibility.Private))
+                    .Build();
+                });
+                policyInitThread.Start();
+            }
+        }
+
+        // api methods
         public UAsset FindFile(string target)
         {
             if (target.StartsWith("/Game/")) target = IntegratorUtils.ConvertGamePathToAbsolutePath(target, ".uasset");
@@ -139,19 +241,25 @@ namespace AstroModIntegrator
         {
             if (outPath.StartsWith("/Game/")) outPath = IntegratorUtils.ConvertGamePathToAbsolutePath(outPath, ".uasset");
             FName.FromString(outAsset, "AMLC CR: " + (currentMod?.ModID ?? "unknown mod")); // add watermark to name map for easily tracing what mods modify what files
-            IntegratorUtils.SplitExportFiles(outAsset, outPath, CreatedPakData);
+            IntegratorUtils.SplitExportFiles(outAsset, outPath, CreatedPakDataTemp);
         }
 
         public void AddFileRaw(string outPath, byte[] rawData)
         {
-            CreatedPakData[outPath] = rawData;
+            CreatedPakDataTemp[outPath] = rawData;
         }
 
         public bool LogToDisk(string text, bool prefixWithMod = true)
         {
             try
             {
-                File.AppendAllText("ModIntegrator.log", (prefixWithMod ? ("[" + (GetCurrentMod()?.ModID ?? "unknown") + "] ") : "") + text + "\n");
+                if (!hasLoggedOnceAlready)
+                {
+                    File.WriteAllText("ModIntegrator.log", "Begin ModIntegrator.log\n");
+                }
+
+                File.AppendAllText("ModIntegrator.log", (prefixWithMod ? ("[" + (GetCurrentMod()?.ModID ?? "unknown mod") + "] ") : "") + text + "\n");
+                hasLoggedOnceAlready = true;
             }
             catch
             {
@@ -384,9 +492,11 @@ namespace AstroModIntegrator
         private void IntegrateModsInternal(string[] paksPaths, string installPath, string outputFolder = null, string mountPoint = null, bool extractLua = false, bool cleanLua = true) // @"C:\Users\<CLIENT USERNAME>\AppData\Local\Astro\Saved\Paks", @"C:\Program Files (x86)\Steam\steamapps\common\ASTRONEER\Astro\Content\Paks"
         {
             CreatedPakData = null;
+            CreatedPakDataTemp = null;
             currentMod = null;
             pakExtractorForCustomRoutines = null;
             customRoutineAssemblyToMetadata = null;
+            hasLoggedOnceAlready = false;
 
             foreach (string paksPath in paksPaths) Directory.CreateDirectory(paksPath);
 
@@ -407,6 +517,15 @@ namespace AstroModIntegrator
             string realPakPath = Directory.GetFiles(installPath, "pakchunk0-*.pak", SearchOption.TopDirectoryOnly)[0];
 
             InitializeSearch(files);
+
+            // sandbox policy
+            // extremely slow (reflection) so we cache it
+            if (EnableCustomRoutines && policyInitThread != null)
+            {
+                policyInitThread.Join();
+                policyInitThread = null;
+            }
+            CasAssemblyLoader loadContext = EnableCustomRoutines ? new CasAssemblyLoader(policy) : null;
 
             int modCount = 0;
             Dictionary<string, List<string>> newComponents = new Dictionary<string, List<string>>();
@@ -436,7 +555,7 @@ namespace AstroModIntegrator
                             byte[] assemblyData = newPakExtractor.ReadRaw("AMLCustomRoutine.dll");
                             if (assemblyData != null && assemblyData.Length > 0)
                             {
-                                Assembly newAsm = Assembly.Load(assemblyData);
+                                Assembly newAsm = loadContext.LoadFromStream(new MemoryStream(assemblyData));
                                 customRoutineAssemblies.Add(newAsm);
                                 customRoutineAssemblyToMetadata[newAsm.ManifestModule.ModuleVersionId] = us; 
                             }
@@ -683,32 +802,35 @@ namespace AstroModIntegrator
 #if DEBUG_CUSTOMROUTINETEST
                     // if Debug_CustomRoutineTest then also load CustomRoutineTest.dll if we can find it
                     // repeatedly look in higher directories (up to 7) until we find CustomRoutineTest or CustomRoutineTest.dll or *.sln
-                    string currentTestPath = Directory.GetCurrentDirectory();
-                    for (int i = 0; i < 7; i++)
+                    if (EnableCustomRoutines)
                     {
-                        try
+                        string currentTestPath = Directory.GetCurrentDirectory();
+                        for (int i = 0; i < 7; i++)
                         {
-                            string[] allPossibleDlls = Directory.GetFiles(currentTestPath, "CustomRoutineTest.dll", SearchOption.AllDirectories);
-                            for (int j = 0; j < allPossibleDlls.Length; j++)
+                            try
                             {
-                                if (i == 0 || (allPossibleDlls[j].Contains("Debug_CustomRoutineTest") && allPossibleDlls[j].Contains("bin")))
+                                string[] allPossibleDlls = Directory.GetFiles(currentTestPath, "CustomRoutineTest.dll", SearchOption.AllDirectories);
+                                for (int j = 0; j < allPossibleDlls.Length; j++)
                                 {
-                                    string chosenDll = allPossibleDlls[j];
-                                    Assembly newAsm = Assembly.Load(File.ReadAllBytes(chosenDll));
-                                    customRoutineAssemblies.Add(newAsm);
-                                    customRoutineAssemblyToMetadata[newAsm.ManifestModule.ModuleVersionId] = new Metadata(); // dummy metadata
-                                    break;
+                                    if (i == 0 || (allPossibleDlls[j].Contains("Debug_CustomRoutineTest") && allPossibleDlls[j].Contains("bin")))
+                                    {
+                                        string chosenDll = allPossibleDlls[j];
+                                        Assembly newAsm = loadContext.LoadFromStream(new MemoryStream(File.ReadAllBytes(chosenDll)));
+                                        customRoutineAssemblies.Add(newAsm);
+                                        customRoutineAssemblyToMetadata[newAsm.ManifestModule.ModuleVersionId] = new Metadata(); // dummy metadata
+                                        break;
+                                    }
                                 }
+
+                                if (Directory.GetFiles(currentTestPath, "*.sln", SearchOption.TopDirectoryOnly).Length > 0) break; // don't go any farther back if we have a sln file here
+                            }
+                            catch
+                            {
+                                // whatever
                             }
 
-                            if (Directory.GetFiles(currentTestPath, "*.sln", SearchOption.TopDirectoryOnly).Length > 0) break; // don't go any farther back if we have a sln file here
+                            currentTestPath = Directory.GetParent(currentTestPath).FullName;
                         }
-                        catch
-                        {
-                            // whatever
-                        }
-
-                        currentTestPath = Directory.GetParent(currentTestPath).FullName;
                     }
 #endif
 
@@ -732,12 +854,47 @@ namespace AstroModIntegrator
 
                                     currentMod = customRoutineAssemblyToMetadata[customRoutineAssemblies[i].ManifestModule.ModuleVersionId];
 
-                                    customRoutineInstance.Execute(this);
+                                    string modId = currentMod?.ModID ?? "unknown mod";
+
+                                    CreatedPakDataTemp = new Dictionary<string, byte[]>();
+
+                                    CustomRoutineAPIWrapper apiWrapper = new CustomRoutineAPIWrapper(this);
+                                    Thread workerThread = new Thread(() =>
+                                    {
+                                        try
+                                        {
+                                            customRoutineInstance.Execute(apiWrapper);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            LogToDisk("[" + modId + "] " + ex.Message + "\n" + (ex.StackTrace ?? "null") + "\n" + (ex.InnerException?.Message ?? "null") + "\n" + (ex.InnerException?.StackTrace ?? "null"), false); // the method could get incorrect mod id so we prepend the mod id manually
+#if DEBUG_CUSTOMROUTINETEST
+                                            throw;
+#endif
+                                        }
+                                    });
+                                    workerThread.Start();
+
+                                    bool terminated = workerThread.Join(TimeSpan.FromSeconds(5));
+                                    if (terminated)
+                                    {
+                                        // copy saved assets
+                                        foreach (KeyValuePair<string, byte[]> entry in CreatedPakDataTemp) CreatedPakData[entry.Key] = entry.Value;
+                                    }
+                                    else
+                                    {
+                                        LogToDisk("[" + modId + "] Failed to terminate in time; discarding changes, disabling API, and moving on", false);
+                                    }
+                                    apiWrapper.Disable(); // disable all api methods
                                 }
                                 catch (Exception ex)
                                 {
-                                    LogToDisk(ex.Message + "\n" + (ex.StackTrace ?? "null"), true);
+                                    LogToDisk(ex.Message + "\n" + (ex.StackTrace ?? "null") + "\n" + (ex.InnerException?.Message ?? "null") + "\n" + (ex.InnerException?.StackTrace ?? "null"), true);
+#if DEBUG_CUSTOMROUTINETEST
+                                    throw;
+#else
                                     continue;
+#endif
                                 }
                             }
                         }
@@ -814,6 +971,8 @@ namespace AstroModIntegrator
                     File.WriteAllBytes(Path.Combine(luaDir, "shared", "AstroHelpers", "AstroHelpers.lua"), Properties.Resources.AstroHelpers);
                 }
             }
+
+            // todo: aml kicks off modintegrator in separate process?
         }
 
         private Dictionary<string, byte[]> StarterPakData = new Dictionary<string, byte[]>();

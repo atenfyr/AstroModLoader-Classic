@@ -192,13 +192,14 @@ namespace ModIntegratorCMD
                 ModIntegrator us = new ModIntegrator()
                 {
                     RefuseMismatchedConnections = true,
-                    EnableCustomRoutines = true, // todo command line option
+                    EnableCustomRoutines = false, // todo command line option
                     //OptionalModIDs = new List<string> { "AstroChat" }
                 };
                 us.IntegrateMods(paksPaths.ToArray(), args[startOtherParams], args.Length > startOtherParams+1 ? args[startOtherParams+1] : null, args.Length > (startOtherParams+2) ? args[startOtherParams+2] : null, args.Length > (startOtherParams+3) ? (args[startOtherParams+3].ToLowerInvariant() == "true") : false, args.Length > (startOtherParams + 4) ? (args[startOtherParams + 4].ToLowerInvariant() == "true") : false);
                 stopWatch.Stop();
 
                 Console.WriteLine("Finished integrating! Took " + ((double)stopWatch.Elapsed.Ticks / TimeSpan.TicksPerMillisecond) + " ms in total.");
+                Environment.Exit(0);
             }
         }
     }
