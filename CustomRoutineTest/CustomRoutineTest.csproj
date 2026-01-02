@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <Configurations>Debug;Release;Debug_CustomRoutineTest</Configurations>
   </PropertyGroup>
-
+  
   <ItemGroup>
     <Reference Include="AstroModIntegrator">
       <HintPath>..\AstroModIntegrator\CustomRoutineDevKit\AstroModIntegrator.dll</HintPath>
