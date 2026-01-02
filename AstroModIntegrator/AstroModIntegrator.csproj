@@ -8,8 +8,13 @@
     <Copyright>Copyright © AstroTechies, atenfyr 2025</Copyright>
     <AssemblyVersion>1.7.6.0</AssemblyVersion>
     <FileVersion>1.7.6.0</FileVersion>
+    <Configurations>Debug;Release;Debug_CustomRoutineTest</Configurations>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_CustomRoutineTest|x86'">
     <OutputPath>bin\x86\Debug\</OutputPath>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
@@ -48,4 +53,8 @@
       <HintPath>UAssetAPI.dll</HintPath>
     </Reference>
   </ItemGroup>
+  <Target Name="AfterBuildMigrated" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
+    <Copy SourceFiles="$(ProjectDir)UAssetAPI.dll" DestinationFolder="CustomRoutineDevKit/" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="CustomRoutineDevKit/" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

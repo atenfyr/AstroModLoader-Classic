@@ -47,6 +47,7 @@
             aboutButton = new CoolButton();
             ue4ssButton = new CoolButton();
             cleanLuaBox = new System.Windows.Forms.CheckBox();
+            customRoutineBox = new System.Windows.Forms.CheckBox();
             SuspendLayout();
             // 
             // label1
@@ -153,7 +154,7 @@
             exitButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             exitButton.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
             exitButton.ForeColor = System.Drawing.Color.FromArgb(225, 225, 225);
-            exitButton.Location = new System.Drawing.Point(14, 259);
+            exitButton.Location = new System.Drawing.Point(14, 291);
             exitButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             exitButton.MinimumSize = new System.Drawing.Size(0, 30);
             exitButton.Name = "exitButton";
@@ -233,7 +234,7 @@
             // 
             refuseMismatchedConnectionsCheckbox.AutoSize = true;
             refuseMismatchedConnectionsCheckbox.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F);
-            refuseMismatchedConnectionsCheckbox.Location = new System.Drawing.Point(178, 202);
+            refuseMismatchedConnectionsCheckbox.Location = new System.Drawing.Point(178, 204);
             refuseMismatchedConnectionsCheckbox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             refuseMismatchedConnectionsCheckbox.Name = "refuseMismatchedConnectionsCheckbox";
             refuseMismatchedConnectionsCheckbox.Size = new System.Drawing.Size(205, 19);
@@ -250,7 +251,7 @@
             aboutButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             aboutButton.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
             aboutButton.ForeColor = System.Drawing.Color.FromArgb(225, 225, 225);
-            aboutButton.Location = new System.Drawing.Point(380, 259);
+            aboutButton.Location = new System.Drawing.Point(380, 291);
             aboutButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             aboutButton.MinimumSize = new System.Drawing.Size(0, 30);
             aboutButton.Name = "aboutButton";
@@ -268,7 +269,7 @@
             ue4ssButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             ue4ssButton.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
             ue4ssButton.ForeColor = System.Drawing.Color.FromArgb(225, 225, 225);
-            ue4ssButton.Location = new System.Drawing.Point(244, 259);
+            ue4ssButton.Location = new System.Drawing.Point(244, 291);
             ue4ssButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             ue4ssButton.MinimumSize = new System.Drawing.Size(0, 30);
             ue4ssButton.Name = "ue4ssButton";
@@ -282,7 +283,7 @@
             // 
             cleanLuaBox.AutoSize = true;
             cleanLuaBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F);
-            cleanLuaBox.Location = new System.Drawing.Point(178, 227);
+            cleanLuaBox.Location = new System.Drawing.Point(178, 255);
             cleanLuaBox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             cleanLuaBox.Name = "cleanLuaBox";
             cleanLuaBox.Size = new System.Drawing.Size(240, 19);
@@ -291,12 +292,26 @@
             cleanLuaBox.UseVisualStyleBackColor = true;
             cleanLuaBox.CheckedChanged += cleanLuaBox_CheckedChanged;
             // 
+            // customRoutineBox
+            // 
+            customRoutineBox.AutoSize = true;
+            customRoutineBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F);
+            customRoutineBox.Location = new System.Drawing.Point(178, 229);
+            customRoutineBox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            customRoutineBox.Name = "customRoutineBox";
+            customRoutineBox.Size = new System.Drawing.Size(243, 19);
+            customRoutineBox.TabIndex = 17;
+            customRoutineBox.Text = "Enable custom integrator routines (WIP)";
+            customRoutineBox.UseVisualStyleBackColor = true;
+            customRoutineBox.CheckedChanged += customRoutineBox_CheckedChanged;
+            // 
             // SettingsForm
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             BackColor = System.Drawing.Color.FromArgb(40, 42, 45);
-            ClientSize = new System.Drawing.Size(482, 303);
+            ClientSize = new System.Drawing.Size(482, 335);
+            Controls.Add(customRoutineBox);
             Controls.Add(cleanLuaBox);
             Controls.Add(ue4ssButton);
             Controls.Add(aboutButton);
@@ -348,5 +363,6 @@
         private CoolButton aboutButton;
         private CoolButton ue4ssButton;
         private System.Windows.Forms.CheckBox cleanLuaBox;
+        private System.Windows.Forms.CheckBox customRoutineBox;
     }
 }
