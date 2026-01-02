@@ -186,5 +186,12 @@ namespace AstroModIntegrator
             EnumMemberAttribute attr = enumVal.GetType().GetMember(enumVal.ToString())[0].GetCustomAttributes(false).OfType<EnumMemberAttribute>().FirstOrDefault();
             return attr?.Value;
         }
+
+        public static FPackageIndex AddItemTypeImport(this UAsset y, string itemTypePath, string itemTypeClass = null)
+        {
+            if (itemTypeClass == null) itemTypeClass = Path.GetFileNameWithoutExtension(itemTypePath) + "_C";
+            FPackageIndex newIdx = y.AddImport(new Import(FName.FromString(y, "/Script/CoreUObject"), FName.FromString(y, "Package"), FPackageIndex.FromRawIndex(0), FName.FromString(y, itemTypePath), false));
+            return y.AddImport(new Import(FName.FromString(y, "/Script/Engine"), FName.FromString(y, "BlueprintGeneratedClass"), newIdx, FName.FromString(y, itemTypeClass), false));
+        }
     }
 }

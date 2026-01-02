@@ -6,6 +6,10 @@
     <StartWorkingDirectory>
     </StartWorkingDirectory>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_CustomRoutineTest|AnyCPU'">
+    <StartArguments />
+    <StartWorkingDirectory />
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
     <StartWorkingDirectory>
     </StartWorkingDirectory>

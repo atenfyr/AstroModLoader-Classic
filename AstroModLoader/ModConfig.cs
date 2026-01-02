@@ -26,6 +26,10 @@ namespace AstroModLoader
         [DefaultValue(false)]
         public bool DisableLuaCleanup;
 
+        [JsonProperty("enable_custom_routines", DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(false)]
+        public bool EnableCustomRoutines;
+
         [JsonProperty("current")]
         public ModProfile ModsOnDisk;
 

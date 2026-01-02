@@ -8,14 +8,22 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModIntegratorCMD", "ModInte
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AstroModLoader", "AstroModLoader\AstroModLoader.csproj", "{2C9EBD7B-D624-45A6-A9AA-0A978EA7833B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomRoutineTest", "CustomRoutineTest\CustomRoutineTest.csproj", "{A5BCA878-2F59-487E-AE20-1622CE3AF414}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug_CustomRoutineTest|Any CPU = Debug_CustomRoutineTest|Any CPU
+		Debug_CustomRoutineTest|x86 = Debug_CustomRoutineTest|x86
 		Debug|Any CPU = Debug|Any CPU
 		Debug|x86 = Debug|x86
 		Release|Any CPU = Release|Any CPU
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{62FCCA7B-39D6-4C3C-A74F-7966DF2D40BC}.Debug_CustomRoutineTest|Any CPU.ActiveCfg = Debug_CustomRoutineTest|Any CPU
+		{62FCCA7B-39D6-4C3C-A74F-7966DF2D40BC}.Debug_CustomRoutineTest|Any CPU.Build.0 = Debug_CustomRoutineTest|Any CPU
+		{62FCCA7B-39D6-4C3C-A74F-7966DF2D40BC}.Debug_CustomRoutineTest|x86.ActiveCfg = Debug_CustomRoutineTest|Any CPU
+		{62FCCA7B-39D6-4C3C-A74F-7966DF2D40BC}.Debug_CustomRoutineTest|x86.Build.0 = Debug_CustomRoutineTest|Any CPU
 		{62FCCA7B-39D6-4C3C-A74F-7966DF2D40BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{62FCCA7B-39D6-4C3C-A74F-7966DF2D40BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{62FCCA7B-39D6-4C3C-A74F-7966DF2D40BC}.Debug|x86.ActiveCfg = Debug|x86
@@ -24,6 +32,10 @@ Global
 		{62FCCA7B-39D6-4C3C-A74F-7966DF2D40BC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{62FCCA7B-39D6-4C3C-A74F-7966DF2D40BC}.Release|x86.ActiveCfg = Release|x86
 		{62FCCA7B-39D6-4C3C-A74F-7966DF2D40BC}.Release|x86.Build.0 = Release|x86
+		{D8194300-9BA0-4105-80DB-110881C1144B}.Debug_CustomRoutineTest|Any CPU.ActiveCfg = Debug_CustomRoutineTest|Any CPU
+		{D8194300-9BA0-4105-80DB-110881C1144B}.Debug_CustomRoutineTest|Any CPU.Build.0 = Debug_CustomRoutineTest|Any CPU
+		{D8194300-9BA0-4105-80DB-110881C1144B}.Debug_CustomRoutineTest|x86.ActiveCfg = Debug_CustomRoutineTest|Any CPU
+		{D8194300-9BA0-4105-80DB-110881C1144B}.Debug_CustomRoutineTest|x86.Build.0 = Debug_CustomRoutineTest|Any CPU
 		{D8194300-9BA0-4105-80DB-110881C1144B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D8194300-9BA0-4105-80DB-110881C1144B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D8194300-9BA0-4105-80DB-110881C1144B}.Debug|x86.ActiveCfg = Debug|Any CPU
@@ -32,6 +44,10 @@ Global
 		{D8194300-9BA0-4105-80DB-110881C1144B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D8194300-9BA0-4105-80DB-110881C1144B}.Release|x86.ActiveCfg = Release|Any CPU
 		{D8194300-9BA0-4105-80DB-110881C1144B}.Release|x86.Build.0 = Release|Any CPU
+		{2C9EBD7B-D624-45A6-A9AA-0A978EA7833B}.Debug_CustomRoutineTest|Any CPU.ActiveCfg = Debug_CustomRoutineTest|Any CPU
+		{2C9EBD7B-D624-45A6-A9AA-0A978EA7833B}.Debug_CustomRoutineTest|Any CPU.Build.0 = Debug_CustomRoutineTest|Any CPU
+		{2C9EBD7B-D624-45A6-A9AA-0A978EA7833B}.Debug_CustomRoutineTest|x86.ActiveCfg = Debug_CustomRoutineTest|Any CPU
+		{2C9EBD7B-D624-45A6-A9AA-0A978EA7833B}.Debug_CustomRoutineTest|x86.Build.0 = Debug_CustomRoutineTest|Any CPU
 		{2C9EBD7B-D624-45A6-A9AA-0A978EA7833B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2C9EBD7B-D624-45A6-A9AA-0A978EA7833B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2C9EBD7B-D624-45A6-A9AA-0A978EA7833B}.Debug|x86.ActiveCfg = Debug|Any CPU
@@ -40,6 +56,18 @@ Global
 		{2C9EBD7B-D624-45A6-A9AA-0A978EA7833B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2C9EBD7B-D624-45A6-A9AA-0A978EA7833B}.Release|x86.ActiveCfg = Release|Any CPU
 		{2C9EBD7B-D624-45A6-A9AA-0A978EA7833B}.Release|x86.Build.0 = Release|Any CPU
+		{A5BCA878-2F59-487E-AE20-1622CE3AF414}.Debug_CustomRoutineTest|Any CPU.ActiveCfg = Debug_CustomRoutineTest|Any CPU
+		{A5BCA878-2F59-487E-AE20-1622CE3AF414}.Debug_CustomRoutineTest|Any CPU.Build.0 = Debug_CustomRoutineTest|Any CPU
+		{A5BCA878-2F59-487E-AE20-1622CE3AF414}.Debug_CustomRoutineTest|x86.ActiveCfg = Debug_CustomRoutineTest|Any CPU
+		{A5BCA878-2F59-487E-AE20-1622CE3AF414}.Debug_CustomRoutineTest|x86.Build.0 = Debug_CustomRoutineTest|Any CPU
+		{A5BCA878-2F59-487E-AE20-1622CE3AF414}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A5BCA878-2F59-487E-AE20-1622CE3AF414}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A5BCA878-2F59-487E-AE20-1622CE3AF414}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A5BCA878-2F59-487E-AE20-1622CE3AF414}.Debug|x86.Build.0 = Debug|Any CPU
+		{A5BCA878-2F59-487E-AE20-1622CE3AF414}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A5BCA878-2F59-487E-AE20-1622CE3AF414}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A5BCA878-2F59-487E-AE20-1622CE3AF414}.Release|x86.ActiveCfg = Release|Any CPU
+		{A5BCA878-2F59-487E-AE20-1622CE3AF414}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

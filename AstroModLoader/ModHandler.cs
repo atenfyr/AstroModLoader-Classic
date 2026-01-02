@@ -45,6 +45,7 @@ namespace AstroModLoader
             BaseForm = baseForm;
             OurIntegrator = new ModIntegrator();
             OurIntegrator.RefuseMismatchedConnections = true;
+            OurIntegrator.EnableCustomRoutines = false;
 
             string automaticSteamPath = null;
             string automaticWin10Path = null;
@@ -888,6 +889,7 @@ namespace AstroModLoader
                 if (ProfileList == null) ProfileList = new Dictionary<string, ModProfile>();
                 if (!string.IsNullOrEmpty(diskConfig.LaunchCommand)) LaunchCommand = diskConfig.LaunchCommand;
                 OurIntegrator.RefuseMismatchedConnections = diskConfig.RefuseMismatchedConnections;
+                OurIntegrator.EnableCustomRoutines = diskConfig.EnableCustomRoutines;
                 this.DisableLuaCleanup = diskConfig.DisableLuaCleanup;
                 if (includeGamePath)
                 {
@@ -971,6 +973,7 @@ namespace AstroModLoader
             newConfig.LaunchCommand = LaunchCommand;
             newConfig.DisableLuaCleanup = DisableLuaCleanup;
             newConfig.RefuseMismatchedConnections = OurIntegrator.RefuseMismatchedConnections;
+            newConfig.EnableCustomRoutines = OurIntegrator.EnableCustomRoutines;
             newConfig.Profiles = ProfileList;
             newConfig.ModsOnDisk = GenerateProfile();
 
