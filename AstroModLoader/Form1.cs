@@ -1121,6 +1121,7 @@ namespace AstroModLoader
                     case 0:
                         // nothing
                         break;
+                    case -1:
                     case 1:
                     case 2:
                         // cancel
