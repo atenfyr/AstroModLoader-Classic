@@ -40,12 +40,15 @@ namespace AstroModLoader
         public volatile bool UE4SSInstalled = false;
         public bool DisableLuaCleanup = false;
 
+        public static bool RefuseMismatchedConnections;
+        public static bool EnableCustomRoutines;
+        public static List<string> OptionalModIDs;
+
         public ModHandler(Form1 baseForm)
         {
             BaseForm = baseForm;
-            OurIntegrator = new ModIntegrator();
-            OurIntegrator.RefuseMismatchedConnections = true;
-            OurIntegrator.EnableCustomRoutines = false;
+            RefuseMismatchedConnections = true;
+            EnableCustomRoutines = false;
 
             string automaticSteamPath = null;
             string automaticWin10Path = null;
@@ -888,8 +891,8 @@ namespace AstroModLoader
                 ProfileList = diskConfig.Profiles;
                 if (ProfileList == null) ProfileList = new Dictionary<string, ModProfile>();
                 if (!string.IsNullOrEmpty(diskConfig.LaunchCommand)) LaunchCommand = diskConfig.LaunchCommand;
-                OurIntegrator.RefuseMismatchedConnections = diskConfig.RefuseMismatchedConnections;
-                OurIntegrator.EnableCustomRoutines = diskConfig.EnableCustomRoutines;
+                RefuseMismatchedConnections = diskConfig.RefuseMismatchedConnections;
+                EnableCustomRoutines = diskConfig.EnableCustomRoutines;
                 this.DisableLuaCleanup = diskConfig.DisableLuaCleanup;
                 if (includeGamePath)
                 {
@@ -972,8 +975,8 @@ namespace AstroModLoader
             newConfig.GamePath = GamePath;
             newConfig.LaunchCommand = LaunchCommand;
             newConfig.DisableLuaCleanup = DisableLuaCleanup;
-            newConfig.RefuseMismatchedConnections = OurIntegrator.RefuseMismatchedConnections;
-            newConfig.EnableCustomRoutines = OurIntegrator.EnableCustomRoutines;
+            newConfig.RefuseMismatchedConnections = RefuseMismatchedConnections;
+            newConfig.EnableCustomRoutines = EnableCustomRoutines;
             newConfig.Profiles = ProfileList;
             newConfig.ModsOnDisk = GenerateProfile();
 
@@ -989,7 +992,6 @@ namespace AstroModLoader
             });
         }
 
-        public static ModIntegrator OurIntegrator;
         private volatile bool currentlyIntegrating = false;
         public void IntegrateMods(bool hasLooped = false)
         {
@@ -1012,8 +1014,46 @@ namespace AstroModLoader
                     if (mod.Enabled && mod.IsOptional) optionalMods.Add(mod.CurrentModData.ModID);
                 }
 
-                if (TableHandler.ShouldContainOptionalColumn()) OurIntegrator.OptionalModIDs = optionalMods;
-                OurIntegrator.IntegrateMods(InstallPath, Path.Combine(GamePath, "Astro", "Content", "Paks"), null, null, true, !DisableLuaCleanup);
+                if (TableHandler.ShouldContainOptionalColumn()) OptionalModIDs = optionalMods;
+
+                string cwd = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AstroModLoader");
+                File.WriteAllText(Path.Combine(cwd, "ModIntegrator.log"), "");
+
+                bool useEmbedded = true;
+                try
+                {
+                    if (File.Exists(Path.Combine(cwd, "ModIntegratorOverride.exe"))) useEmbedded = false;
+                }
+                catch { }
+
+                Process process = new Process();
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.RedirectStandardError = true;
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.CreateNoWindow = true;
+                process.StartInfo.WorkingDirectory = cwd;
+                process.StartInfo.FileName = useEmbedded ? Path.Combine(cwd, "ModIntegrator.exe") : Path.Combine(cwd, "ModIntegratorOverride.exe");
+                process.StartInfo.Arguments = "-i \"" + InstallPath + "\" -g \"" + Path.Combine(GamePath, "Astro", "Content", "Paks") + "\" -v --extract_lua " + (DisableLuaCleanup ? "--disable_clean_lua " : "") + (EnableCustomRoutines ? "--enable_custom_routines " : "") + (RefuseMismatchedConnections ? "" : "--disable_refuse_mismatched_connections ") + ((OptionalModIDs != null && OptionalModIDs.Count > 0) ? (" --optional_mod_ids " + string.Join(' ', OptionalModIDs)) : string.Empty);
+                process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                process.Start();
+
+                string integratorOutput = process.StandardOutput.ReadToEnd().Trim();
+                string integratorError = process.StandardError.ReadToEnd().Trim();
+                File.AppendAllText(Path.Combine(cwd, "ModIntegrator.log"), "\n" + process.StartInfo.Arguments + "\n" + integratorOutput + "\n" + integratorError + "\n");
+
+                bool success = process.WaitForExit(10000);
+                if (!success)
+                {
+                    process.Kill();
+                    File.AppendAllText(Path.Combine(cwd, "ModIntegrator.log"), "Integrator process timed out");
+                }
+                if (success && process.ExitCode != 0)
+                {
+                    File.AppendAllText(Path.Combine(cwd, "ModIntegrator.log"), "Integrator process responded with exit code " + process.ExitCode.ToString());
+                    success = false;
+                }
+
+                if (!success) throw new Exception("Integrator process timed out or bad return value");
 
                 sw.Stop();
                 string tm = sw.Elapsed.TotalMilliseconds.ToString("#.##");

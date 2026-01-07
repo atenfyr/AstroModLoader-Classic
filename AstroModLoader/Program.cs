@@ -45,6 +45,27 @@ namespace AstroModLoader
         [STAThread]
         static void Main(string[] args)
         {
+            try
+            {
+                Directory.CreateDirectory(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AstroModLoader"));
+                using (var resource = typeof(Program).Assembly.GetManifestResourceStream("AstroModLoader.ModIntegrator.exe"))
+                {
+                    if (resource != null)
+                    {
+                        using (var file = new FileStream(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AstroModLoader", "ModIntegrator.exe"), FileMode.Create, FileAccess.Write))
+                        {
+                            resource.CopyTo(file);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // some error occurred we need to output...
+                Clipboard.SetText(ex.ToString());
+                return;
+            }
+
             Parser.Default.ParseArguments<Options>(args)
             .WithParsed(o =>
             {

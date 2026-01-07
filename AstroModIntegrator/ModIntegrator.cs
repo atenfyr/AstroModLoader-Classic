@@ -1,7 +1,6 @@
 ﻿using DouglasDwyer.CasCore;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -159,9 +158,10 @@ namespace AstroModIntegrator
     public class ModIntegrator
     {
         // Settings //
-        public bool RefuseMismatchedConnections;
+        public bool RefuseMismatchedConnections = true;
         public bool EnableCustomRoutines = false;
         public List<string> OptionalModIDs;
+        public bool Verbose = false;
         // End Settings //
 
         // Exposed Fields //
@@ -260,10 +260,10 @@ namespace AstroModIntegrator
             {
                 if (!hasLoggedOnceAlready)
                 {
-                    File.WriteAllText("ModIntegrator.log", "Begin ModIntegrator.log\n");
+                    File.WriteAllText("ModIntegrator.log", "[" + DateTime.Now.ToString() + "] Begin ModIntegrator.log\n");
                 }
 
-                File.AppendAllText("ModIntegrator.log", (prefixWithMod ? ("[" + (GetCurrentMod()?.ModID ?? "unknown mod") + "] ") : "") + text + "\n");
+                File.AppendAllText("ModIntegrator.log", "[" + DateTime.Now.ToString() + "] " + (prefixWithMod ? ("[" + (GetCurrentMod()?.ModID ?? "unknown mod") + "] ") : "") + text + "\n");
                 hasLoggedOnceAlready = true;
             }
             catch
@@ -271,6 +271,15 @@ namespace AstroModIntegrator
                 return false;
             }
             return true;
+        }
+
+        public bool LogToDiskVerbose(string text)
+        {
+            if (Verbose)
+            {
+                return LogToDisk(text, false);
+            }
+            return false;
         }
 
         public Metadata GetCurrentMod()
@@ -503,6 +512,22 @@ namespace AstroModIntegrator
             customRoutineAssemblyToMetadata = null;
             hasLoggedOnceAlready = false;
 
+            LogToDiskVerbose("Currently executing AstroModIntegrator Classic " + IntegratorUtils.CurrentVersion.ToString());
+            LogToDiskVerbose("https://github.com/atenfyr/AstroModLoader-Classic/tree/master/AstroModIntegrator");
+            LogToDiskVerbose(string.Empty);
+
+            LogToDiskVerbose("paksPaths: " + string.Join(", ", paksPaths));
+            LogToDiskVerbose("installPath: " + installPath);
+            LogToDiskVerbose("outputFolder: " + outputFolder ?? "null");
+            LogToDiskVerbose("mountPoint: " + mountPoint ?? "null");
+            LogToDiskVerbose("extractLua: " + extractLua);
+            LogToDiskVerbose("cleanLua: " + cleanLua);
+            LogToDiskVerbose("RefuseMismatchedConnections: " + RefuseMismatchedConnections);
+            LogToDiskVerbose("OptionalModIDs: " + string.Join(", ", OptionalModIDs ?? new List<string>()));
+            LogToDiskVerbose("EnableCustomRoutines: " + EnableCustomRoutines);
+            LogToDiskVerbose("Verbose: " + Verbose);
+            LogToDiskVerbose(string.Empty);
+
             foreach (string paksPath in paksPaths) Directory.CreateDirectory(paksPath);
 
             /*if (IntegratorUtils.CompatibilityMode)
@@ -521,6 +546,8 @@ namespace AstroModIntegrator
             if (realPakPaths.Length == 0) throw new FileNotFoundException("Failed to locate any game installation pak files");
             string realPakPath = Directory.GetFiles(installPath, "pakchunk0-*.pak", SearchOption.TopDirectoryOnly)[0];
 
+            LogToDiskVerbose("Found game installation pak: " + realPakPath);
+
             InitializeSearch(files);
 
             // sandbox policy
@@ -529,6 +556,7 @@ namespace AstroModIntegrator
             {
                 policyInitThread.Join();
                 policyInitThread = null;
+                LogToDiskVerbose("Sandbox policy is initialized");
             }
             CasAssemblyLoader loadContext = EnableCustomRoutines ? new CasAssemblyLoader(policy) : null;
 
@@ -544,6 +572,8 @@ namespace AstroModIntegrator
             customRoutineAssemblyToMetadata = new Dictionary<Guid, Metadata>();
             foreach (string file in files)
             {
+                LogToDiskVerbose("Parsing " + file);
+
                 using (FileStream f = new FileStream(file, FileMode.Open, FileAccess.Read))
                 {
                     Metadata us = null;
@@ -562,7 +592,8 @@ namespace AstroModIntegrator
                             {
                                 Assembly newAsm = loadContext.LoadFromStream(new MemoryStream(assemblyData));
                                 customRoutineAssemblies.Add(newAsm);
-                                customRoutineAssemblyToMetadata[newAsm.ManifestModule.ModuleVersionId] = us; 
+                                customRoutineAssemblyToMetadata[newAsm.ManifestModule.ModuleVersionId] = us;
+                                LogToDiskVerbose("Found AMLCustomRoutine.dll for mod " + (us?.ModID ?? file) + ", adding to list of assemblies");
                             }
                         }
                     }
@@ -684,6 +715,8 @@ namespace AstroModIntegrator
 
             if (modCount > 0)
             {
+                LogToDiskVerbose("Adding static files");
+
                 // Apply static files
                 CreatedPakData = StarterPakData.ToDictionary(entry => entry.Key, entry => (byte[])entry.Value.Clone());
 
@@ -723,6 +756,7 @@ namespace AstroModIntegrator
                         string iniIndicatedVersionStr = IniParser.FindLine(Encoding.UTF8.GetString(defaultGameIni), "/Script/EngineSettings.GeneralProjectSettings", "ProjectVersion");
                         if (iniIndicatedVersionStr != null) Version.TryParse(iniIndicatedVersionStr, out DetectedAstroBuild);
                     }
+                    LogToDiskVerbose("Detected game version: " + (DetectedAstroBuild?.ToString() ?? "unknown"));
 
                     var actorBaker = new ActorBaker();
                     var itemListBaker = new ItemListBaker();
@@ -737,6 +771,11 @@ namespace AstroModIntegrator
                     if (gmdoData1 != null && gmdoData1.Length != 0)
                     {
                         IntegratorUtils.SplitExportFiles(gmdoBaker.Bake(IntegratorUtils.Concatenate(gmdoData1, gmdoData2), gmdoEngVer), gmdoPath, CreatedPakData);
+                        LogToDiskVerbose("Baked GameMenuOptionsSubmenu");
+                    }
+                    else
+                    {
+                        LogToDiskVerbose("Failed to bake GameMenuOptionsSubmenu");
                     }
 
                     // Patch levels for biome placement modifiers and missions, as well as persistent actors if we can just do that here to avoid reading twice
@@ -753,7 +792,15 @@ namespace AstroModIntegrator
                                 allPersistentActorMaps.Remove(path); // avoid re-visiting this map again later
                                 mapReader.Dispose();
                             }
-                            if (mapPathData1 != null) IntegratorUtils.SplitExportFiles(baked, path, CreatedPakData);
+                            if (mapPathData1 != null)
+                            {
+                                IntegratorUtils.SplitExportFiles(baked, path, CreatedPakData);
+                                LogToDiskVerbose("Baked BPM/missions/persistent actors for " + path);
+                            }
+                            else
+                            {
+                                LogToDiskVerbose("Failed to bake BPM/missions/persistent actors for " + path);
+                            }
                         }
                     }
 
@@ -764,7 +811,15 @@ namespace AstroModIntegrator
                         {
                             byte[] mapPathData1 = FindFile(mapPath, ourExtractor, out EngineVersion engVer);
                             byte[] mapPathData2 = FindFile(Path.ChangeExtension(mapPath, ".uexp"), ourExtractor, out EngineVersion _) ?? Array.Empty<byte>();
-                            if (mapPathData1 != null) IntegratorUtils.SplitExportFiles(levelBaker.Bake(newPersistentActors.ToArray(), IntegratorUtils.Concatenate(mapPathData1, mapPathData2), engVer), mapPath, CreatedPakData);
+                            if (mapPathData1 != null)
+                            {
+                                IntegratorUtils.SplitExportFiles(levelBaker.Bake(newPersistentActors.ToArray(), IntegratorUtils.Concatenate(mapPathData1, mapPathData2), engVer), mapPath, CreatedPakData);
+                                LogToDiskVerbose("Baked persistent actors for " + mapPath);
+                            }
+                            else
+                            {
+                                LogToDiskVerbose("Failed to bake persistent actors for " + mapPath);
+                            }
                         }
                     }
 
@@ -775,14 +830,19 @@ namespace AstroModIntegrator
 
                         byte[] actorData1 = FindFile(establishedPath, ourExtractor, out EngineVersion engVer);
                         byte[] actorData2 = FindFile(Path.ChangeExtension(establishedPath, ".uexp"), ourExtractor, out EngineVersion _) ?? Array.Empty<byte>();
-                        if (actorData1 == null) continue;
+                        if (actorData1 == null)
+                        {
+                            LogToDiskVerbose("Failed to find target actor " + establishedPath + " for baking components");
+                            continue;
+                        }
                         try
                         {
                             IntegratorUtils.SplitExportFiles(actorBaker.Bake(entry.Value.ToArray(), IntegratorUtils.Concatenate(actorData1, actorData2), engVer), establishedPath, CreatedPakData);
+                            LogToDiskVerbose("Baked components for target actor " + establishedPath);
                         }
                         catch (Exception ex)
                         {
-                            Debug.WriteLine(ex.ToString());
+                            LogToDiskVerbose("Failed to bake components: " + ex.ToString());
                         }
                     }
 
@@ -793,14 +853,18 @@ namespace AstroModIntegrator
 
                         byte[] actorData1 = FindFile(establishedPath, ourExtractor, out EngineVersion engVer);
                         byte[] actorData2 = FindFile(Path.ChangeExtension(establishedPath, ".uexp"), ourExtractor, out EngineVersion _) ?? Array.Empty<byte>();
-                        if (actorData1 == null) continue;
+                        if (actorData1 == null)
+                        {
+                            LogToDiskVerbose("Failed to find target asset " + establishedPath + " for baking item entries");
+                        }
                         try
                         {
                             IntegratorUtils.SplitExportFiles(itemListBaker.Bake(entry.Value, IntegratorUtils.Concatenate(actorData1, actorData2), engVer), establishedPath, CreatedPakData);
+                            LogToDiskVerbose("Baked item entries for target asset " + establishedPath);
                         }
                         catch (Exception ex)
                         {
-                            Debug.WriteLine(ex.ToString());
+                            LogToDiskVerbose("Failed to bake item entries: " + ex.ToString());
                         }
                     }
 
@@ -809,6 +873,7 @@ namespace AstroModIntegrator
                     // repeatedly look in higher directories (up to 7) until we find CustomRoutineTest or CustomRoutineTest.dll or *.sln
                     if (EnableCustomRoutines)
                     {
+                        bool foundDll = false;
                         string currentTestPath = Directory.GetCurrentDirectory();
                         for (int i = 0; i < 7; i++)
                         {
@@ -823,6 +888,9 @@ namespace AstroModIntegrator
                                         Assembly newAsm = loadContext.LoadFromStream(new MemoryStream(File.ReadAllBytes(chosenDll)));
                                         customRoutineAssemblies.Add(newAsm);
                                         customRoutineAssemblyToMetadata[newAsm.ManifestModule.ModuleVersionId] = new Metadata(); // dummy metadata
+
+                                        foundDll = true;
+                                        LogToDiskVerbose("Found CustomRoutineTest.dll, adding to list of assemblies");
                                         break;
                                     }
                                 }
@@ -835,6 +903,11 @@ namespace AstroModIntegrator
                             }
 
                             currentTestPath = Directory.GetParent(currentTestPath).FullName;
+                        }
+
+                        if (!foundDll)
+                        {
+                            LogToDiskVerbose("Failed to find CustomRoutineTest.dll, skipping");
                         }
                     }
 #endif
@@ -860,6 +933,7 @@ namespace AstroModIntegrator
                                     currentMod = customRoutineAssemblyToMetadata[customRoutineAssemblies[i].ManifestModule.ModuleVersionId];
 
                                     string modId = currentMod?.ModID ?? "unknown mod";
+                                    LogToDiskVerbose("Executing custom routine for mod " + modId);
 
                                     CreatedPakDataTemp = new Dictionary<string, byte[]>();
 
@@ -908,6 +982,7 @@ namespace AstroModIntegrator
             }
 
             // final save
+            LogToDiskVerbose("Writing final integrator .pak file");
             byte[] pakData = PakBaker.Bake(CreatedPakData, mountPoint);
 
             outputFolder = outputFolder ?? paksPaths[0];
@@ -918,6 +993,7 @@ namespace AstroModIntegrator
 
             if (extractLua)
             {
+                LogToDiskVerbose("Extracting UE4SS mods");
                 string luaDir = Path.Combine(outputFolder, "UE4SS");
                 if (cleanLua)
                 {
@@ -978,6 +1054,7 @@ namespace AstroModIntegrator
             }
 
             // todo: aml kicks off modintegrator in separate process?
+            LogToDiskVerbose("All done");
         }
 
         private Dictionary<string, byte[]> StarterPakData = new Dictionary<string, byte[]>();

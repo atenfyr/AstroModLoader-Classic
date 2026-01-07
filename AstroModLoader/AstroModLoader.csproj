@@ -20,6 +20,7 @@
     <ApplicationIcon>Resources\icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="ModIntegrator.exe" />
     <None Remove="UAssetAPI.dll" />
   </ItemGroup>
   <ItemGroup>
@@ -34,8 +35,11 @@
     <Content Include="next_patch_notes.txt" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="ModIntegrator.exe" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="CommandLineParser">
-      <Version>2.8.0</Version>
+      <Version>2.9.1</Version>
     </PackageReference>
     <PackageReference Include="Costura.Fody" Version="5.7.0">
       <PrivateAssets>all</PrivateAssets>
@@ -53,5 +57,10 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AstroModIntegrator\AstroModIntegrator.csproj" />
+    <ProjectReference Include="..\ModIntegratorCMD\ModIntegratorCMD.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <PrivateAssets>all</PrivateAssets>
+      <PropagateProjectReferenceProperties>false</PropagateProjectReferenceProperties>
+    </ProjectReference>
   </ItemGroup>
 </Project>

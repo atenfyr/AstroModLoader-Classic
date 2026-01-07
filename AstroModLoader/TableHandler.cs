@@ -132,7 +132,7 @@ namespace AstroModLoader
         // While we allow clients to enable RefuseMismatchedConnections too, the average co-op player doesn't need the level of configuration that the Optional column provides
         public static bool ShouldContainOptionalColumn()
         {
-            return Program.CommandLineOptions.ServerMode && ModHandler.OurIntegrator.RefuseMismatchedConnections;
+            return Program.CommandLineOptions.ServerMode && ModHandler.RefuseMismatchedConnections;
         }
 
         private void RefreshInternal()

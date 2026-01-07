@@ -4,3 +4,4 @@
 **/Properties/PublishProfiles/*
 *.csproj.user
 packages
+AstroModLoader/ModIntegrator.exe
