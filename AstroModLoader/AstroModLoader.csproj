@@ -63,4 +63,9 @@
       <PropagateProjectReferenceProperties>false</PropagateProjectReferenceProperties>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Reference Include="UAssetAPI">
+      <HintPath>..\AstroModIntegrator\UAssetAPI.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 </Project>

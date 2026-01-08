@@ -164,6 +164,7 @@ namespace AstroModIntegrator
         public List<string> OptionalModIDs;
         public bool Verbose = false;
         public string PakToNamedPipe = null;
+        public string CallingExePath = null; // for debugging
         // End Settings //
 
         // Exposed Fields //
@@ -185,12 +186,13 @@ namespace AstroModIntegrator
         private volatile bool hasLoggedOnceAlready = false;
 
         // handle policy initialization
+        internal static readonly bool EnableSandbox = true; // adds a few extra hundred milliseconds
         internal volatile static CasPolicy policy = null;
         internal volatile static Thread policyInitThread = null;
 
         static ModIntegrator()
         {
-            if (policy == null)
+            if (policy == null && EnableSandbox)
             {
                 policyInitThread = new Thread(() =>
                 {
@@ -208,7 +210,7 @@ namespace AstroModIntegrator
                         .Allow(new AssemblyBinding(typeof(UAsset).Assembly, Accessibility.Public))
                         .Deny(typeof(UAsset).GetMethods().Where(p => p.Name == "PathToStream" || p.Name == "Write" || p.Name == "SerializeJson" || p.Name == "SerializeJsonObject" || p.Name == "DeserializeJson" || p.Name == "DeserializeJsonObject" || p.Name == "PullSchemasFromAnotherAsset" || p.Name == "VerifyBinaryEquality"))
                         .Deny(typeof(UAsset).GetConstructors())
-                        .Deny(new TypeBinding(typeof(UAssetAPI.Unversioned.Usmap), Accessibility.Private))
+                        //.Deny(new TypeBinding(typeof(UAssetAPI.Unversioned.Usmap), Accessibility.Private))
                         .Deny(new TypeBinding(typeof(UAssetAPI.Unversioned.SaveGame), Accessibility.Private))
                     .Build();
                 });
@@ -274,7 +276,13 @@ namespace AstroModIntegrator
                 if (usePipe)
                 {
                     logCache += desiredText;
-                    if (ForceLogCacheFlush || logCache.Length > 3000)
+
+                    int flushFrequency = 3000;
+#if DEBUG || DEBUG_CUSTOMROUTINETEST
+                    flushFrequency = 100;
+#endif
+
+                    if (ForceLogCacheFlush || logCache.Length > flushFrequency)
                     {
                         try
                         {
@@ -577,6 +585,7 @@ namespace AstroModIntegrator
             LogToDiskVerbose("RefuseMismatchedConnections: " + RefuseMismatchedConnections);
             LogToDiskVerbose("OptionalModIDs: " + string.Join(", ", OptionalModIDs ?? new List<string>()));
             LogToDiskVerbose("EnableCustomRoutines: " + EnableCustomRoutines);
+            LogToDiskVerbose("CallingExePath: " + CallingExePath);
             LogToDiskVerbose("Verbose: " + Verbose);
             LogToDiskVerbose(string.Empty);
 
@@ -604,13 +613,13 @@ namespace AstroModIntegrator
 
             // sandbox policy
             // extremely slow (reflection) so we cache it
-            if (EnableCustomRoutines && policyInitThread != null)
+            if (EnableCustomRoutines && EnableSandbox && policyInitThread != null)
             {
                 policyInitThread.Join();
                 policyInitThread = null;
                 LogToDiskVerbose("Sandbox policy is initialized");
             }
-            CasAssemblyLoader loadContext = EnableCustomRoutines ? new CasAssemblyLoader(policy) : null;
+            CasAssemblyLoader loadContext = (EnableCustomRoutines && EnableSandbox) ? new CasAssemblyLoader(policy) : null;
 
             int modCount = 0;
             Dictionary<string, List<string>> newComponents = new Dictionary<string, List<string>>();
@@ -642,7 +651,7 @@ namespace AstroModIntegrator
                             byte[] assemblyData = newPakExtractor.ReadRaw("AMLCustomRoutine.dll");
                             if (assemblyData != null && assemblyData.Length > 0)
                             {
-                                Assembly newAsm = loadContext.LoadFromStream(new MemoryStream(assemblyData));
+                                Assembly newAsm = EnableSandbox ? loadContext.LoadFromStream(new MemoryStream(assemblyData)) : Assembly.Load(assemblyData);
                                 customRoutineAssemblies.Add(newAsm);
                                 customRoutineAssemblyToMetadata[newAsm.ManifestModule.ModuleVersionId] = us;
                                 LogToDiskVerbose("Found AMLCustomRoutine.dll for mod " + (us?.ModID ?? file) + ", adding to list of assemblies");
@@ -925,10 +934,14 @@ namespace AstroModIntegrator
                     // repeatedly look in higher directories (up to 7) until we find CustomRoutineTest or CustomRoutineTest.dll or *.sln
                     if (EnableCustomRoutines)
                     {
+                        LogToDiskVerbose("Searching for CustomRoutineTest.dll");
+
                         bool foundDll = false;
-                        string currentTestPath = Directory.GetCurrentDirectory();
+                        string currentTestPath = CallingExePath ?? Directory.GetCurrentDirectory();
                         for (int i = 0; i < 7; i++)
                         {
+                            LogToDiskVerbose("Trying " + currentTestPath);
+
                             try
                             {
                                 string[] allPossibleDlls = Directory.GetFiles(currentTestPath, "CustomRoutineTest.dll", SearchOption.AllDirectories);
@@ -937,9 +950,9 @@ namespace AstroModIntegrator
                                     if (i == 0 || (allPossibleDlls[j].Contains("Debug_CustomRoutineTest") && allPossibleDlls[j].Contains("bin")))
                                     {
                                         string chosenDll = allPossibleDlls[j];
-                                        Assembly newAsm = loadContext.LoadFromStream(new MemoryStream(File.ReadAllBytes(chosenDll)));
+                                        Assembly newAsm = EnableSandbox ? loadContext.LoadFromStream(new MemoryStream(File.ReadAllBytes(chosenDll))) : Assembly.Load(File.ReadAllBytes(chosenDll));
                                         customRoutineAssemblies.Add(newAsm);
-                                        customRoutineAssemblyToMetadata[newAsm.ManifestModule.ModuleVersionId] = new Metadata(); // dummy metadata
+                                        customRoutineAssemblyToMetadata[newAsm.ManifestModule.ModuleVersionId] = new Metadata() { ModID = "CustomRoutineTest" }; // dummy metadata
 
                                         foundDll = true;
                                         LogToDiskVerbose("Found CustomRoutineTest.dll, adding to list of assemblies");
@@ -954,7 +967,8 @@ namespace AstroModIntegrator
                                 // whatever
                             }
 
-                            currentTestPath = Directory.GetParent(currentTestPath).FullName;
+                            currentTestPath = Directory.GetParent(currentTestPath)?.FullName;
+                            if (currentTestPath == null) break;
                         }
 
                         if (!foundDll)

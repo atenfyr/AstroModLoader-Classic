@@ -39,8 +39,11 @@ namespace ModIntegratorCMD
         [Option("disable_refuse_mismatched_connections", Required = false, Default = false, HelpText = "Whether or not to disable refusing mismatched connections.")]
         public bool DisableRefuseMismatchedConnections { get; set; }
 
-        [Option("pak_to_named_pipe", Required = false, Default = null, HelpText = "If specified, outputs written files to the specified named pipe instead of to disk. Used internally by AstroModLoader Classic.")]
+        [Option("pak_to_named_pipe", Required = false, Default = null, HelpText = "If specified, outputs written files to the specified named pipe instead of to disk. Used internally by AstroModLoader Classic. See source code for format.")]
         public string PakToNamedPipe { get; set; }
+
+        [Option("calling_exe_path", Required = false, Default = null, Hidden = true, HelpText = "Used only for Debug_CustomRoutineTest configuration")]
+        public string CallingExePath { get; set; }
 
         [Option("optional_mod_ids", Required = false, Default = null, HelpText = "List of optional mod IDs. Defaults to an empty list (i.e., clients are required to install all server-client mods).")]
         public IEnumerable<string> OptionalModIDs { get; set; }
@@ -199,7 +202,8 @@ namespace ModIntegratorCMD
                         EnableCustomRoutines = o.EnableCustomRoutines,
                         OptionalModIDs = o.OptionalModIDs?.ToList() ?? new List<string>(),
                         Verbose = o.Verbose,
-                        PakToNamedPipe = o.PakToNamedPipe
+                        PakToNamedPipe = o.PakToNamedPipe,
+                        CallingExePath = o.CallingExePath
                     };
                     us.IntegrateMods(o.ModPakDirectories?.ToArray(), o.GamePakDirectory, o.OutputFolder, o.MountPoint, o.ExtractLua, !o.DisableCleanLua);
                     stopWatch.Stop();

@@ -1061,6 +1061,13 @@ namespace AstroModLoader
 
                 Program.ExpectingPak = true;
 
+                string parms = "-i \"" + InstallPath.TrimEnd(['/', '\\']) + "\" -g \"" + Path.Combine(GamePath, "Astro", "Content", "Paks").TrimEnd(['/', '\\']) + "\" -v --pak_to_named_pipe " + Program.PipeUniqID + " --extract_lua --disable_clean_lua " + (EnableCustomRoutines ? "--enable_custom_routines " : "") + (RefuseMismatchedConnections ? "" : "--disable_refuse_mismatched_connections ");
+#if DEBUG_CUSTOMROUTINETEST
+                parms += "--calling_exe_path \"" + AppContext.BaseDirectory.TrimEnd(['/', '\\']) + "\" ";
+#endif
+                parms += (OptionalModIDs != null && OptionalModIDs.Count > 0) ? ("--optional_mod_ids " + string.Join(' ', OptionalModIDs) + " ") : string.Empty;
+
+
                 process = new Process();
                 process.StartInfo.RedirectStandardOutput = true;
                 process.StartInfo.RedirectStandardError = true;
@@ -1068,7 +1075,7 @@ namespace AstroModLoader
                 process.StartInfo.CreateNoWindow = true;
                 process.StartInfo.WorkingDirectory = cwd;
                 process.StartInfo.FileName = pathToExe;
-                process.StartInfo.Arguments = "-i \"" + InstallPath + "\" -g \"" + Path.Combine(GamePath, "Astro", "Content", "Paks") + "\" -v --pak_to_named_pipe " + Program.PipeUniqID + " --extract_lua --disable_clean_lua " + (EnableCustomRoutines ? "--enable_custom_routines " : "") + (RefuseMismatchedConnections ? "" : "--disable_refuse_mismatched_connections ") + ((OptionalModIDs != null && OptionalModIDs.Count > 0) ? (" --optional_mod_ids " + string.Join(' ', OptionalModIDs)) : string.Empty);
+                process.StartInfo.Arguments = parms;
                 process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
                 process.Start();
 

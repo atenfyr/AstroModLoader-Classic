@@ -155,6 +155,8 @@ namespace AstroModLoader
             try
             {
                 Directory.CreateDirectory(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AstroModLoader"));
+
+                // dump ModIntegrator.exe
                 using (var resource = typeof(Program).Assembly.GetManifestResourceStream("AstroModLoader.ModIntegrator.exe"))
                 {
                     if (resource != null)
@@ -165,6 +167,35 @@ namespace AstroModLoader
                         }
                     }
                 }
+
+                // dump repak_bind ourselves because low-integrity uassetapi cannot
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    using (var resource = typeof(UAssetAPI.PropertyTypes.Objects.PropertyData).Assembly.GetManifestResourceStream("UAssetAPI.repak_bind.so"))
+                    {
+                        if (resource != null)
+                        {
+                            using (var file = new FileStream(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AstroModLoader", "repak_bind.so"), FileMode.Create, FileAccess.Write))
+                            {
+                                resource.CopyTo(file);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    using (var resource = typeof(UAssetAPI.PropertyTypes.Objects.PropertyData).Assembly.GetManifestResourceStream("UAssetAPI.repak_bind.dll"))
+                    {
+                        if (resource != null)
+                        {
+                            using (var file = new FileStream(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AstroModLoader", "repak_bind.dll"), FileMode.Create, FileAccess.Write))
+                            {
+                                resource.CopyTo(file);
+                            }
+                        }
+                    }
+                }
+
             }
             catch (Exception ex)
             {
