@@ -995,6 +995,81 @@ namespace AstroModLoader
         private volatile bool currentlyIntegrating = false;
         public void IntegrateMods(bool hasLooped = false)
         {
+            // for now, we keep both the old (same process) and new (different process, with named pipes) approaches available, because:
+            // a. there are probably edge cases that could break integration with the new experimental approach still
+            // b. new approach is significantly slower, still perf work to do
+            if (EnableCustomRoutines)
+            {
+                IntegrateModsNew(hasLooped);
+            }
+            else
+            {
+                IntegrateModsOld(hasLooped);
+            }
+        }
+
+        public void IntegrateModsOld(bool hasLooped = false)
+        {
+            if (IsReadOnly || GamePath == null || InstallPath == null || currentlyIntegrating) return;
+
+            currentlyIntegrating = true;
+            try
+            {
+                AMLUtils.InvokeUI(() =>
+                {
+                    if (BaseForm.integratingLabel != null) BaseForm.integratingLabel.Text = "Integrating...";
+                });
+
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
+
+                List<string> optionalMods = new List<string>();
+                foreach (Mod mod in Mods)
+                {
+                    if (mod.Enabled && mod.IsOptional) optionalMods.Add(mod.CurrentModData.ModID);
+                }
+
+                var OurIntegrator = new ModIntegrator()
+                {
+                    RefuseMismatchedConnections = RefuseMismatchedConnections,
+                    Verbose = true,
+                    EnableCustomRoutines = false
+                };
+
+                if (TableHandler.ShouldContainOptionalColumn()) OurIntegrator.OptionalModIDs = optionalMods;
+                OurIntegrator.IntegrateMods(InstallPath, Path.Combine(GamePath, "Astro", "Content", "Paks"), null, null, true, !DisableLuaCleanup);
+
+                sw.Stop();
+                string tm = sw.Elapsed.TotalMilliseconds.ToString("#.##");
+
+                AMLUtils.InvokeUI(() =>
+                {
+                    if (BaseForm.integratingLabel != null) BaseForm.integratingLabel.Text = "Integrated in " + tm + " ms";
+                });
+            }
+            catch
+            {
+                if (hasLooped)
+                {
+                    AMLUtils.InvokeUI(() =>
+                    {
+                        if (BaseForm.integratingLabel != null) BaseForm.integratingLabel.Text = "Failed to integrate!";
+                    });
+                }
+                else
+                {
+                    currentlyIntegrating = false;
+                    IntegrateModsOld(true);
+                }
+            }
+            finally
+            {
+                currentlyIntegrating = false;
+            }
+        }
+
+        public void IntegrateModsNew(bool hasLooped = false)
+        {
             if (IsReadOnly || GamePath == null || InstallPath == null || currentlyIntegrating) return;
 
             currentlyIntegrating = true;
@@ -1096,7 +1171,7 @@ namespace AstroModLoader
                 }
 
                 if (success && !Program.GotPak) success = false;
-                if (!success) throw new Exception("Integrator process timed out or bad return value");
+                if (!success) throw new Exception("Integrator process timed out or responded with bad return value");
 
                 sw.Stop();
                 string tm = sw.Elapsed.TotalMilliseconds.ToString("#.##");
@@ -1120,7 +1195,7 @@ namespace AstroModLoader
                 else
                 {
                     currentlyIntegrating = false;
-                    IntegrateMods(true);
+                    IntegrateModsNew(true);
                 }
             }
             finally

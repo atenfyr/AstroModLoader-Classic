@@ -186,7 +186,7 @@ namespace AstroModIntegrator
         private volatile bool hasLoggedOnceAlready = false;
 
         // handle policy initialization
-        internal static readonly bool EnableSandbox = true; // adds a few extra hundred milliseconds
+        internal static readonly bool EnableSandbox = false; // adds a few extra hundred milliseconds
         internal volatile static CasPolicy policy = null;
         internal volatile static Thread policyInitThread = null;
 
@@ -278,7 +278,7 @@ namespace AstroModIntegrator
                     logCache += desiredText;
 
                     int flushFrequency = 3000;
-#if DEBUG || DEBUG_CUSTOMROUTINETEST
+#if DEBUG_CUSTOMROUTINETEST
                     flushFrequency = 100;
 #endif
 
