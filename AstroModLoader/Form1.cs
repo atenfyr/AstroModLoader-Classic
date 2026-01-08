@@ -1082,6 +1082,7 @@ namespace AstroModLoader
                     case 1:
                         // nothing
                         break;
+                    case -1:
                     case 2:
                         // cancel
                         return;
