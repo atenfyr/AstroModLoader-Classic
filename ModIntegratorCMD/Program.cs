@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace ModIntegratorCMD
 {
@@ -38,6 +39,9 @@ namespace ModIntegratorCMD
         [Option("disable_refuse_mismatched_connections", Required = false, Default = false, HelpText = "Whether or not to disable refusing mismatched connections.")]
         public bool DisableRefuseMismatchedConnections { get; set; }
 
+        [Option("pak_to_named_pipe", Required = false, Default = null, HelpText = "If specified, outputs written files to the specified named pipe instead of to disk. Used internally by AstroModLoader Classic.")]
+        public string PakToNamedPipe { get; set; }
+
         [Option("optional_mod_ids", Required = false, Default = null, HelpText = "List of optional mod IDs. Defaults to an empty list (i.e., clients are required to install all server-client mods).")]
         public IEnumerable<string> OptionalModIDs { get; set; }
     }
@@ -56,14 +60,14 @@ namespace ModIntegratorCMD
                 };
 
                 int TRIALS = 10;
-                Stopwatch stopWatch = new Stopwatch();
-                stopWatch.Start();
+                Stopwatch stopWatch2 = new Stopwatch();
+                stopWatch2.Start();
                 for (int i = 0; i < TRIALS; i++)
                 {
                     us.IntegrateMods(args[1], args[2]);
                 }
-                stopWatch.Stop();
-                Console.WriteLine("Finished integrating! Took " + ((double)stopWatch.Elapsed.Ticks / TimeSpan.TicksPerMillisecond / TRIALS) + " ms per trial for " + TRIALS + " trials.");
+                stopWatch2.Stop();
+                Console.WriteLine("Finished integrating! Took " + ((double)stopWatch2.Elapsed.Ticks / TimeSpan.TicksPerMillisecond / TRIALS) + " ms per trial for " + TRIALS + " trials.");
                 return;
             }
 
@@ -159,11 +163,34 @@ namespace ModIntegratorCMD
                 return;
             }
 
+            Stopwatch stopWatch = new Stopwatch();
+
+            // start watchdog
+            Task.Factory.StartNew(async () =>
+            {
+                // wait until stopwatch starts
+                while (!stopWatch.IsRunning)
+                {
+                    await Task.Delay(1000);
+                }
+
+                // keep running until stopwatch stops
+                while (stopWatch.IsRunning)
+                {
+                    if (stopWatch.ElapsedMilliseconds > 15000)
+                    {
+                        Console.Error.WriteLine("Watchdog timer activated after " + stopWatch.ElapsedMilliseconds.ToString() + " ms; prematurely terminating program");
+                        Environment.Exit(1);
+                        break;
+                    }
+                    await Task.Delay(1000);
+                }
+            });
+
             if (argWithHyphenExists) // new
             {
                 Parser.Default.ParseArguments<Options>(args).WithParsed(o =>
                 {
-                    Stopwatch stopWatch = new Stopwatch();
                     stopWatch.Start();
 
                     ModIntegrator us = new ModIntegrator()
@@ -171,7 +198,8 @@ namespace ModIntegratorCMD
                         RefuseMismatchedConnections = !o.DisableRefuseMismatchedConnections,
                         EnableCustomRoutines = o.EnableCustomRoutines,
                         OptionalModIDs = o.OptionalModIDs?.ToList() ?? new List<string>(),
-                        Verbose = o.Verbose
+                        Verbose = o.Verbose,
+                        PakToNamedPipe = o.PakToNamedPipe
                     };
                     us.IntegrateMods(o.ModPakDirectories?.ToArray(), o.GamePakDirectory, o.OutputFolder, o.MountPoint, o.ExtractLua, !o.DisableCleanLua);
                     stopWatch.Stop();
@@ -209,7 +237,6 @@ namespace ModIntegratorCMD
                 bool cleanLua = args.Length > (startOtherParams + 4) ? (args[startOtherParams + 4].ToLowerInvariant() == "true") : false;
                 bool enableCustomRoutines = args.Length > (startOtherParams + 5) ? (args[startOtherParams + 5].ToLowerInvariant() == "true") : false;
 
-                Stopwatch stopWatch = new Stopwatch();
                 stopWatch.Start();
 
                 ModIntegrator us = new ModIntegrator()

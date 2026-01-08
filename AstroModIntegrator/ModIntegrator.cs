@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -162,6 +163,7 @@ namespace AstroModIntegrator
         public bool EnableCustomRoutines = false;
         public List<string> OptionalModIDs;
         public bool Verbose = false;
+        public string PakToNamedPipe = null;
         // End Settings //
 
         // Exposed Fields //
@@ -254,16 +256,49 @@ namespace AstroModIntegrator
             CreatedPakDataTemp[outPath] = rawData;
         }
 
+        private string logCache = string.Empty;
+        private bool ForceLogCacheFlush = false;
+
         public bool LogToDisk(string text, bool prefixWithMod = true)
         {
             try
             {
-                if (!hasLoggedOnceAlready)
+                bool usePipe = !string.IsNullOrEmpty(PakToNamedPipe);
+
+                if (!hasLoggedOnceAlready && !usePipe)
                 {
                     File.WriteAllText("ModIntegrator.log", "[" + DateTime.Now.ToString() + "] Begin ModIntegrator.log\n");
                 }
 
-                File.AppendAllText("ModIntegrator.log", "[" + DateTime.Now.ToString() + "] " + (prefixWithMod ? ("[" + (GetCurrentMod()?.ModID ?? "unknown mod") + "] ") : "") + text + "\n");
+                string desiredText = "[" + DateTime.Now.ToString() + "] " + (prefixWithMod ? ("[" + (GetCurrentMod()?.ModID ?? "unknown mod") + "] ") : "") + text + "\n";
+                if (usePipe)
+                {
+                    logCache += desiredText;
+                    if (ForceLogCacheFlush || logCache.Length > 3000)
+                    {
+                        try
+                        {
+                            byte[] bytes = Encoding.UTF8.GetBytes(logCache);
+                            client.WriteLine("WriteFile:Log");
+                            client.WriteLine(bytes.Length.ToString());
+                            client.Write(bytes);
+                            client.Flush();
+                        }
+                        catch
+                        {
+
+                        }
+                        finally
+                        {
+                            logCache = string.Empty;
+                            ForceLogCacheFlush = false;
+                        }
+                    }
+                }
+                else
+                {
+                    File.AppendAllText("ModIntegrator.log", desiredText);
+                }
                 hasLoggedOnceAlready = true;
             }
             catch
@@ -488,6 +523,7 @@ namespace AstroModIntegrator
             IntegrateMods([paksPath], installPath, outputFolder, mountPoint, extractLua, cleanLua);
         }
 
+        private volatile NamedPipeClientStream client;
         public void IntegrateMods(string[] paksPaths, string installPath, string outputFolder = null, string mountPoint = null, bool extractLua = false, bool cleanLua = true)
         {
             if (isCurrentlyIntegrating) return;
@@ -499,10 +535,18 @@ namespace AstroModIntegrator
             }
             finally
             {
+                if (client != null)
+                {
+                    client.WriteLine("Disconnect");
+                    client.Flush();
+                    client.Close();
+                    client = null;
+                }
                 isCurrentlyIntegrating = false;
             }
         }
 
+        // do not execute outside of IntegrateMods
         private void IntegrateModsInternal(string[] paksPaths, string installPath, string outputFolder = null, string mountPoint = null, bool extractLua = false, bool cleanLua = true) // @"C:\Users\<CLIENT USERNAME>\AppData\Local\Astro\Saved\Paks", @"C:\Program Files (x86)\Steam\steamapps\common\ASTRONEER\Astro\Content\Paks"
         {
             CreatedPakData = null;
@@ -511,6 +555,14 @@ namespace AstroModIntegrator
             pakExtractorForCustomRoutines = null;
             customRoutineAssemblyToMetadata = null;
             hasLoggedOnceAlready = false;
+            client = null;
+
+            bool usePipe = !string.IsNullOrEmpty(PakToNamedPipe);
+            if (usePipe)
+            {
+                client = new NamedPipeClientStream(".", PakToNamedPipe, PipeDirection.Out);
+                client.Connect(5);
+            }
 
             LogToDiskVerbose("Currently executing AstroModIntegrator Classic " + IntegratorUtils.CurrentVersion.ToString());
             LogToDiskVerbose("https://github.com/atenfyr/AstroModLoader-Classic/tree/master/AstroModIntegrator");
@@ -982,13 +1034,27 @@ namespace AstroModIntegrator
             }
 
             // final save
+            outputFolder = outputFolder ?? paksPaths[0];
+
             LogToDiskVerbose("Writing final integrator .pak file");
             byte[] pakData = PakBaker.Bake(CreatedPakData, mountPoint);
 
-            outputFolder = outputFolder ?? paksPaths[0];
-            using (FileStream f = new FileStream(Path.Combine(outputFolder, @"999-AstroModIntegrator_P.pak"), FileMode.Create, FileAccess.Write))
+            if (usePipe)
             {
-                f.Write(pakData, 0, pakData.Length);
+                client.WriteLine("WriteFile:ClientTransmitIntegratorPak");
+                client.WriteLine(pakData.Length.ToString());
+                client.Write(pakData);
+                client.Flush();
+
+                LogToDiskVerbose("Wrote to named pipe " + PakToNamedPipe);
+            }
+            else
+            {
+                using (FileStream f = new FileStream(Path.Combine(outputFolder, @"999-AstroModIntegrator_P.pak"), FileMode.Create, FileAccess.Write))
+                {
+                    f.Write(pakData, 0, pakData.Length);
+                }
+                LogToDiskVerbose("Wrote to disk");
             }
 
             if (extractLua)
@@ -1002,6 +1068,11 @@ namespace AstroModIntegrator
                         Directory.Delete(luaDir, true);
                     }
                     catch { }
+                }
+
+                if (usePipe)
+                {
+                    client.WriteLine("WriteFile:ClientTransmitUE4SSMods");
                 }
 
                 foreach (string file in files)
@@ -1026,13 +1097,26 @@ namespace AstroModIntegrator
                         {
                             if (subPath.StartsWith("UE4SS/"))
                             {
-                                string newPath = Path.Combine(outputFolder, "UE4SS", mtd.ModID, subPath.Substring(6));
-                                Directory.CreateDirectory(Path.GetDirectoryName(newPath));
-                                File.WriteAllBytes(newPath, us.ReadRaw(subPath));
+                                if (usePipe)
+                                {
+                                    byte[] rawData = us.ReadRaw(subPath);
+                                    client.WriteLine(mtd.ModID);
+                                    client.WriteLine(subPath.Substring(6));
+                                    client.WriteLine(rawData.Length.ToString());
+                                    client.Write(rawData, 0, rawData.Length);
+                                }
+                                else
+                                {
+                                    string newPath = Path.Combine(outputFolder, "UE4SS", mtd.ModID, subPath.Substring(6));
+                                    Directory.CreateDirectory(Path.GetDirectoryName(newPath));
+                                    File.WriteAllBytes(newPath, us.ReadRaw(subPath));
+                                }
                             }
                         }
                     }
                 }
+
+                if (usePipe) client.WriteLine("Stop");
 
                 if (Path.Exists(luaDir))
                 {
@@ -1042,19 +1126,51 @@ namespace AstroModIntegrator
                     {
                         modsTxt.AppendLine(Path.GetFileNameWithoutExtension(luaDirPath) + " : 1");
                     }
-                    File.WriteAllText(Path.Combine(luaDir, "mods.txt"), modsTxt.ToString());
+                    string modsTxtAsStr = modsTxt.ToString();
+
+                    if (usePipe)
+                    {
+                        byte[] bytes = Encoding.ASCII.GetBytes(modsTxtAsStr);
+                        client.WriteLine(bytes.Length.ToString());
+                        client.Write(bytes, 0, bytes.Length);
+                    }
+                    else
+                    {
+                        File.WriteAllText(Path.Combine(luaDir, "mods.txt"), modsTxtAsStr);
+                    }
 
                     // extra libraries
                     // UEHelpers taken from UE4SS, see NOTICE.md for more information
-                    Directory.CreateDirectory(Path.Combine(luaDir, "shared", "UEHelpers"));
-                    Directory.CreateDirectory(Path.Combine(luaDir, "shared", "AstroHelpers"));
-                    File.WriteAllBytes(Path.Combine(luaDir, "shared", "UEHelpers", "UEHelpers.lua"), Properties.Resources.UEHelpers);
-                    File.WriteAllBytes(Path.Combine(luaDir, "shared", "AstroHelpers", "AstroHelpers.lua"), Properties.Resources.AstroHelpers);
+                    if (usePipe)
+                    {
+                        client.WriteLine(Properties.Resources.UEHelpers.Length.ToString());
+                        client.Write(Properties.Resources.UEHelpers, 0, Properties.Resources.UEHelpers.Length);
+                        client.WriteLine(Properties.Resources.AstroHelpers.Length.ToString());
+                        client.Write(Properties.Resources.AstroHelpers, 0, Properties.Resources.AstroHelpers.Length);
+                    }
+                    else
+                    {
+                        Directory.CreateDirectory(Path.Combine(luaDir, "shared", "UEHelpers"));
+                        Directory.CreateDirectory(Path.Combine(luaDir, "shared", "AstroHelpers"));
+                        File.WriteAllBytes(Path.Combine(luaDir, "shared", "UEHelpers", "UEHelpers.lua"), Properties.Resources.UEHelpers);
+                        File.WriteAllBytes(Path.Combine(luaDir, "shared", "AstroHelpers", "AstroHelpers.lua"), Properties.Resources.AstroHelpers);
+                    }
+                }
+                else if (usePipe)
+                {
+                    client.WriteLine("0"); // mods.txt
+                    client.WriteLine("0"); // UEHelpers.lua
+                    client.WriteLine("0"); // AstroHelpers.lua
                 }
             }
 
-            // todo: aml kicks off modintegrator in separate process?
             LogToDiskVerbose("All done");
+
+            if (usePipe && hasLoggedOnceAlready)
+            {
+                ForceLogCacheFlush = true;
+                LogToDisk("Flushing logs", false);
+            }
         }
 
         private Dictionary<string, byte[]> StarterPakData = new Dictionary<string, byte[]>();

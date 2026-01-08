@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
@@ -169,6 +170,12 @@ namespace AstroModIntegrator
         public static void WriteUString(this BinaryWriter writer, UString str)
         {
             WriteUString(writer, str?.Value, str?.Encoding);
+        }
+
+        public static void WriteLine(this PipeStream strm, string str)
+        {
+            byte[] bytes = Encoding.ASCII.GetBytes(str + "\n");
+            strm.Write(bytes, 0, bytes.Length);
         }
 
         public static readonly Regex GameRegex = new Regex(@"^\/Game\/", RegexOptions.Compiled);

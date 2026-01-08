@@ -998,12 +998,55 @@ namespace AstroModLoader
             if (IsReadOnly || GamePath == null || InstallPath == null || currentlyIntegrating) return;
 
             currentlyIntegrating = true;
+            Process process = null;
             try
             {
                 AMLUtils.InvokeUI(() =>
                 {
                     if (BaseForm.integratingLabel != null) BaseForm.integratingLabel.Text = "Integrating...";
                 });
+
+                // manually clean up lua if requested
+                if (!DisableLuaCleanup)
+                {
+                    try
+                    {
+                        Directory.Delete(Path.Combine(InstallPath, "UE4SS"), true);
+                    }
+                    catch { }
+                }
+
+                string cwd = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AstroModLoader");
+                Program.Cwd = cwd;
+                File.WriteAllText(Path.Combine(cwd, "ModIntegrator.log"), "");
+
+                bool useEmbedded = true;
+                try
+                {
+                    if (File.Exists(Path.Combine(cwd, "ModIntegratorOverride.exe"))) useEmbedded = false;
+                }
+                catch { }
+
+                string pathToExe = useEmbedded ? Path.Combine(cwd, "ModIntegrator.exe") : Path.Combine(cwd, "ModIntegratorOverride.exe");
+                string errorTextToAppend = "";
+
+                // try to reduce integrity to low
+                try
+                {
+                    Process icaclsProcess = new Process();
+                    icaclsProcess.StartInfo.FileName = "icacls.exe";
+                    icaclsProcess.StartInfo.Arguments = "\"" + pathToExe + "\" /setintegritylevel Low";
+                    icaclsProcess.StartInfo.UseShellExecute = false;
+                    icaclsProcess.StartInfo.RedirectStandardOutput = true;
+                    icaclsProcess.StartInfo.CreateNoWindow = true;
+                    icaclsProcess.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                    icaclsProcess.Start();
+                    icaclsProcess.WaitForExit();
+                }
+                catch (Exception ex)
+                {
+                    errorTextToAppend += "Failed to execute icacls.exe: " + ex.Message.ToString() + "\n";
+                }
 
                 Stopwatch sw = new Stopwatch();
                 sw.Start();
@@ -1016,32 +1059,24 @@ namespace AstroModLoader
 
                 if (TableHandler.ShouldContainOptionalColumn()) OptionalModIDs = optionalMods;
 
-                string cwd = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AstroModLoader");
-                File.WriteAllText(Path.Combine(cwd, "ModIntegrator.log"), "");
+                Program.ExpectingPak = true;
 
-                bool useEmbedded = true;
-                try
-                {
-                    if (File.Exists(Path.Combine(cwd, "ModIntegratorOverride.exe"))) useEmbedded = false;
-                }
-                catch { }
-
-                Process process = new Process();
+                process = new Process();
                 process.StartInfo.RedirectStandardOutput = true;
                 process.StartInfo.RedirectStandardError = true;
                 process.StartInfo.UseShellExecute = false;
                 process.StartInfo.CreateNoWindow = true;
                 process.StartInfo.WorkingDirectory = cwd;
-                process.StartInfo.FileName = useEmbedded ? Path.Combine(cwd, "ModIntegrator.exe") : Path.Combine(cwd, "ModIntegratorOverride.exe");
-                process.StartInfo.Arguments = "-i \"" + InstallPath + "\" -g \"" + Path.Combine(GamePath, "Astro", "Content", "Paks") + "\" -v --extract_lua " + (DisableLuaCleanup ? "--disable_clean_lua " : "") + (EnableCustomRoutines ? "--enable_custom_routines " : "") + (RefuseMismatchedConnections ? "" : "--disable_refuse_mismatched_connections ") + ((OptionalModIDs != null && OptionalModIDs.Count > 0) ? (" --optional_mod_ids " + string.Join(' ', OptionalModIDs)) : string.Empty);
+                process.StartInfo.FileName = pathToExe;
+                process.StartInfo.Arguments = "-i \"" + InstallPath + "\" -g \"" + Path.Combine(GamePath, "Astro", "Content", "Paks") + "\" -v --pak_to_named_pipe " + Program.PipeUniqID + " --extract_lua --disable_clean_lua " + (EnableCustomRoutines ? "--enable_custom_routines " : "") + (RefuseMismatchedConnections ? "" : "--disable_refuse_mismatched_connections ") + ((OptionalModIDs != null && OptionalModIDs.Count > 0) ? (" --optional_mod_ids " + string.Join(' ', OptionalModIDs)) : string.Empty);
                 process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
                 process.Start();
 
-                string integratorOutput = process.StandardOutput.ReadToEnd().Trim();
+                string integratorOut = process.StandardOutput.ReadToEnd().Trim();
                 string integratorError = process.StandardError.ReadToEnd().Trim();
-                File.AppendAllText(Path.Combine(cwd, "ModIntegrator.log"), "\n" + process.StartInfo.Arguments + "\n" + integratorOutput + "\n" + integratorError + "\n");
+                File.AppendAllText(Path.Combine(cwd, "ModIntegrator.log"), "\n" + process.StartInfo.Arguments + "\n" + integratorOut + "\n" + integratorError + "\n\n" + errorTextToAppend + "\n");
 
-                bool success = process.WaitForExit(10000);
+                bool success = process.WaitForExit(15000);
                 if (!success)
                 {
                     process.Kill();
@@ -1053,6 +1088,7 @@ namespace AstroModLoader
                     success = false;
                 }
 
+                if (success && !Program.GotPak) success = false;
                 if (!success) throw new Exception("Integrator process timed out or bad return value");
 
                 sw.Stop();
@@ -1065,6 +1101,8 @@ namespace AstroModLoader
             }
             catch
             {
+                if (process != null && !process.HasExited) process.Kill();
+
                 if (hasLooped)
                 {
                     AMLUtils.InvokeUI(() =>
@@ -1080,6 +1118,9 @@ namespace AstroModLoader
             }
             finally
             {
+                if (process != null && !process.HasExited) process.Kill();
+                Program.ExpectingPak = false;
+                Program.GotPak = false;
                 currentlyIntegrating = false;
             }
         }
