@@ -8,7 +8,7 @@ namespace AstroModLoader
     public partial class BasicButtonPopup : Form
     {
         public string DisplayText;
-        public int ResultButton;
+        public int ResultButton = -1;
         public string PageToVisit = "";
 
         public BasicButtonPopup()

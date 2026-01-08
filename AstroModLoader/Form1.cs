@@ -1095,6 +1095,7 @@ namespace AstroModLoader
             // ok, now check: do we meet all dependencies?
             // we only actually check presence of dependency, not version, for simplicity
             List<string> missingDependencies = new List<string>();
+            List<string> disabledDependencies = new List<string>();
             HashSet<string> allModIDs = ModManager.Mods.Select(x => x.CurrentModData.ModID).ToHashSet();
             foreach (var mod in ModManager.Mods)
             {
@@ -1107,6 +1108,10 @@ namespace AstroModLoader
                         {
                             missingDependencies.Add(entry.Key);
                             continue;
+                        }
+                        if (!ModManager.Mods.First(x => x.newModID == entry.Key).Enabled)
+                        {
+                            disabledDependencies.Add(entry.Key);
                         }
                     }
                 }
@@ -1121,6 +1126,24 @@ namespace AstroModLoader
                     case 0:
                         // nothing
                         break;
+                    case -1:
+                    case 1:
+                    case 2:
+                        // cancel
+                        return;
+                }
+            }
+
+            if (disabledDependencies.Count > 0)
+            {
+                int dialogRes = -1;
+                AMLUtils.InvokeUI(() => dialogRes = this.ShowBasicButton("One or more of your mods have these required dependencies disabled:\n\n" + string.Join(", ", disabledDependencies) + "\n\nThese mods may not operate as expected without these dependencies.\nWould you like to continue anyways?", "Play", "Cancel", null));
+                switch (dialogRes)
+                {
+                    case 0:
+                        // nothing
+                        break;
+                    case -1:
                     case 1:
                     case 2:
                         // cancel
