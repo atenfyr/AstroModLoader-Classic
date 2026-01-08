@@ -45,6 +45,9 @@ namespace ModIntegratorCMD
         [Option("calling_exe_path", Required = false, Default = null, Hidden = true, HelpText = "Used only for Debug_CustomRoutineTest configuration")]
         public string CallingExePath { get; set; }
 
+        [Option("benchmark", Required = false, Default = 1, HelpText = "If specified, repeat integration multiple times for benchmarking purposes.")]
+        public int BenchmarkTrials { get; set; }
+
         [Option("optional_mod_ids", Required = false, Default = null, HelpText = "List of optional mod IDs. Defaults to an empty list (i.e., clients are required to install all server-client mods).")]
         public IEnumerable<string> OptionalModIDs { get; set; }
     }
@@ -53,27 +56,6 @@ namespace ModIntegratorCMD
     {
         public static void Main(string[] args)
         {
-            if (args.Length == 3 && args[0] == "benchmark")
-            {
-                ModIntegrator us = new ModIntegrator()
-                {
-                    RefuseMismatchedConnections = true,
-                    EnableCustomRoutines = false,
-                    //OptionalModIDs = new List<string> { "AstroChat" }
-                };
-
-                int TRIALS = 10;
-                Stopwatch stopWatch2 = new Stopwatch();
-                stopWatch2.Start();
-                for (int i = 0; i < TRIALS; i++)
-                {
-                    us.IntegrateMods(args[1], args[2]);
-                }
-                stopWatch2.Stop();
-                Console.WriteLine("Finished integrating! Took " + ((double)stopWatch2.Elapsed.Ticks / TimeSpan.TicksPerMillisecond / TRIALS) + " ms per trial for " + TRIALS + " trials.");
-                return;
-            }
-
             // single-argument options
             if (args.Length >= 1 && args[0] == "license")
             {
@@ -167,6 +149,7 @@ namespace ModIntegratorCMD
             }
 
             Stopwatch stopWatch = new Stopwatch();
+            int numBenchmarkTrials = 1;
 
             // start watchdog
             Task.Factory.StartNew(async () =>
@@ -180,7 +163,7 @@ namespace ModIntegratorCMD
                 // keep running until stopwatch stops
                 while (stopWatch.IsRunning)
                 {
-                    if (stopWatch.ElapsedMilliseconds > 15000)
+                    if (stopWatch.ElapsedMilliseconds > (15000 * numBenchmarkTrials))
                     {
                         Console.Error.WriteLine("Watchdog timer activated after " + stopWatch.ElapsedMilliseconds.ToString() + " ms; prematurely terminating program");
                         Environment.Exit(1);
@@ -194,21 +177,30 @@ namespace ModIntegratorCMD
             {
                 Parser.Default.ParseArguments<Options>(args).WithParsed(o =>
                 {
-                    stopWatch.Start();
+                    bool isBenchmark = o.BenchmarkTrials > 1;
+                    numBenchmarkTrials = isBenchmark ? o.BenchmarkTrials : 1;
 
-                    ModIntegrator us = new ModIntegrator()
+                    stopWatch.Start();
+                    for (int i = 0; i < numBenchmarkTrials; i++)
                     {
-                        RefuseMismatchedConnections = !o.DisableRefuseMismatchedConnections,
-                        EnableCustomRoutines = o.EnableCustomRoutines,
-                        OptionalModIDs = o.OptionalModIDs?.ToList() ?? new List<string>(),
-                        Verbose = o.Verbose,
-                        PakToNamedPipe = o.PakToNamedPipe,
-                        CallingExePath = o.CallingExePath
-                    };
-                    us.IntegrateMods(o.ModPakDirectories?.ToArray(), o.GamePakDirectory, o.OutputFolder, o.MountPoint, o.ExtractLua, !o.DisableCleanLua);
+                        ModIntegrator us = new ModIntegrator()
+                        {
+                            RefuseMismatchedConnections = !o.DisableRefuseMismatchedConnections,
+                            EnableCustomRoutines = o.EnableCustomRoutines,
+                            OptionalModIDs = o.OptionalModIDs?.ToList() ?? new List<string>(),
+                            Verbose = o.Verbose,
+                            PakToNamedPipe = o.PakToNamedPipe,
+                            CallingExePath = o.CallingExePath
+                        };
+                        us.IntegrateMods(o.ModPakDirectories?.ToArray(), o.GamePakDirectory, o.OutputFolder, o.MountPoint, o.ExtractLua, !o.DisableCleanLua);
+                    }
                     stopWatch.Stop();
 
                     Console.WriteLine("Finished integrating! Took " + ((double)stopWatch.Elapsed.Ticks / TimeSpan.TicksPerMillisecond) + " ms in total.");
+                    if (isBenchmark)
+                    {
+                        Console.WriteLine("(" + ((double)stopWatch.Elapsed.Ticks / TimeSpan.TicksPerMillisecond / (double)numBenchmarkTrials) + " ms per trial)");
+                    }
                     Environment.Exit(0);
                 });
             }
