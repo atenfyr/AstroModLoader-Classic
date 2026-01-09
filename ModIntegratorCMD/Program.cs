@@ -54,8 +54,28 @@ namespace ModIntegratorCMD
 
     public class Program
     {
+        // exit immediately, ensures dangling threads are killed
+        private static void Exit(int exitCode)
+        {
+            Environment.Exit(exitCode);
+        }
+
         public static void Main(string[] args)
         {
+#if DEBUG
+            // if in debug configuration and no parameters, attempt to connect to main AML pipe
+            try
+            {
+                string gamePaksPath = "D:\\Games\\steamapps\\common\\ASTRONEER\\Astro\\Content\\Paks";
+                if (args.Length == 0 && Directory.Exists(gamePaksPath))
+                {
+                    string decidedPath = Path.Combine(Environment.GetEnvironmentVariable("LocalAppData") ?? throw new InvalidOperationException(), "Astro", "Saved", "Paks");
+                    args = ["-i", decidedPath, "-g", gamePaksPath, "-v", "--enable_custom_routines", "--benchmark", "10", "--pak_to_named_pipe", "AstroModLoader-Classic-192637418"];
+                    Console.WriteLine("Entering named pipe benchmark mode; if this is a mistake, execute with the --help parameter or execute in the Release configuration");
+                }
+            }
+            catch { }
+#endif
             // single-argument options
             if (args.Length >= 1 && args[0] == "license")
             {
@@ -127,7 +147,7 @@ namespace ModIntegratorCMD
                 string decidedPath = "C:\\Users\\YOU\\AppData\\Local\\Astro\\Saved\\Paks";
                 try
                 {
-                    decidedPath = Path.Combine(Environment.GetEnvironmentVariable("LocalAppData") ?? throw new InvalidOperationException(), @"Astro\Saved\Paks");
+                    decidedPath = Path.Combine(Environment.GetEnvironmentVariable("LocalAppData") ?? throw new InvalidOperationException(), "Astro", "Saved", "Paks");
                 }
                 catch { }
 
@@ -166,7 +186,7 @@ namespace ModIntegratorCMD
                     if (stopWatch.ElapsedMilliseconds > (15000 * numBenchmarkTrials))
                     {
                         Console.Error.WriteLine("Watchdog timer activated after " + stopWatch.ElapsedMilliseconds.ToString() + " ms; prematurely terminating program");
-                        Environment.Exit(1);
+                        Exit(1);
                         break;
                     }
                     await Task.Delay(1000);
@@ -201,7 +221,7 @@ namespace ModIntegratorCMD
                     {
                         Console.WriteLine("(" + ((double)stopWatch.Elapsed.Ticks / TimeSpan.TicksPerMillisecond / (double)numBenchmarkTrials) + " ms per trial)");
                     }
-                    Environment.Exit(0);
+                    Exit(0);
                 });
             }
             else // old
@@ -244,7 +264,7 @@ namespace ModIntegratorCMD
                 stopWatch.Stop();
 
                 Console.WriteLine("Finished integrating! Took " + ((double)stopWatch.Elapsed.Ticks / TimeSpan.TicksPerMillisecond) + " ms in total.");
-                Environment.Exit(0);
+                Exit(0);
             }
         }
     }

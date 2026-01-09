@@ -138,7 +138,6 @@ namespace AstroModLoader
     public static class Program
     {
         public static Options CommandLineOptions;
-        public static volatile bool ExpectingPak = false;
         public static volatile bool GotPak = false;
         public static volatile string Cwd = null;
         public static readonly string PipeUniqID = "AstroModLoader-Classic-192637418";
@@ -146,11 +145,238 @@ namespace AstroModLoader
         [DllImport("user32.dll")]
         private static extern bool SetProcessDPIAware();
 
+        internal static Task StartNamedPipeServer(string pipeID, Form1 f1, CancellationToken? cs, int numAllowedConnectionTimes, bool ExpectingPak)
+        {
+#if DEBUG
+            // if in debug configuration, allow integrator commands on the main pipe
+            ExpectingPak = true;
+#endif
+
+            return Task.Factory.StartNew(() =>
+            {
+                int numTimesConnected = 0;
+                while (true)
+                {
+                    if (cs != null && ((CancellationToken)cs).IsCancellationRequested) break;
+
+                    // if numTimesConnected == numAllowedConnectionTimes then still acceptable because we increment first
+                    numTimesConnected++;
+                    if (numAllowedConnectionTimes > 0 && numTimesConnected > numAllowedConnectionTimes) break;
+
+                    using (var server = new NamedPipeServerStream(pipeID))
+                    {
+                        try
+                        {
+                            server.Disconnect();
+                        }
+                        catch { }
+
+                        InterProcessSecurity.SetLowIntegrityLevel(server.SafePipeHandle);
+
+                        server.WaitForConnection();
+
+                        bool enableReply = false;
+
+                        // continually respond to messages until we receive Disconnect
+                        using (var reader = new StreamReader(server))
+                        {
+                            using (var writer = new StreamWriter(server))
+                            {
+                                bool keepResponding = true;
+
+                                while (keepResponding)
+                                {
+                                    if (cs != null && ((CancellationToken)cs).IsCancellationRequested) break;
+                                    if (!server.IsConnected) break;
+
+                                    string responseText = null; // null = don't transmit any reply
+
+                                    string myLine = reader.ReadLine();
+                                    switch (myLine)
+                                    {
+                                        case null:
+                                            // unexpected disconnect
+                                            keepResponding = false;
+                                            responseText = null;
+                                            break;
+                                        case "Disconnect":
+                                            keepResponding = false;
+                                            responseText = null; // no reply
+                                            break;
+                                        case "EnableReply":
+                                            enableReply = true;
+                                            responseText = "Ack";
+                                            break;
+                                        case "DisableReply":
+                                            enableReply = false;
+                                            responseText = "Ack";
+                                            break;
+                                        case "Ping":
+                                            responseText = "Pong";
+                                            break;
+                                        case "Version":
+                                            responseText = Application.ProductVersion.ToString();
+                                            break;
+                                        case "WriteFile:Open":
+                                            responseText = "Ack";
+                                            break;
+                                        case "WriteFile:DisconnectIfReject":
+                                            if (!ExpectingPak || f1?.ModManager == null || f1.ModManager.GetReadOnly())
+                                            {
+                                                keepResponding = false;
+                                                responseText = null;
+                                                break;
+                                            }
+                                            responseText = "Ack";
+                                            break;
+                                        case "WriteFile:Close":
+                                            ExpectingPak = false;
+                                            responseText = "Ack";
+                                            break;
+                                        case "WriteFile:ClientTransmitIntegratorPak":
+                                            if (!ExpectingPak || f1?.ModManager == null || f1.ModManager.GetReadOnly())
+                                            {
+                                                responseText = "Rejected";
+                                                break;
+                                            }
+
+                                            GotPak = false;
+                                            if (int.TryParse(reader.ReadLine(), out int numBytes))
+                                            {
+                                                byte[] pakData = new byte[numBytes];
+                                                server.Read(pakData, 0, numBytes);
+                                                if (pakData != null && pakData.Length > 0)
+                                                {
+                                                    File.WriteAllBytes(Path.Combine(f1.ModManager.InstallPath, "999-AstroModIntegrator_P.pak"), pakData);
+                                                    GotPak = true;
+                                                }
+                                            }
+
+                                            responseText = GotPak ? "Ack" : "Failed";
+                                            break;
+                                        case "WriteFile:Log":
+                                            if (string.IsNullOrEmpty(Program.Cwd)) break;
+
+                                            {
+                                                int numBytes1 = int.Parse(reader.ReadLine());
+                                                if (numBytes1 == 0) continue;
+                                                byte[] data1 = new byte[numBytes1];
+                                                server.Read(data1, 0, numBytes1);
+                                                File.AppendAllText(Path.Combine(Program.Cwd, "ModIntegrator.log"), Encoding.UTF8.GetString(data1));
+                                            }
+
+                                            responseText = "Ack";
+                                            break;
+                                        case "WriteFile:ClientTransmitUE4SSMods":
+                                            if (!ExpectingPak || f1?.ModManager == null || f1.ModManager.GetReadOnly())
+                                            {
+                                                responseText = "Rejected";
+                                                break;
+                                            }
+
+                                            while (true)
+                                            {
+                                                string modId = reader.ReadLine().Replace("..", "");
+                                                if (modId == "AstroModIntegratorNamedPipeStopModTransmission") break;
+                                                string modSubPath = reader.ReadLine().Replace("..", "");
+                                                int numBytes1 = int.Parse(reader.ReadLine());
+                                                if (numBytes1 == 0) continue;
+                                                byte[] data1 = new byte[numBytes1];
+                                                server.Read(data1, 0, numBytes1);
+
+                                                string newPath = Path.Combine(f1.ModManager.InstallPathLua, modId, modSubPath);
+                                                Directory.CreateDirectory(Path.GetDirectoryName(newPath));
+                                                File.WriteAllBytes(newPath, data1);
+                                            }
+
+                                            {
+                                                int numBytes1 = int.Parse(reader.ReadLine());
+                                                if (numBytes1 > 0)
+                                                {
+                                                    byte[] data1 = new byte[numBytes1];
+                                                    server.Read(data1, 0, numBytes1);
+
+                                                    string newPath = Path.Combine(f1.ModManager.InstallPathLua, "mods.txt");
+                                                    Directory.CreateDirectory(Path.GetDirectoryName(newPath));
+                                                    File.WriteAllBytes(newPath, data1);
+                                                }
+                                            }
+                                            {
+                                                int numBytes1 = int.Parse(reader.ReadLine());
+                                                if (numBytes1 > 0)
+                                                {
+                                                    byte[] data1 = new byte[numBytes1];
+                                                    server.Read(data1, 0, numBytes1);
+
+                                                    string newPath = Path.Combine(f1.ModManager.InstallPathLua, "shared", "UEHelpers", "UEHelpers.lua");
+                                                    Directory.CreateDirectory(Path.GetDirectoryName(newPath));
+                                                    File.WriteAllBytes(newPath, data1);
+
+                                                    string[] binariesDir = Directory.GetDirectories(Path.Combine(f1.ModManager.GamePath, "Astro", "Binaries"), "*", SearchOption.TopDirectoryOnly);
+                                                    if (binariesDir.Length > 0)
+                                                    {
+                                                        try
+                                                        {
+                                                            string newPath2 = Path.Combine(binariesDir[0], "ue4ss", "Mods", "shared", "UEHelpers", "UEHelpers.lua");
+                                                            Directory.CreateDirectory(Path.GetDirectoryName(newPath2));
+                                                            File.WriteAllBytes(newPath2, data1);
+                                                        }
+                                                        catch { }
+                                                    }
+                                                }
+                                            }
+                                            {
+                                                int numBytes1 = int.Parse(reader.ReadLine());
+                                                if (numBytes1 > 0)
+                                                {
+                                                    byte[] data1 = new byte[numBytes1];
+                                                    server.Read(data1, 0, numBytes1);
+
+                                                    string newPath = Path.Combine(f1.ModManager.InstallPathLua, "shared", "AstroHelpers", "AstroHelpers.lua");
+                                                    Directory.CreateDirectory(Path.GetDirectoryName(newPath));
+                                                    File.WriteAllBytes(newPath, data1);
+
+                                                    string[] binariesDir = Directory.GetDirectories(Path.Combine(f1.ModManager.GamePath, "Astro", "Binaries"), "*", SearchOption.TopDirectoryOnly);
+                                                    if (binariesDir.Length > 0)
+                                                    {
+                                                        try
+                                                        {
+                                                            string newPath2 = Path.Combine(binariesDir[0], "ue4ss", "Mods", "shared", "AstroHelpers", "AstroHelpers.lua");
+                                                            Directory.CreateDirectory(Path.GetDirectoryName(newPath2));
+                                                            File.WriteAllBytes(newPath2, data1);
+                                                        }
+                                                        catch { }
+                                                    }
+                                                }
+                                            }
+
+                                            responseText = "Ack";
+                                            break;
+                                        default:
+                                            // pass to main program
+                                            bool bubbleSuccess = f1.ReceivePipe(myLine);
+                                            responseText = bubbleSuccess ? "Ack" : "Failed";
+                                            break;
+                                    }
+
+                                    if (enableReply && responseText != null)
+                                    {
+                                        writer.WriteLine(responseText);
+                                        writer.Flush();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             try
             {
@@ -298,156 +524,9 @@ namespace AstroModLoader
                         Form1 f1 = new Form1();
 
                         // open named pipe server
-                        Task.Factory.StartNew(() =>
-                        {
-                            while (true)
-                            {
-                                using (var server = new NamedPipeServerStream(PipeUniqID))
-                                {
-                                    try
-                                    {
-                                        server.Disconnect();
-                                    }
-                                    catch { }
+                        StartNamedPipeServer(PipeUniqID, f1, null, -1, false);
 
-                                    InterProcessSecurity.SetLowIntegrityLevel(server.SafePipeHandle);
-
-                                    server.WaitForConnection();
-
-                                    // continually respond to messages until we receive Disconnect
-                                    using (var reader = new StreamReader(server))
-                                    {
-                                        using (var writer = new StreamWriter(server))
-                                        {
-                                            bool keepResponding = true;
-                                            while (keepResponding)
-                                            {
-                                                string myLine = reader.ReadLine();
-                                                switch (myLine)
-                                                {
-                                                    case null:
-                                                        keepResponding = true;
-                                                        break;
-                                                    case "Disconnect":
-                                                        keepResponding = false;
-                                                        break;
-                                                    case "WriteFile:ClientTransmitIntegratorPak":
-                                                        if (!ExpectingPak || f1?.ModManager == null) break;
-                                                        if (f1.ModManager.GetReadOnly()) break;
-
-                                                        GotPak = false;
-                                                        if (int.TryParse(reader.ReadLine(), out int numBytes))
-                                                        {
-                                                            byte[] pakData = new byte[numBytes];
-                                                            server.Read(pakData, 0, numBytes);
-                                                            if (pakData != null && pakData.Length > 0)
-                                                            {
-                                                                File.WriteAllBytes(Path.Combine(f1.ModManager.InstallPath, "999-AstroModIntegrator_P.pak"), pakData);
-                                                                GotPak = true;
-                                                            }
-                                                        }
-                                                        break;
-                                                    case "WriteFile:Log":
-                                                        if (string.IsNullOrEmpty(Program.Cwd)) break;
-                                                        {
-                                                            int numBytes1 = int.Parse(reader.ReadLine());
-                                                            if (numBytes1 == 0) continue;
-                                                            byte[] data1 = new byte[numBytes1];
-                                                            server.Read(data1, 0, numBytes1);
-                                                            File.AppendAllText(Path.Combine(Program.Cwd, "ModIntegrator.log"), Encoding.UTF8.GetString(data1));
-                                                        }
-                                                        break;
-                                                    case "WriteFile:ClientTransmitUE4SSMods":
-                                                        if (!ExpectingPak || f1?.ModManager == null) break;
-                                                        if (f1.ModManager.GetReadOnly()) break;
-
-                                                        while (true)
-                                                        {
-                                                            string modId = reader.ReadLine().Replace("..", "");
-                                                            if (modId == "Stop") break;
-                                                            string modSubPath = reader.ReadLine().Replace("..", "");
-                                                            int numBytes1 = int.Parse(reader.ReadLine());
-                                                            if (numBytes1 == 0) continue;
-                                                            byte[] data1 = new byte[numBytes1];
-                                                            server.Read(data1, 0, numBytes1);
-
-                                                            string newPath = Path.Combine(f1.ModManager.InstallPathLua, modId, modSubPath);
-                                                            Directory.CreateDirectory(Path.GetDirectoryName(newPath));
-                                                            File.WriteAllBytes(newPath, data1);
-                                                        }
-
-                                                        {
-                                                            int numBytes1 = int.Parse(reader.ReadLine());
-                                                            if (numBytes1 > 0)
-                                                            {
-                                                                byte[] data1 = new byte[numBytes1];
-                                                                server.Read(data1, 0, numBytes1);
-
-                                                                string newPath = Path.Combine(f1.ModManager.InstallPathLua, "mods.txt");
-                                                                Directory.CreateDirectory(Path.GetDirectoryName(newPath));
-                                                                File.WriteAllBytes(newPath, data1);
-                                                            }
-                                                        }
-                                                        {
-                                                            int numBytes1 = int.Parse(reader.ReadLine());
-                                                            if (numBytes1 > 0)
-                                                            {
-                                                                byte[] data1 = new byte[numBytes1];
-                                                                server.Read(data1, 0, numBytes1);
-
-                                                                string newPath = Path.Combine(f1.ModManager.InstallPathLua, "shared", "UEHelpers", "UEHelpers.lua");
-                                                                Directory.CreateDirectory(Path.GetDirectoryName(newPath));
-                                                                File.WriteAllBytes(newPath, data1);
-
-                                                                string[] binariesDir = Directory.GetDirectories(Path.Combine(f1.ModManager.GamePath, "Astro", "Binaries"), "*", SearchOption.TopDirectoryOnly);
-                                                                if (binariesDir.Length > 0)
-                                                                {
-                                                                    try
-                                                                    {
-                                                                        string newPath2 = Path.Combine(binariesDir[0], "ue4ss", "Mods", "shared", "UEHelpers", "UEHelpers.lua");
-                                                                        Directory.CreateDirectory(Path.GetDirectoryName(newPath2));
-                                                                        File.WriteAllBytes(newPath2, data1);
-                                                                    }
-                                                                    catch { }
-                                                                }
-                                                            }
-                                                        }
-                                                        {
-                                                            int numBytes1 = int.Parse(reader.ReadLine());
-                                                            if (numBytes1 > 0)
-                                                            {
-                                                                byte[] data1 = new byte[numBytes1];
-                                                                server.Read(data1, 0, numBytes1);
-
-                                                                string newPath = Path.Combine(f1.ModManager.InstallPathLua, "shared", "AstroHelpers", "AstroHelpers.lua");
-                                                                Directory.CreateDirectory(Path.GetDirectoryName(newPath));
-                                                                File.WriteAllBytes(newPath, data1);
-
-                                                                string[] binariesDir = Directory.GetDirectories(Path.Combine(f1.ModManager.GamePath, "Astro", "Binaries"), "*", SearchOption.TopDirectoryOnly);
-                                                                if (binariesDir.Length > 0)
-                                                                {
-                                                                    try
-                                                                    {
-                                                                        string newPath2 = Path.Combine(binariesDir[0], "ue4ss", "Mods", "shared", "AstroHelpers", "AstroHelpers.lua");
-                                                                        Directory.CreateDirectory(Path.GetDirectoryName(newPath2));
-                                                                        File.WriteAllBytes(newPath2, data1);
-                                                                    }
-                                                                    catch { }
-                                                                }
-                                                            }
-                                                        }
-                                                        break;
-                                                    default:
-                                                        // pass to main program
-                                                        f1.ReceivePipe(myLine);
-                                                        break;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        });
+                        // start
                         Application.Run(f1);
                     }
                 }

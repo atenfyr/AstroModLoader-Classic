@@ -545,6 +545,7 @@ namespace AstroModIntegrator
             {
                 if (client != null)
                 {
+                    client.WriteLine("WriteFile:Close");
                     client.WriteLine("Disconnect");
                     client.Flush();
                     client.Close();
@@ -570,6 +571,24 @@ namespace AstroModIntegrator
             {
                 client = new NamedPipeClientStream(".", PakToNamedPipe, PipeDirection.Out);
                 client.Connect(5);
+                try
+                {
+                    client.WriteLine("WriteFile:Open");
+                }
+                catch (IOException)
+                {
+                    throw new IOException("Failed to connect to named pipe server");
+                }
+                try
+                {
+                    // send twice because the second will throw the exception if the server rejected from the first
+                    client.WriteLine("WriteFile:DisconnectIfReject");
+                    client.WriteLine("WriteFile:DisconnectIfReject");
+                }
+                catch (IOException)
+                {
+                    throw new IOException("Named pipe server rejected integrator client");
+                }
             }
 
             LogToDiskVerbose("Currently executing AstroModIntegrator Classic " + IntegratorUtils.CurrentVersion.ToString());
@@ -1057,7 +1076,7 @@ namespace AstroModIntegrator
             {
                 client.WriteLine("WriteFile:ClientTransmitIntegratorPak");
                 client.WriteLine(pakData.Length.ToString());
-                client.Write(pakData);
+                client.Write(pakData, 0, pakData.Length);
                 client.Flush();
 
                 LogToDiskVerbose("Wrote to named pipe " + PakToNamedPipe);
@@ -1130,7 +1149,7 @@ namespace AstroModIntegrator
                     }
                 }
 
-                if (usePipe) client.WriteLine("Stop");
+                if (usePipe) client.WriteLine("AstroModIntegratorNamedPipeStopModTransmission");
 
                 if (Path.Exists(luaDir))
                 {

@@ -1134,9 +1134,11 @@ namespace AstroModLoader
 
                 if (TableHandler.ShouldContainOptionalColumn()) OptionalModIDs = optionalMods;
 
-                Program.ExpectingPak = true;
+                CancellationTokenSource cs = new CancellationTokenSource();
+                string PipeUniqID_ModIntegrator = Program.PipeUniqID + "-ModIntegrator";
+                Task task = Program.StartNamedPipeServer(PipeUniqID_ModIntegrator, BaseForm, cs.Token, 1, true);
 
-                string parms = "-i \"" + InstallPath.TrimEnd(['/', '\\']) + "\" -g \"" + Path.Combine(GamePath, "Astro", "Content", "Paks").TrimEnd(['/', '\\']) + "\" -v --pak_to_named_pipe " + Program.PipeUniqID + " --extract_lua --disable_clean_lua " + (EnableCustomRoutines ? "--enable_custom_routines " : "") + (RefuseMismatchedConnections ? "" : "--disable_refuse_mismatched_connections ");
+                string parms = "-i \"" + InstallPath.TrimEnd(['/', '\\']) + "\" -g \"" + Path.Combine(GamePath, "Astro", "Content", "Paks").TrimEnd(['/', '\\']) + "\" -v --pak_to_named_pipe " + PipeUniqID_ModIntegrator + " --extract_lua --disable_clean_lua " + (EnableCustomRoutines ? "--enable_custom_routines " : "") + (RefuseMismatchedConnections ? "" : "--disable_refuse_mismatched_connections ");
 #if DEBUG_CUSTOMROUTINETEST
                 parms += "--calling_exe_path \"" + AppContext.BaseDirectory.TrimEnd(['/', '\\']) + "\" ";
 #endif
@@ -1170,6 +1172,10 @@ namespace AstroModLoader
                     success = false;
                 }
 
+                // wait for named pipe server to disconnect
+                cs.Cancel();
+                if (!task.Wait(2000)) throw new TimeoutException("Named pipe server for integrator is hanging");
+
                 if (success && !Program.GotPak) success = false;
                 if (!success) throw new Exception("Integrator process timed out or responded with bad return value");
 
@@ -1201,7 +1207,6 @@ namespace AstroModLoader
             finally
             {
                 if (process != null && !process.HasExited) process.Kill();
-                Program.ExpectingPak = false;
                 Program.GotPak = false;
                 currentlyIntegrating = false;
             }

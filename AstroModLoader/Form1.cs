@@ -955,7 +955,7 @@ namespace AstroModLoader
             HandleThunderstoreCommandLineParameters(Program.CommandLineOptions.InstallThunderstore);
         }
 
-        internal void ReceivePipe(string txt)
+        internal bool ReceivePipe(string txt)
         {
             string[] parts = txt.Split(":");
             string cmd = parts[0];
@@ -970,15 +970,16 @@ namespace AstroModLoader
                         this.WindowState = FormWindowState.Normal;
                     });
                     HandleThunderstoreCommandLineParameters(data);
-                    break;
+                    return true;
                 case "Focus":
                     AMLUtils.InvokeUI(() =>
                     {
                         this.Activate();
                         this.WindowState = FormWindowState.Normal;
                     });
-                    break;
+                    return true;
             }
+            return false;
         }
 
         private void HandleThunderstoreCommandLineParameters(string installParams)
