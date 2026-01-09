@@ -4,9 +4,9 @@ using UAssetAPI.ExportTypes;
 using UAssetAPI.PropertyTypes.Objects;
 using UAssetAPI.PropertyTypes.Structs;
 
-namespace CustomRoutineTest
+namespace AMLCustomRoutine
 {
-    public class CustomRoutineTest : CustomRoutine
+    public class AMLCustomRoutine : CustomRoutine
     {
         public override void Execute(ICustomRoutineAPI api)
         {

@@ -1123,6 +1123,30 @@ namespace AstroModLoader
                     errorTextToAppend += "Failed to execute icacls.exe: " + ex.Message.ToString() + "\n";
                 }
 
+                // allow access to profile optimization directory
+                string optimizationDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AstroModLoader", "IntegratorProfileOptimization");
+                try
+                {
+                    Directory.CreateDirectory(optimizationDirectory);
+                }
+                catch { }
+                try
+                {
+                    Process icaclsProcess = new Process();
+                    icaclsProcess.StartInfo.FileName = "icacls.exe";
+                    icaclsProcess.StartInfo.Arguments = "\"" + optimizationDirectory + "\" /setintegritylevel Low";
+                    icaclsProcess.StartInfo.UseShellExecute = false;
+                    icaclsProcess.StartInfo.RedirectStandardOutput = true;
+                    icaclsProcess.StartInfo.CreateNoWindow = true;
+                    icaclsProcess.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                    icaclsProcess.Start();
+                    icaclsProcess.WaitForExit();
+                }
+                catch (Exception ex)
+                {
+                    errorTextToAppend += "Failed to execute icacls.exe: " + ex.Message.ToString() + "\n";
+                }
+
                 Stopwatch sw = new Stopwatch();
                 sw.Start();
 
@@ -1138,11 +1162,12 @@ namespace AstroModLoader
                 string PipeUniqID_ModIntegrator = Program.PipeUniqID + "-ModIntegrator";
                 Task task = Program.StartNamedPipeServer(PipeUniqID_ModIntegrator, BaseForm, cs.Token, 1, true);
 
-                string parms = "-i \"" + InstallPath.TrimEnd(['/', '\\']) + "\" -g \"" + Path.Combine(GamePath, "Astro", "Content", "Paks").TrimEnd(['/', '\\']) + "\" -v --pak_to_named_pipe " + PipeUniqID_ModIntegrator + " --extract_lua --disable_clean_lua " + (EnableCustomRoutines ? "--enable_custom_routines " : "") + (RefuseMismatchedConnections ? "" : "--disable_refuse_mismatched_connections ");
+                string parms = "-i \"" + InstallPath.TrimEnd(['/', '\\']) + "\" -g \"" + Path.Combine(GamePath, "Astro", "Content", "Paks").TrimEnd(['/', '\\']) + "\" --pak_to_named_pipe " + PipeUniqID_ModIntegrator + " --extract_lua --disable_clean_lua " + (EnableCustomRoutines ? "--enable_custom_routines " : "") + (RefuseMismatchedConnections ? "" : "--disable_refuse_mismatched_connections ");
 #if DEBUG_CUSTOMROUTINETEST
                 parms += "--calling_exe_path \"" + AppContext.BaseDirectory.TrimEnd(['/', '\\']) + "\" ";
 #endif
                 parms += (OptionalModIDs != null && OptionalModIDs.Count > 0) ? ("--optional_mod_ids " + string.Join(' ', OptionalModIDs) + " ") : string.Empty;
+                parms += "-v ";
 
 
                 process = new Process();
@@ -1173,8 +1198,11 @@ namespace AstroModLoader
                 }
 
                 // wait for named pipe server to disconnect
-                cs.Cancel();
-                if (!task.Wait(2000)) throw new TimeoutException("Named pipe server for integrator is hanging");
+                if (!task.Wait(2000))
+                {
+                    cs.Cancel();
+                    if (!task.Wait(1000)) throw new TimeoutException("Named pipe server for integrator is hanging");
+                }
 
                 if (success && !Program.GotPak) success = false;
                 if (!success) throw new Exception("Integrator process timed out or responded with bad return value");

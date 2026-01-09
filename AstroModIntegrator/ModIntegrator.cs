@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Pipes;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using UAssetAPI;
@@ -186,12 +187,28 @@ namespace AstroModIntegrator
         private volatile bool hasLoggedOnceAlready = false;
 
         // handle policy initialization
-        internal static readonly bool EnableSandbox = false; // adds a few extra hundred milliseconds
+        internal static bool EnableSandbox = false; // adds a few extra hundred milliseconds
         internal volatile static CasPolicy policy = null;
         internal volatile static Thread policyInitThread = null;
 
         static ModIntegrator()
         {
+            // always enable sandbox if not on Windows
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                EnableSandbox = true;
+            }
+            else if (!IntegrityLevelChecker.IsCurrentProcessLowIntegrity())
+            {
+                // on Windows, enable sandbox only if not low-integrity
+                EnableSandbox = true;
+            }
+
+#if DEBUG || DEBUG_CUSTOMROUTINETEST
+            // always enable sandbox in debug
+            EnableSandbox = true;
+#endif
+
             if (policy == null && EnableSandbox)
             {
                 policyInitThread = new Thread(() =>
@@ -581,7 +598,7 @@ namespace AstroModIntegrator
                 }
                 try
                 {
-                    // send twice because the second will throw the exception if the server rejected from the first
+                    // send twice because the second will throw the exception if the server disconnected from the first
                     client.WriteLine("WriteFile:DisconnectIfReject");
                     client.WriteLine("WriteFile:DisconnectIfReject");
                 }
@@ -592,6 +609,9 @@ namespace AstroModIntegrator
             }
 
             LogToDiskVerbose("Currently executing AstroModIntegrator Classic " + IntegratorUtils.CurrentVersion.ToString());
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) LogToDiskVerbose("Running on Windows");
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) LogToDiskVerbose("Running on OSX");
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) LogToDiskVerbose("Running on Linux");
             LogToDiskVerbose("https://github.com/atenfyr/AstroModLoader-Classic/tree/master/AstroModIntegrator");
             LogToDiskVerbose(string.Empty);
 
@@ -606,6 +626,7 @@ namespace AstroModIntegrator
             LogToDiskVerbose("EnableCustomRoutines: " + EnableCustomRoutines);
             LogToDiskVerbose("CallingExePath: " + CallingExePath);
             LogToDiskVerbose("Verbose: " + Verbose);
+            LogToDiskVerbose("EnableSandbox: " + EnableSandbox);
             LogToDiskVerbose(string.Empty);
 
             foreach (string paksPath in paksPaths) Directory.CreateDirectory(paksPath);
@@ -677,8 +698,9 @@ namespace AstroModIntegrator
                             }
                         }
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        LogToDiskVerbose("Exception while examining mod: " + ex.Message + "\n\n" + ex.StackTrace);
                         continue;
                     }
 
@@ -949,11 +971,11 @@ namespace AstroModIntegrator
                     }
 
 #if DEBUG_CUSTOMROUTINETEST
-                    // if Debug_CustomRoutineTest then also load CustomRoutineTest.dll if we can find it
-                    // repeatedly look in higher directories (up to 7) until we find CustomRoutineTest or CustomRoutineTest.dll or *.sln
+                    // if Debug_CustomRoutineTest then also load AMLCustomRoutine.dll if we can find it
+                    // repeatedly look in higher directories (up to 7) until we find AMLCustomRoutine.dll or *.sln
                     if (EnableCustomRoutines)
                     {
-                        LogToDiskVerbose("Searching for CustomRoutineTest.dll");
+                        LogToDiskVerbose("Searching for AMLCustomRoutine.dll");
 
                         bool foundDll = false;
                         string currentTestPath = CallingExePath ?? Directory.GetCurrentDirectory();
@@ -963,7 +985,7 @@ namespace AstroModIntegrator
 
                             try
                             {
-                                string[] allPossibleDlls = Directory.GetFiles(currentTestPath, "CustomRoutineTest.dll", SearchOption.AllDirectories);
+                                string[] allPossibleDlls = Directory.GetFiles(currentTestPath, "AMLCustomRoutine.dll", SearchOption.AllDirectories);
                                 for (int j = 0; j < allPossibleDlls.Length; j++)
                                 {
                                     if (i == 0 || (allPossibleDlls[j].Contains("Debug_CustomRoutineTest") && allPossibleDlls[j].Contains("bin")))
@@ -971,10 +993,10 @@ namespace AstroModIntegrator
                                         string chosenDll = allPossibleDlls[j];
                                         Assembly newAsm = EnableSandbox ? loadContext.LoadFromStream(new MemoryStream(File.ReadAllBytes(chosenDll))) : Assembly.Load(File.ReadAllBytes(chosenDll));
                                         customRoutineAssemblies.Add(newAsm);
-                                        customRoutineAssemblyToMetadata[newAsm.ManifestModule.ModuleVersionId] = new Metadata() { ModID = "CustomRoutineTest" }; // dummy metadata
+                                        customRoutineAssemblyToMetadata[newAsm.ManifestModule.ModuleVersionId] = new Metadata() { ModID = "AMLCustomRoutine" }; // dummy metadata
 
                                         foundDll = true;
-                                        LogToDiskVerbose("Found CustomRoutineTest.dll, adding to list of assemblies");
+                                        LogToDiskVerbose("Found AMLCustomRoutine.dll, adding to list of assemblies");
                                         break;
                                     }
                                 }
@@ -992,7 +1014,7 @@ namespace AstroModIntegrator
 
                         if (!foundDll)
                         {
-                            LogToDiskVerbose("Failed to find CustomRoutineTest.dll, skipping");
+                            LogToDiskVerbose("Failed to find AMLCustomRoutine.dll, skipping");
                         }
                     }
 #endif
@@ -1149,7 +1171,13 @@ namespace AstroModIntegrator
                     }
                 }
 
-                if (usePipe) client.WriteLine("AstroModIntegratorNamedPipeStopModTransmission");
+                if (usePipe)
+                {
+                    client.WriteLine("!!!Stop");
+                    client.WriteLine("!!!Stop");
+                    client.WriteLine("!!!Stop");
+                    client.WriteLine("Next");
+                }
 
                 if (Path.Exists(luaDir))
                 {

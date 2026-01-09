@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.IO.Pipes;
+using System.Runtime;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -218,6 +219,7 @@ namespace AstroModLoader
                                             responseText = Application.ProductVersion.ToString();
                                             break;
                                         case "WriteFile:Open":
+                                            GotPak = false;
                                             responseText = "Ack";
                                             break;
                                         case "WriteFile:DisconnectIfReject":
@@ -277,8 +279,9 @@ namespace AstroModLoader
                                             while (true)
                                             {
                                                 string modId = reader.ReadLine().Replace("..", "");
-                                                if (modId == "AstroModIntegratorNamedPipeStopModTransmission") break;
+                                                if (modId == "!!!Stop") break;
                                                 string modSubPath = reader.ReadLine().Replace("..", "");
+                                                if (modSubPath == "!!!Stop") break;
                                                 int numBytes1 = int.Parse(reader.ReadLine());
                                                 if (numBytes1 == 0) continue;
                                                 byte[] data1 = new byte[numBytes1];
@@ -288,6 +291,8 @@ namespace AstroModLoader
                                                 Directory.CreateDirectory(Path.GetDirectoryName(newPath));
                                                 File.WriteAllBytes(newPath, data1);
                                             }
+
+                                            while (reader.ReadLine() == "!!!Stop") { }
 
                                             {
                                                 int numBytes1 = int.Parse(reader.ReadLine());
@@ -378,16 +383,20 @@ namespace AstroModLoader
         [STAThread]
         public static void Main(string[] args)
         {
+            string rootFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AstroModLoader");
+            ProfileOptimization.SetProfileRoot(rootFolder);
+            ProfileOptimization.StartProfile("Startup.Profile");
+
             try
             {
-                Directory.CreateDirectory(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AstroModLoader"));
+                Directory.CreateDirectory(rootFolder);
 
                 // dump ModIntegrator.exe
                 using (var resource = typeof(Program).Assembly.GetManifestResourceStream("AstroModLoader.ModIntegrator.exe"))
                 {
                     if (resource != null)
                     {
-                        using (var file = new FileStream(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AstroModLoader", "ModIntegrator.exe"), FileMode.Create, FileAccess.Write))
+                        using (var file = new FileStream(Path.Combine(rootFolder, "ModIntegrator.exe"), FileMode.Create, FileAccess.Write))
                         {
                             resource.CopyTo(file);
                         }
@@ -401,7 +410,7 @@ namespace AstroModLoader
                     {
                         if (resource != null)
                         {
-                            using (var file = new FileStream(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AstroModLoader", "repak_bind.so"), FileMode.Create, FileAccess.Write))
+                            using (var file = new FileStream(Path.Combine(rootFolder, "repak_bind.so"), FileMode.Create, FileAccess.Write))
                             {
                                 resource.CopyTo(file);
                             }
@@ -414,7 +423,7 @@ namespace AstroModLoader
                     {
                         if (resource != null)
                         {
-                            using (var file = new FileStream(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AstroModLoader", "repak_bind.dll"), FileMode.Create, FileAccess.Write))
+                            using (var file = new FileStream(Path.Combine(rootFolder, "repak_bind.dll"), FileMode.Create, FileAccess.Write))
                             {
                                 resource.CopyTo(file);
                             }

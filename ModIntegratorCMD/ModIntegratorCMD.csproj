@@ -24,13 +24,13 @@
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
   </ItemGroup>
-  <Target Name="AutoPublish" AfterTargets="Build">
+  <Target Name="AutoPublish" AfterTargets="Build" Condition="'$(RuntimeIdentifier)' == 'win-x64'">
     <Message Text="Automatically publishing after build" Importance="high"/>
     <CallTarget Targets="Publish" />
     <Message Text="Copying published .exe to AstroModLoader" Importance="high"/>
     <Copy SourceFiles="$(MSBuildProjectDirectory)/$(PublishDir)$(AssemblyName)$(_NativeExecutableExtension)" DestinationFolder="../AstroModLoader/" SkipUnchangedFiles="true" />
   </Target>
-  <Target Name="AfterPublish" AfterTargets="Publish">
+  <Target Name="AfterPublish" AfterTargets="Publish" Condition="'$(RuntimeIdentifier)' == 'win-x64'">
     <Message Text="Copying published .exe to AstroModLoader" Importance="high"/>
     <Copy SourceFiles="$(MSBuildProjectDirectory)/$(PublishDir)$(AssemblyName)$(_NativeExecutableExtension)" DestinationFolder="../AstroModLoader/" SkipUnchangedFiles="true" />
   </Target>

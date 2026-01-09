@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime;
 using System.Threading.Tasks;
 
 namespace ModIntegratorCMD
@@ -50,6 +51,11 @@ namespace ModIntegratorCMD
 
         [Option("optional_mod_ids", Required = false, Default = null, HelpText = "List of optional mod IDs. Defaults to an empty list (i.e., clients are required to install all server-client mods).")]
         public IEnumerable<string> OptionalModIDs { get; set; }
+
+        public Options()
+        {
+
+        }
     }
 
     public class Program
@@ -76,6 +82,15 @@ namespace ModIntegratorCMD
             }
             catch { }
 #endif
+            string optimizationDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AstroModLoader", "IntegratorProfileOptimization");
+            try
+            {
+                Directory.CreateDirectory(optimizationDirectory);
+            }
+            catch { }
+            ProfileOptimization.SetProfileRoot(optimizationDirectory);
+            ProfileOptimization.StartProfile("Startup.Profile");
+
             // single-argument options
             if (args.Length >= 1 && args[0] == "license")
             {
