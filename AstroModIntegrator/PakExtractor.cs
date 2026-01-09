@@ -190,11 +190,11 @@ namespace AstroModIntegrator
         private BinaryReader reader;
         private Stream internal_stream;
 
-        public Dictionary<string, long> PathToOffset;
-        public bool RepakBacked = false;
+        internal Dictionary<string, long> PathToOffset;
+        internal bool RepakBacked = false;
         private PakReader pakReader;
 
-        public string MountPoint;
+        internal string MountPoint;
 
         public PakExtractor(Stream stream)
         {

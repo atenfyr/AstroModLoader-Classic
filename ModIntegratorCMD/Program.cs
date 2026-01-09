@@ -1,114 +1,97 @@
 ﻿using AstroModIntegrator;
+using CommandLine;
+using CommandLine.Text;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Runtime;
+using System.Threading.Tasks;
 
 namespace ModIntegratorCMD
 {
+    public class Options
+    {
+        [Option('i', "input", Required = true, HelpText = "List of active mod paks directories.")]
+        public IEnumerable<string> ModPakDirectories { get; set; }
+
+        [Option('g', "game_pak_folder", Required = true, HelpText = "Game installation paks folder.")]
+        public string GamePakDirectory { get; set; }
+
+        [Option('o', "output", Required = false, Default = null, HelpText = "The folder to output the integrator .pak file to. Defaults to the first directory passed into the input parameter.")]
+        public string OutputFolder { get; set; }
+
+        [Option('v', "verbose", Required = false, Default = false, HelpText = "Whether or not to enable verbose logging to disk.")]
+        public bool Verbose { get; set; }
+
+        [Option("mount_point", Required = false, Default = "../../../", HelpText = "The integrator .pak file's mount point. Almost always should be left unspecified.")]
+        public string MountPoint { get; set; }
+
+        [Option("extract_lua", Required = false, Default = false, HelpText = "Whether or not to extract UE4SS mods.")]
+        public bool ExtractLua { get; set; }
+
+        [Option("disable_clean_lua", Required = false, Default = false, HelpText = "Whether or not to disable clean-up of UE4SS mods before execution.")]
+        public bool DisableCleanLua { get; set; }
+
+        [Option("enable_custom_routines", Required = false, Default = false, HelpText = "Whether or not to execute custom routines.")]
+        public bool EnableCustomRoutines { get; set; }
+
+        [Option("disable_refuse_mismatched_connections", Required = false, Default = false, HelpText = "Whether or not to disable refusing mismatched connections.")]
+        public bool DisableRefuseMismatchedConnections { get; set; }
+
+        [Option("pak_to_named_pipe", Required = false, Default = null, HelpText = "If specified, outputs written files to the specified named pipe instead of to disk. Used internally by AstroModLoader Classic. See source code for format.")]
+        public string PakToNamedPipe { get; set; }
+
+        [Option("calling_exe_path", Required = false, Default = null, Hidden = true, HelpText = "Used only for Debug_CustomRoutineTest configuration")]
+        public string CallingExePath { get; set; }
+
+        [Option("benchmark", Required = false, Default = 1, HelpText = "If specified, repeat integration multiple times for benchmarking purposes.")]
+        public int BenchmarkTrials { get; set; }
+
+        [Option("optional_mod_ids", Required = false, Default = null, HelpText = "List of optional mod IDs. Defaults to an empty list (i.e., clients are required to install all server-client mods).")]
+        public IEnumerable<string> OptionalModIDs { get; set; }
+
+        public Options()
+        {
+
+        }
+    }
+
     public class Program
     {
+        // exit immediately, ensures dangling threads are killed
+        private static void Exit(int exitCode)
+        {
+            Environment.Exit(exitCode);
+        }
+
         public static void Main(string[] args)
         {
-            /*// @"C:\Program Files (x86)\Steam\steamapps\common\ASTRONEER\Astro\Content\Paks\Astro-WindowsNoEditor.pak"
-            using (FileStream f = new FileStream(@"C:\Users\Alexandros\AppData\Local\Astro\Saved\Paks\000-Minimap-0.1.1_P.pak", FileMode.Open, FileAccess.Read))
-            {
-                var ext = new MetadataExtractor(new BinaryReader(f));
-                foreach (string thing in ext.PathToOffset.Keys)
-                {
-                    Console.WriteLine(thing + ": " + ext.PathToOffset[thing]);
-                }
-                Console.WriteLine(BitConverter.ToString(ext.ReadRaw("metadata.json")).Replace("-", " "));
-            }
-
-            Console.ReadKey();*/
 #if DEBUG
-            args = ["benchmark", Path.Combine(Environment.GetEnvironmentVariable("LocalAppData") ?? throw new InvalidOperationException(), @"Astro\Saved\Paks"), @"D:\Games\steamapps\common\ASTRONEER\Astro\Content\Paks\"];
-#endif
-
-                /*{
-                    Stopwatch extractingTimer = new Stopwatch();
-                    extractingTimer.Start();
-
-                    string pakPath = @"C:\Program Files (x86)\Steam\steamapps\common\ASTRONEER\Astro\Content\Paks\Astro-WindowsNoEditor.pak";
-
-                    string extractingDir = Path.Combine(Path.GetDirectoryName(pakPath), Path.GetFileNameWithoutExtension(pakPath));
-                    Directory.CreateDirectory(extractingDir);
-                    using (FileStream f = new FileStream(pakPath, FileMode.Open, FileAccess.Read))
-                    {
-                        PakExtractor mainExtractor = new PakExtractor(new BinaryReader(f));
-                        IReadOnlyList<string> allPaths = mainExtractor.GetAllPaths(); // Get a list of every path that is contained within this pak file. The provided mount point is ignored
-                        foreach (string path in allPaths)
-                        {
-                            Console.WriteLine("Extracting " + path);
-
-                            string writingPathName = Path.Combine(extractingDir, path);
-                            Directory.CreateDirectory(Path.GetDirectoryName(writingPathName));
-
-                            byte[] allPathData = mainExtractor.ReadRaw(path, true); // Read the bytes of this particular asset based off its path within the pak file
-                            File.WriteAllBytes(writingPathName, allPathData);
-                        }
-                    }
-
-                    extractingTimer.Stop();
-                    Console.WriteLine("Finished extracting! Took " + ((double)extractingTimer.Elapsed.Ticks / TimeSpan.TicksPerSecond) + " seconds in total.");
-                    return;
-                }*/
-
-                /*{
-                    Stopwatch testTimer = new Stopwatch();
-                    string pakPath = @"C:\Program Files (x86)\Steam\steamapps\common\ASTRONEER\Astro\Content\Paks\Astro-WindowsNoEditor.pak";
-
-                    using (FileStream f = new FileStream(pakPath, FileMode.Open, FileAccess.Read))
-                    {
-                        testTimer.Start();
-                        PakExtractor mainExtractor = new PakExtractor(new BinaryReader(f));
-                        testTimer.Stop();
-                        Console.WriteLine("Parsed index in " + ((double)testTimer.Elapsed.Ticks / TimeSpan.TicksPerMillisecond) + " ms");
-
-                        IReadOnlyList<string> allPaths = mainExtractor.GetAllPaths();
-                        int numTests = 5000;
-                        testTimer.Reset();
-                        testTimer.Start();
-                        for (int i = 0; i < numTests; i++)
-                        {
-                            byte[] allPathData = mainExtractor.ReadRaw(allPaths[i]);
-                        }
-                        testTimer.Stop();
-                        Console.WriteLine("~" + ((double)testTimer.Elapsed.Ticks / TimeSpan.TicksPerMillisecond) / numTests + " ms per asset read");
-                        //Console.ReadLine();
-                    }
-
-                    return;
-                }*/
-
-
-            if (args.Length == 3 && args[0] == "benchmark")
+            // if in debug configuration and no parameters, attempt to connect to main AML pipe
+            try
             {
-                ModIntegrator us = new ModIntegrator()
+                string gamePaksPath = "D:\\Games\\steamapps\\common\\ASTRONEER\\Astro\\Content\\Paks";
+                if (args.Length == 0 && Directory.Exists(gamePaksPath))
                 {
-                    RefuseMismatchedConnections = true,
-                    //OptionalModIDs = new List<string> { "AstroChat" }
-                };
-
-                int TRIALS = 10;
-                Stopwatch stopWatch = new Stopwatch();
-                stopWatch.Start();
-                for (int i = 0; i < TRIALS; i++)
-                {
-                    us.IntegrateMods(args[1], args[2]);
+                    string decidedPath = Path.Combine(Environment.GetEnvironmentVariable("LocalAppData") ?? throw new InvalidOperationException(), "Astro", "Saved", "Paks");
+                    args = ["-i", decidedPath, "-g", gamePaksPath, "-v", "--enable_custom_routines", "--benchmark", "10", "--pak_to_named_pipe", "AstroModLoader-Classic-192637418"];
+                    Console.WriteLine("Entering named pipe benchmark mode; if this is a mistake, execute with the --help parameter or execute in the Release configuration");
                 }
-                stopWatch.Stop();
-                Console.WriteLine("Finished integrating! Took " + ((double)stopWatch.Elapsed.Ticks / TimeSpan.TicksPerMillisecond / TRIALS) + " ms per trial for " + TRIALS + " trials.");
-                return;
             }
+            catch { }
+#endif
+            string optimizationDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AstroModLoader", "IntegratorProfileOptimization");
+            try
+            {
+                Directory.CreateDirectory(optimizationDirectory);
+            }
+            catch { }
+            ProfileOptimization.SetProfileRoot(optimizationDirectory);
+            ProfileOptimization.StartProfile("Startup.Profile");
 
             // single-argument options
-            if (args.Length >= 1 && args[0] == "version")
-            {
-                Console.WriteLine(IntegratorUtils.CurrentVersion.ToString());
-                return;
-            }
             if (args.Length >= 1 && args[0] == "license")
             {
                 using (var resource = typeof(AstroModIntegrator.ModIntegrator).Assembly.GetManifestResourceStream("AstroModIntegrator.LICENSE.md"))
@@ -148,26 +131,116 @@ namespace ModIntegratorCMD
                 return;
             }
 
-            if (args.Length < 2)
+            // check if any argument exists starting with "-"; if so, use new system, else, use old system
+            bool argWithHyphenExists = false;
+            bool printHelp = false;
+            bool printVersion = false;
+            for (int i = 0; i < args.Length; i++)
+            {
+                if (args[i].Length > 0 && args[i][0] == '-')
+                {
+                    argWithHyphenExists = true;
+                }
+                if (args[i] == "help" || args[i] == "--help" || args[i] == "-h")
+                {
+                    printHelp = true;
+                }
+                if (args[i] == "version" || args[i] == "--version")
+                {
+                    printVersion = true;
+                }
+            }
+
+            if (printVersion)
+            {
+                Console.WriteLine(IntegratorUtils.CurrentVersion.ToString());
+                return;
+            }
+
+            if (args.Length < 2 || printHelp)
             {
                 string decidedPath = "C:\\Users\\YOU\\AppData\\Local\\Astro\\Saved\\Paks";
                 try
                 {
-                    decidedPath = Path.Combine(Environment.GetEnvironmentVariable("LocalAppData") ?? throw new InvalidOperationException(), @"Astro\Saved\Paks");
+                    decidedPath = Path.Combine(Environment.GetEnvironmentVariable("LocalAppData") ?? throw new InvalidOperationException(), "Astro", "Saved", "Paks");
                 }
-                catch {}
+                catch { }
 
-                Console.WriteLine("AstroModIntegrator Classic " + IntegratorUtils.CurrentVersion.ToString() + ": Automatically integrates Astroneer .pak mods based on their metadata\n");
-                Console.WriteLine("Usage: modintegrator <active mod paks directory> <game installation paks directory> [folder to output to]\n");
-                Console.WriteLine("Example: modintegrator \"" + decidedPath + "\" \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\ASTRONEER\\Astro\\Content\\Paks\"");
+                Console.WriteLine("AstroModIntegrator Classic " + IntegratorUtils.CurrentVersion.ToString() + ": Automatically integrates Astroneer .pak mods based on their metadata");
+                Console.WriteLine("\nParameters:");
+
+                var parser = new Parser(with =>
+                {
+                    with.HelpWriter = null;
+                    with.AutoVersion = false;
+                    with.AutoHelp = false;
+                });
+                HelpText helpText = new HelpText { AddDashesToOption = true, AddNewLineBetweenHelpSections = true }.AddOptions(parser.ParseArguments<Options>(args));
+                Console.WriteLine(helpText.ToString().Trim(['\r', '\n']));
+
+                Console.WriteLine("\nExample: modintegrator -i \"" + decidedPath + "\" -g \"D:\\Games\\steamapps\\common\\ASTRONEER\\Astro\\Content\\Paks\"");
                 Console.WriteLine("\nExecute \"modintegrator license\" to receive a copy of the license agreement for this software.\nExecute \"modintegrator notice\" to receive a copy of the license agreements for the third-party material used in this software.");
                 return;
             }
 
-            {
-                Stopwatch stopWatch = new Stopwatch();
-                stopWatch.Start();
+            Stopwatch stopWatch = new Stopwatch();
+            int numBenchmarkTrials = 1;
 
+            // start watchdog
+            Task.Factory.StartNew(async () =>
+            {
+                // wait until stopwatch starts
+                while (!stopWatch.IsRunning)
+                {
+                    await Task.Delay(1000);
+                }
+
+                // keep running until stopwatch stops
+                while (stopWatch.IsRunning)
+                {
+                    if (stopWatch.ElapsedMilliseconds > (15000 * numBenchmarkTrials))
+                    {
+                        Console.Error.WriteLine("Watchdog timer activated after " + stopWatch.ElapsedMilliseconds.ToString() + " ms; prematurely terminating program");
+                        Exit(1);
+                        break;
+                    }
+                    await Task.Delay(1000);
+                }
+            });
+
+            if (argWithHyphenExists) // new
+            {
+                Parser.Default.ParseArguments<Options>(args).WithParsed(o =>
+                {
+                    bool isBenchmark = o.BenchmarkTrials > 1;
+                    numBenchmarkTrials = isBenchmark ? o.BenchmarkTrials : 1;
+
+                    stopWatch.Start();
+                    for (int i = 0; i < numBenchmarkTrials; i++)
+                    {
+                        ModIntegrator us = new ModIntegrator()
+                        {
+                            RefuseMismatchedConnections = !o.DisableRefuseMismatchedConnections,
+                            EnableCustomRoutines = o.EnableCustomRoutines,
+                            OptionalModIDs = o.OptionalModIDs?.ToList() ?? new List<string>(),
+                            Verbose = o.Verbose,
+                            PakToNamedPipe = o.PakToNamedPipe,
+                            CallingExePath = o.CallingExePath
+                        };
+                        us.IntegrateMods(o.ModPakDirectories?.ToArray(), o.GamePakDirectory, o.OutputFolder, o.MountPoint, o.ExtractLua, !o.DisableCleanLua);
+                    }
+                    stopWatch.Stop();
+
+                    Console.WriteLine("Finished integrating! Took " + ((double)stopWatch.Elapsed.Ticks / TimeSpan.TicksPerMillisecond) + " ms in total.");
+                    if (isBenchmark)
+                    {
+                        Console.WriteLine("(" + ((double)stopWatch.Elapsed.Ticks / TimeSpan.TicksPerMillisecond / (double)numBenchmarkTrials) + " ms per trial)");
+                    }
+                    Exit(0);
+                });
+            }
+            else // old
+            {
                 int startOtherParams = 1;
 
                 List<string> paksPaths = [args[0]];
@@ -189,15 +262,24 @@ namespace ModIntegratorCMD
                     return;
                 }
 
+                string outputFolder = args.Length > (startOtherParams + 1) ? ((args[startOtherParams + 1] == "null") ? null : args[startOtherParams + 1]) : null;
+                string mountPoint = args.Length > (startOtherParams + 2) ? ((args[startOtherParams + 2] == "null") ? null : args[startOtherParams + 2]) : null;
+                bool extractLua = args.Length > (startOtherParams + 3) ? (args[startOtherParams + 3].ToLowerInvariant() == "true") : false;
+                bool cleanLua = args.Length > (startOtherParams + 4) ? (args[startOtherParams + 4].ToLowerInvariant() == "true") : false;
+                bool enableCustomRoutines = args.Length > (startOtherParams + 5) ? (args[startOtherParams + 5].ToLowerInvariant() == "true") : false;
+
+                stopWatch.Start();
+
                 ModIntegrator us = new ModIntegrator()
                 {
                     RefuseMismatchedConnections = true,
-                    //OptionalModIDs = new List<string> { "AstroChat" }
+                    EnableCustomRoutines = enableCustomRoutines
                 };
-                us.IntegrateMods(paksPaths.ToArray(), args[startOtherParams], args.Length > startOtherParams+1 ? args[startOtherParams+1] : null, args.Length > (startOtherParams+2) ? args[startOtherParams+2] : null, args.Length > (startOtherParams+3) ? (args[startOtherParams+3].ToLowerInvariant() == "true") : false, args.Length > (startOtherParams + 4) ? (args[startOtherParams + 4].ToLowerInvariant() == "true") : false);
+                us.IntegrateMods(paksPaths.ToArray(), args[startOtherParams], outputFolder, mountPoint, extractLua, cleanLua);
                 stopWatch.Stop();
 
                 Console.WriteLine("Finished integrating! Took " + ((double)stopWatch.Elapsed.Ticks / TimeSpan.TicksPerMillisecond) + " ms in total.");
+                Exit(0);
             }
         }
     }

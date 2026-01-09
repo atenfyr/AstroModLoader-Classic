@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
@@ -29,7 +30,7 @@ namespace AstroModIntegrator
 
     public static class IntegratorUtils
     {
-        public static readonly Version CurrentVersion = new Version(1, 7, 6, 0);
+        public static readonly Version CurrentVersion = new Version(1, 8, 0, 0);
         public static readonly EngineVersion MainEngineVersion = EngineVersion.VER_UE4_27;
         public static readonly string[] IgnoredModIDs = new string[]
         {
@@ -171,6 +172,12 @@ namespace AstroModIntegrator
             WriteUString(writer, str?.Value, str?.Encoding);
         }
 
+        public static void WriteLine(this PipeStream strm, string str)
+        {
+            byte[] bytes = Encoding.ASCII.GetBytes(str + "\n");
+            strm.Write(bytes, 0, bytes.Length);
+        }
+
         public static readonly Regex GameRegex = new Regex(@"^\/Game\/", RegexOptions.Compiled);
         public static string ConvertGamePathToAbsolutePath(this string gamePath, string targetExtension = ".uasset")
         {
@@ -185,6 +192,13 @@ namespace AstroModIntegrator
         {
             EnumMemberAttribute attr = enumVal.GetType().GetMember(enumVal.ToString())[0].GetCustomAttributes(false).OfType<EnumMemberAttribute>().FirstOrDefault();
             return attr?.Value;
+        }
+
+        public static FPackageIndex AddItemTypeImport(this UAsset y, string itemTypePath, string itemTypeClass = null)
+        {
+            if (itemTypeClass == null) itemTypeClass = Path.GetFileNameWithoutExtension(itemTypePath) + "_C";
+            FPackageIndex newIdx = y.AddImport(new Import(FName.FromString(y, "/Script/CoreUObject"), FName.FromString(y, "Package"), FPackageIndex.FromRawIndex(0), FName.FromString(y, itemTypePath), false));
+            return y.AddImport(new Import(FName.FromString(y, "/Script/Engine"), FName.FromString(y, "BlueprintGeneratedClass"), newIdx, FName.FromString(y, itemTypeClass), false));
         }
     }
 }

@@ -40,11 +40,15 @@ namespace AstroModLoader
         public volatile bool UE4SSInstalled = false;
         public bool DisableLuaCleanup = false;
 
+        public static bool RefuseMismatchedConnections;
+        public static bool EnableCustomRoutines;
+        public static List<string> OptionalModIDs;
+
         public ModHandler(Form1 baseForm)
         {
             BaseForm = baseForm;
-            OurIntegrator = new ModIntegrator();
-            OurIntegrator.RefuseMismatchedConnections = true;
+            RefuseMismatchedConnections = true;
+            EnableCustomRoutines = false;
 
             string automaticSteamPath = null;
             string automaticWin10Path = null;
@@ -887,7 +891,8 @@ namespace AstroModLoader
                 ProfileList = diskConfig.Profiles;
                 if (ProfileList == null) ProfileList = new Dictionary<string, ModProfile>();
                 if (!string.IsNullOrEmpty(diskConfig.LaunchCommand)) LaunchCommand = diskConfig.LaunchCommand;
-                OurIntegrator.RefuseMismatchedConnections = diskConfig.RefuseMismatchedConnections;
+                RefuseMismatchedConnections = diskConfig.RefuseMismatchedConnections;
+                EnableCustomRoutines = diskConfig.EnableCustomRoutines;
                 this.DisableLuaCleanup = diskConfig.DisableLuaCleanup;
                 if (includeGamePath)
                 {
@@ -970,7 +975,8 @@ namespace AstroModLoader
             newConfig.GamePath = GamePath;
             newConfig.LaunchCommand = LaunchCommand;
             newConfig.DisableLuaCleanup = DisableLuaCleanup;
-            newConfig.RefuseMismatchedConnections = OurIntegrator.RefuseMismatchedConnections;
+            newConfig.RefuseMismatchedConnections = RefuseMismatchedConnections;
+            newConfig.EnableCustomRoutines = EnableCustomRoutines;
             newConfig.Profiles = ProfileList;
             newConfig.ModsOnDisk = GenerateProfile();
 
@@ -986,9 +992,23 @@ namespace AstroModLoader
             });
         }
 
-        public static ModIntegrator OurIntegrator;
         private volatile bool currentlyIntegrating = false;
         public void IntegrateMods(bool hasLooped = false)
+        {
+            // for now, we keep both the old (same process) and new (different process, with named pipes) approaches available, because:
+            // a. there are probably edge cases that could break integration with the new experimental approach still
+            // b. new approach is significantly slower, still perf work to do
+            if (EnableCustomRoutines)
+            {
+                IntegrateModsNew(hasLooped);
+            }
+            else
+            {
+                IntegrateModsOld(hasLooped);
+            }
+        }
+
+        public void IntegrateModsOld(bool hasLooped = false)
         {
             if (IsReadOnly || GamePath == null || InstallPath == null || currentlyIntegrating) return;
 
@@ -1008,6 +1028,13 @@ namespace AstroModLoader
                 {
                     if (mod.Enabled && mod.IsOptional) optionalMods.Add(mod.CurrentModData.ModID);
                 }
+
+                var OurIntegrator = new ModIntegrator()
+                {
+                    RefuseMismatchedConnections = RefuseMismatchedConnections,
+                    Verbose = true,
+                    EnableCustomRoutines = false
+                };
 
                 if (TableHandler.ShouldContainOptionalColumn()) OurIntegrator.OptionalModIDs = optionalMods;
                 OurIntegrator.IntegrateMods(InstallPath, Path.Combine(GamePath, "Astro", "Content", "Paks"), null, null, true, !DisableLuaCleanup);
@@ -1032,11 +1059,183 @@ namespace AstroModLoader
                 else
                 {
                     currentlyIntegrating = false;
-                    IntegrateMods(true);
+                    IntegrateModsOld(true);
                 }
             }
             finally
             {
+                currentlyIntegrating = false;
+            }
+        }
+
+        public void IntegrateModsNew(bool hasLooped = false)
+        {
+            if (IsReadOnly || GamePath == null || InstallPath == null || currentlyIntegrating) return;
+
+            currentlyIntegrating = true;
+            Process process = null;
+            try
+            {
+                AMLUtils.InvokeUI(() =>
+                {
+                    if (BaseForm.integratingLabel != null) BaseForm.integratingLabel.Text = "Integrating...";
+                });
+
+                // manually clean up lua if requested
+                if (!DisableLuaCleanup)
+                {
+                    try
+                    {
+                        Directory.Delete(Path.Combine(InstallPath, "UE4SS"), true);
+                    }
+                    catch { }
+                }
+
+                string cwd = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AstroModLoader");
+                Program.Cwd = cwd;
+                File.WriteAllText(Path.Combine(cwd, "ModIntegrator.log"), "");
+
+                bool useEmbedded = true;
+                try
+                {
+                    if (File.Exists(Path.Combine(cwd, "ModIntegratorOverride.exe"))) useEmbedded = false;
+                }
+                catch { }
+
+                string pathToExe = useEmbedded ? Path.Combine(cwd, "ModIntegrator.exe") : Path.Combine(cwd, "ModIntegratorOverride.exe");
+                string errorTextToAppend = "";
+
+                // try to reduce integrity to low
+                try
+                {
+                    Process icaclsProcess = new Process();
+                    icaclsProcess.StartInfo.FileName = "icacls.exe";
+                    icaclsProcess.StartInfo.Arguments = "\"" + pathToExe + "\" /setintegritylevel Low";
+                    icaclsProcess.StartInfo.UseShellExecute = false;
+                    icaclsProcess.StartInfo.RedirectStandardOutput = true;
+                    icaclsProcess.StartInfo.CreateNoWindow = true;
+                    icaclsProcess.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                    icaclsProcess.Start();
+                    icaclsProcess.WaitForExit();
+                }
+                catch (Exception ex)
+                {
+                    errorTextToAppend += "Failed to execute icacls.exe: " + ex.Message.ToString() + "\n";
+                }
+
+                // allow access to profile optimization directory
+                string optimizationDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AstroModLoader", "IntegratorProfileOptimization");
+                try
+                {
+                    Directory.CreateDirectory(optimizationDirectory);
+                }
+                catch { }
+                try
+                {
+                    Process icaclsProcess = new Process();
+                    icaclsProcess.StartInfo.FileName = "icacls.exe";
+                    icaclsProcess.StartInfo.Arguments = "\"" + optimizationDirectory + "\" /setintegritylevel Low";
+                    icaclsProcess.StartInfo.UseShellExecute = false;
+                    icaclsProcess.StartInfo.RedirectStandardOutput = true;
+                    icaclsProcess.StartInfo.CreateNoWindow = true;
+                    icaclsProcess.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                    icaclsProcess.Start();
+                    icaclsProcess.WaitForExit();
+                }
+                catch (Exception ex)
+                {
+                    errorTextToAppend += "Failed to execute icacls.exe: " + ex.Message.ToString() + "\n";
+                }
+
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
+
+                List<string> optionalMods = new List<string>();
+                foreach (Mod mod in Mods)
+                {
+                    if (mod.Enabled && mod.IsOptional) optionalMods.Add(mod.CurrentModData.ModID);
+                }
+
+                if (TableHandler.ShouldContainOptionalColumn()) OptionalModIDs = optionalMods;
+
+                CancellationTokenSource cs = new CancellationTokenSource();
+                string PipeUniqID_ModIntegrator = Program.PipeUniqID + "-ModIntegrator";
+                Task task = Program.StartNamedPipeServer(PipeUniqID_ModIntegrator, BaseForm, cs.Token, 1, true);
+
+                string parms = "-i \"" + InstallPath.TrimEnd(['/', '\\']) + "\" -g \"" + Path.Combine(GamePath, "Astro", "Content", "Paks").TrimEnd(['/', '\\']) + "\" --pak_to_named_pipe " + PipeUniqID_ModIntegrator + " --extract_lua --disable_clean_lua " + (EnableCustomRoutines ? "--enable_custom_routines " : "") + (RefuseMismatchedConnections ? "" : "--disable_refuse_mismatched_connections ");
+#if DEBUG_CUSTOMROUTINETEST
+                parms += "--calling_exe_path \"" + AppContext.BaseDirectory.TrimEnd(['/', '\\']) + "\" ";
+#endif
+                parms += (OptionalModIDs != null && OptionalModIDs.Count > 0) ? ("--optional_mod_ids " + string.Join(' ', OptionalModIDs) + " ") : string.Empty;
+                parms += "-v ";
+
+
+                process = new Process();
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.RedirectStandardError = true;
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.CreateNoWindow = true;
+                process.StartInfo.WorkingDirectory = cwd;
+                process.StartInfo.FileName = pathToExe;
+                process.StartInfo.Arguments = parms;
+                process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                process.Start();
+
+                string integratorOut = process.StandardOutput.ReadToEnd().Trim();
+                string integratorError = process.StandardError.ReadToEnd().Trim();
+                File.AppendAllText(Path.Combine(cwd, "ModIntegrator.log"), "\n" + process.StartInfo.Arguments + "\n" + integratorOut + "\n" + integratorError + "\n\n" + errorTextToAppend + "\n");
+
+                bool success = process.WaitForExit(15000);
+                if (!success)
+                {
+                    process.Kill();
+                    File.AppendAllText(Path.Combine(cwd, "ModIntegrator.log"), "Integrator process timed out");
+                }
+                if (success && process.ExitCode != 0)
+                {
+                    File.AppendAllText(Path.Combine(cwd, "ModIntegrator.log"), "Integrator process responded with exit code " + process.ExitCode.ToString());
+                    success = false;
+                }
+
+                // wait for named pipe server to disconnect
+                if (!task.Wait(2000))
+                {
+                    cs.Cancel();
+                    if (!task.Wait(1000)) throw new TimeoutException("Named pipe server for integrator is hanging");
+                }
+
+                if (success && !Program.GotPak) success = false;
+                if (!success) throw new Exception("Integrator process timed out or responded with bad return value");
+
+                sw.Stop();
+                string tm = sw.Elapsed.TotalMilliseconds.ToString("#.##");
+
+                AMLUtils.InvokeUI(() =>
+                {
+                    if (BaseForm.integratingLabel != null) BaseForm.integratingLabel.Text = "Integrated in " + tm + " ms";
+                });
+            }
+            catch
+            {
+                if (process != null && !process.HasExited) process.Kill();
+
+                if (hasLooped)
+                {
+                    AMLUtils.InvokeUI(() =>
+                    {
+                        if (BaseForm.integratingLabel != null) BaseForm.integratingLabel.Text = "Failed to integrate!";
+                    });
+                }
+                else
+                {
+                    currentlyIntegrating = false;
+                    IntegrateModsNew(true);
+                }
+            }
+            finally
+            {
+                if (process != null && !process.HasExited) process.Kill();
+                Program.GotPak = false;
                 currentlyIntegrating = false;
             }
         }

@@ -5,11 +5,16 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AssemblyTitle>AstroModIntegrator</AssemblyTitle>
     <Product>AstroModIntegrator</Product>
-    <Copyright>Copyright © AstroTechies, atenfyr 2025</Copyright>
-    <AssemblyVersion>1.7.6.0</AssemblyVersion>
-    <FileVersion>1.7.6.0</FileVersion>
+    <Copyright>Copyright © AstroTechies, atenfyr 2026</Copyright>
+    <AssemblyVersion>1.8.0.0</AssemblyVersion>
+    <FileVersion>1.8.0.0</FileVersion>
+    <Configurations>Debug;Release;Debug_CustomRoutineTest</Configurations>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_CustomRoutineTest|x86'">
     <OutputPath>bin\x86\Debug\</OutputPath>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
@@ -39,8 +44,8 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="DouglasDwyer.CasCore" Version="0.2.1" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
   <ItemGroup>
@@ -48,4 +53,8 @@
       <HintPath>UAssetAPI.dll</HintPath>
     </Reference>
   </ItemGroup>
+  <Target Name="AfterBuildMigrated" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
+    <Copy SourceFiles="$(ProjectDir)UAssetAPI.dll" DestinationFolder="CustomRoutineDevKit/" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="CustomRoutineDevKit/" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

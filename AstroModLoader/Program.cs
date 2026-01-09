@@ -1,16 +1,120 @@
 ﻿using CommandLine;
 using Microsoft.Win32;
 using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.IO.Pipes;
+using System.Runtime;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace AstroModLoader
 {
+    // BEGIN NON-MIT LICENSED SECTION //
+
+    // THE FOLLOWING METHODS ARE ADAPTED FROM STACK OVERFLOW ANSWERS!
+    // THEY ARE NOT LICENSED UNDER MIT. SEE COMMENTS FOR FURTHER INFORMATION
+
+    // CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/deed.en)
+    // This code is copyrighted by StackOverflow user "Dzmitry Lahoda" https://stackoverflow.com/users/173073/dzmitry-lahoda
+    // Minor changes were made to this source code from the original. No warranties are given. See the original license text for more information.
+    // https://stackoverflow.com/a/14424623
+
+    public static class NativeMethods
+    {
+        public const string LOW_INTEGRITY_SSL_SACL = "S:(ML;;NW;;;LW)";
+
+        public static int ERROR_SUCCESS = 0x0;
+
+        public const int LABEL_SECURITY_INFORMATION = 0x00000010;
+
+        public enum SE_OBJECT_TYPE
+        {
+            SE_UNKNOWN_OBJECT_TYPE = 0,
+            SE_FILE_OBJECT,
+            SE_SERVICE,
+            SE_PRINTER,
+            SE_REGISTRY_KEY,
+            SE_LMSHARE,
+            SE_KERNEL_OBJECT,
+            SE_WINDOW_OBJECT,
+            SE_DS_OBJECT,
+            SE_DS_OBJECT_ALL,
+            SE_PROVIDER_DEFINED_OBJECT,
+            SE_WMIGUID_OBJECT,
+            SE_REGISTRY_WOW64_32KEY
+        }
+
+
+
+        [DllImport("advapi32.dll", EntryPoint = "ConvertStringSecurityDescriptorToSecurityDescriptorW")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern Boolean ConvertStringSecurityDescriptorToSecurityDescriptor(
+            [MarshalAs(UnmanagedType.LPWStr)] String strSecurityDescriptor,
+            UInt32 sDRevision,
+            ref IntPtr securityDescriptor,
+            ref UInt32 securityDescriptorSize);
+
+        [DllImport("kernel32.dll", EntryPoint = "LocalFree")]
+        public static extern UInt32 LocalFree(IntPtr hMem);
+
+        [DllImport("Advapi32.dll", EntryPoint = "SetSecurityInfo")]
+        public static extern int SetSecurityInfo(SafeHandle hFileMappingObject,
+                                                    SE_OBJECT_TYPE objectType,
+                                                    Int32 securityInfo,
+                                                    IntPtr psidOwner,
+                                                    IntPtr psidGroup,
+                                                    IntPtr pDacl,
+                                                    IntPtr pSacl);
+        [DllImport("advapi32.dll", EntryPoint = "GetSecurityDescriptorSacl")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern Boolean GetSecurityDescriptorSacl(
+            IntPtr pSecurityDescriptor,
+            out IntPtr lpbSaclPresent,
+            out IntPtr pSacl,
+            out IntPtr lpbSaclDefaulted);
+    }
+
+    public class InterProcessSecurity
+    {
+
+        public static void SetLowIntegrityLevel(SafeHandle hObject)
+        {
+            IntPtr pSD = IntPtr.Zero;
+            IntPtr pSacl;
+            IntPtr lpbSaclPresent;
+            IntPtr lpbSaclDefaulted;
+            uint securityDescriptorSize = 0;
+
+            if (NativeMethods.ConvertStringSecurityDescriptorToSecurityDescriptor(NativeMethods.LOW_INTEGRITY_SSL_SACL, 1, ref pSD, ref securityDescriptorSize))
+            {
+                if (NativeMethods.GetSecurityDescriptorSacl(pSD, out lpbSaclPresent, out pSacl, out lpbSaclDefaulted))
+                {
+                    var err = NativeMethods.SetSecurityInfo(hObject,
+                                                  NativeMethods.SE_OBJECT_TYPE.SE_KERNEL_OBJECT,
+                                                  NativeMethods.LABEL_SECURITY_INFORMATION,
+                                                  IntPtr.Zero,
+                                                  IntPtr.Zero,
+                                                  IntPtr.Zero,
+                                                  pSacl);
+                    if (err != NativeMethods.ERROR_SUCCESS)
+                    {
+                        throw new Win32Exception(err);
+                    }
+                }
+                NativeMethods.LocalFree(pSD);
+            }
+        }
+    }
+    // END NON-MIT LICENSED SECTION //
+
+    // ALL CODE FROM THIS POINT ON IS MIT LICENSED BY ATENFYR
+    // SEE THE "LICENSE" FILE FOR MORE INFORMATION
+
     public class Options
     {
         [Option("server", Required = false, HelpText = "Specifies that AstroModLoader is being ran for a server.")]
@@ -35,16 +139,306 @@ namespace AstroModLoader
     public static class Program
     {
         public static Options CommandLineOptions;
+        public static volatile bool GotPak = false;
+        public static volatile string Cwd = null;
+        public static readonly string PipeUniqID = "AstroModLoader-Classic-192637418";
 
         [DllImport("user32.dll")]
         private static extern bool SetProcessDPIAware();
+
+        internal static Task StartNamedPipeServer(string pipeID, Form1 f1, CancellationToken? cs, int numAllowedConnectionTimes, bool ExpectingPak)
+        {
+#if DEBUG
+            // if in debug configuration, allow integrator commands on the main pipe
+            ExpectingPak = true;
+#endif
+
+            return Task.Factory.StartNew(() =>
+            {
+                int numTimesConnected = 0;
+                while (true)
+                {
+                    if (cs != null && ((CancellationToken)cs).IsCancellationRequested) break;
+
+                    // if numTimesConnected == numAllowedConnectionTimes then still acceptable because we increment first
+                    numTimesConnected++;
+                    if (numAllowedConnectionTimes > 0 && numTimesConnected > numAllowedConnectionTimes) break;
+
+                    using (var server = new NamedPipeServerStream(pipeID))
+                    {
+                        try
+                        {
+                            server.Disconnect();
+                        }
+                        catch { }
+
+                        InterProcessSecurity.SetLowIntegrityLevel(server.SafePipeHandle);
+
+                        server.WaitForConnection();
+
+                        bool enableReply = false;
+
+                        // continually respond to messages until we receive Disconnect
+                        using (var reader = new StreamReader(server))
+                        {
+                            using (var writer = new StreamWriter(server))
+                            {
+                                bool keepResponding = true;
+
+                                while (keepResponding)
+                                {
+                                    if (cs != null && ((CancellationToken)cs).IsCancellationRequested) break;
+                                    if (!server.IsConnected) break;
+
+                                    string responseText = null; // null = don't transmit any reply
+
+                                    string myLine = reader.ReadLine();
+                                    switch (myLine)
+                                    {
+                                        case null:
+                                            // unexpected disconnect
+                                            keepResponding = false;
+                                            responseText = null;
+                                            break;
+                                        case "Disconnect":
+                                            keepResponding = false;
+                                            responseText = null; // no reply
+                                            break;
+                                        case "EnableReply":
+                                            enableReply = true;
+                                            responseText = "Ack";
+                                            break;
+                                        case "DisableReply":
+                                            enableReply = false;
+                                            responseText = "Ack";
+                                            break;
+                                        case "Ping":
+                                            responseText = "Pong";
+                                            break;
+                                        case "Version":
+                                            responseText = Application.ProductVersion.ToString();
+                                            break;
+                                        case "WriteFile:Open":
+                                            GotPak = false;
+                                            responseText = "Ack";
+                                            break;
+                                        case "WriteFile:DisconnectIfReject":
+                                            if (!ExpectingPak || f1?.ModManager == null || f1.ModManager.GetReadOnly())
+                                            {
+                                                keepResponding = false;
+                                                responseText = null;
+                                                break;
+                                            }
+                                            responseText = "Ack";
+                                            break;
+                                        case "WriteFile:Close":
+                                            ExpectingPak = false;
+                                            responseText = "Ack";
+                                            break;
+                                        case "WriteFile:ClientTransmitIntegratorPak":
+                                            if (!ExpectingPak || f1?.ModManager == null || f1.ModManager.GetReadOnly())
+                                            {
+                                                responseText = "Rejected";
+                                                break;
+                                            }
+
+                                            GotPak = false;
+                                            if (int.TryParse(reader.ReadLine(), out int numBytes))
+                                            {
+                                                byte[] pakData = new byte[numBytes];
+                                                server.Read(pakData, 0, numBytes);
+                                                if (pakData != null && pakData.Length > 0)
+                                                {
+                                                    File.WriteAllBytes(Path.Combine(f1.ModManager.InstallPath, "999-AstroModIntegrator_P.pak"), pakData);
+                                                    GotPak = true;
+                                                }
+                                            }
+
+                                            responseText = GotPak ? "Ack" : "Failed";
+                                            break;
+                                        case "WriteFile:Log":
+                                            if (string.IsNullOrEmpty(Program.Cwd)) break;
+
+                                            {
+                                                int numBytes1 = int.Parse(reader.ReadLine());
+                                                if (numBytes1 == 0) continue;
+                                                byte[] data1 = new byte[numBytes1];
+                                                server.Read(data1, 0, numBytes1);
+                                                File.AppendAllText(Path.Combine(Program.Cwd, "ModIntegrator.log"), Encoding.UTF8.GetString(data1));
+                                            }
+
+                                            responseText = "Ack";
+                                            break;
+                                        case "WriteFile:ClientTransmitUE4SSMods":
+                                            if (!ExpectingPak || f1?.ModManager == null || f1.ModManager.GetReadOnly())
+                                            {
+                                                responseText = "Rejected";
+                                                break;
+                                            }
+
+                                            while (true)
+                                            {
+                                                string modId = reader.ReadLine().Replace("..", "");
+                                                if (modId == "!!!Stop") break;
+                                                string modSubPath = reader.ReadLine().Replace("..", "");
+                                                if (modSubPath == "!!!Stop") break;
+                                                int numBytes1 = int.Parse(reader.ReadLine());
+                                                if (numBytes1 == 0) continue;
+                                                byte[] data1 = new byte[numBytes1];
+                                                server.Read(data1, 0, numBytes1);
+
+                                                string newPath = Path.Combine(f1.ModManager.InstallPathLua, modId, modSubPath);
+                                                Directory.CreateDirectory(Path.GetDirectoryName(newPath));
+                                                File.WriteAllBytes(newPath, data1);
+                                            }
+
+                                            while (reader.ReadLine() == "!!!Stop") { }
+
+                                            {
+                                                int numBytes1 = int.Parse(reader.ReadLine());
+                                                if (numBytes1 > 0)
+                                                {
+                                                    byte[] data1 = new byte[numBytes1];
+                                                    server.Read(data1, 0, numBytes1);
+
+                                                    string newPath = Path.Combine(f1.ModManager.InstallPathLua, "mods.txt");
+                                                    Directory.CreateDirectory(Path.GetDirectoryName(newPath));
+                                                    File.WriteAllBytes(newPath, data1);
+                                                }
+                                            }
+                                            {
+                                                int numBytes1 = int.Parse(reader.ReadLine());
+                                                if (numBytes1 > 0)
+                                                {
+                                                    byte[] data1 = new byte[numBytes1];
+                                                    server.Read(data1, 0, numBytes1);
+
+                                                    string newPath = Path.Combine(f1.ModManager.InstallPathLua, "shared", "UEHelpers", "UEHelpers.lua");
+                                                    Directory.CreateDirectory(Path.GetDirectoryName(newPath));
+                                                    File.WriteAllBytes(newPath, data1);
+
+                                                    string[] binariesDir = Directory.GetDirectories(Path.Combine(f1.ModManager.GamePath, "Astro", "Binaries"), "*", SearchOption.TopDirectoryOnly);
+                                                    if (binariesDir.Length > 0)
+                                                    {
+                                                        try
+                                                        {
+                                                            string newPath2 = Path.Combine(binariesDir[0], "ue4ss", "Mods", "shared", "UEHelpers", "UEHelpers.lua");
+                                                            Directory.CreateDirectory(Path.GetDirectoryName(newPath2));
+                                                            File.WriteAllBytes(newPath2, data1);
+                                                        }
+                                                        catch { }
+                                                    }
+                                                }
+                                            }
+                                            {
+                                                int numBytes1 = int.Parse(reader.ReadLine());
+                                                if (numBytes1 > 0)
+                                                {
+                                                    byte[] data1 = new byte[numBytes1];
+                                                    server.Read(data1, 0, numBytes1);
+
+                                                    string newPath = Path.Combine(f1.ModManager.InstallPathLua, "shared", "AstroHelpers", "AstroHelpers.lua");
+                                                    Directory.CreateDirectory(Path.GetDirectoryName(newPath));
+                                                    File.WriteAllBytes(newPath, data1);
+
+                                                    string[] binariesDir = Directory.GetDirectories(Path.Combine(f1.ModManager.GamePath, "Astro", "Binaries"), "*", SearchOption.TopDirectoryOnly);
+                                                    if (binariesDir.Length > 0)
+                                                    {
+                                                        try
+                                                        {
+                                                            string newPath2 = Path.Combine(binariesDir[0], "ue4ss", "Mods", "shared", "AstroHelpers", "AstroHelpers.lua");
+                                                            Directory.CreateDirectory(Path.GetDirectoryName(newPath2));
+                                                            File.WriteAllBytes(newPath2, data1);
+                                                        }
+                                                        catch { }
+                                                    }
+                                                }
+                                            }
+
+                                            responseText = "Ack";
+                                            break;
+                                        default:
+                                            // pass to main program
+                                            bool bubbleSuccess = f1.ReceivePipe(myLine);
+                                            responseText = bubbleSuccess ? "Ack" : "Failed";
+                                            break;
+                                    }
+
+                                    if (enableReply && responseText != null)
+                                    {
+                                        writer.WriteLine(responseText);
+                                        writer.Flush();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
 
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
+            string rootFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AstroModLoader");
+            ProfileOptimization.SetProfileRoot(rootFolder);
+            ProfileOptimization.StartProfile("Startup.Profile");
+
+            try
+            {
+                Directory.CreateDirectory(rootFolder);
+
+                // dump ModIntegrator.exe
+                using (var resource = typeof(Program).Assembly.GetManifestResourceStream("AstroModLoader.ModIntegrator.exe"))
+                {
+                    if (resource != null)
+                    {
+                        using (var file = new FileStream(Path.Combine(rootFolder, "ModIntegrator.exe"), FileMode.Create, FileAccess.Write))
+                        {
+                            resource.CopyTo(file);
+                        }
+                    }
+                }
+
+                // dump repak_bind ourselves because low-integrity uassetapi cannot
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    using (var resource = typeof(UAssetAPI.PropertyTypes.Objects.PropertyData).Assembly.GetManifestResourceStream("UAssetAPI.repak_bind.so"))
+                    {
+                        if (resource != null)
+                        {
+                            using (var file = new FileStream(Path.Combine(rootFolder, "repak_bind.so"), FileMode.Create, FileAccess.Write))
+                            {
+                                resource.CopyTo(file);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    using (var resource = typeof(UAssetAPI.PropertyTypes.Objects.PropertyData).Assembly.GetManifestResourceStream("UAssetAPI.repak_bind.dll"))
+                    {
+                        if (resource != null)
+                        {
+                            using (var file = new FileStream(Path.Combine(rootFolder, "repak_bind.dll"), FileMode.Create, FileAccess.Write))
+                            {
+                                resource.CopyTo(file);
+                            }
+                        }
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                // some error occurred we need to output...
+                Clipboard.SetText(ex.ToString());
+                return;
+            }
+
             Parser.Default.ParseArguments<Options>(args)
             .WithParsed(o =>
             {
@@ -92,8 +486,7 @@ namespace AstroModLoader
                         // no big deal if it doesn't work
                     }
 
-                    string uniq_id = "AstroModLoader-Classic-192637418";
-                    using (Mutex mutex = new Mutex(false, uniq_id))
+                    using (Mutex mutex = new Mutex(false, PipeUniqID))
                     {
                         if (!mutex.WaitOne(5000, false))
                         {
@@ -102,14 +495,15 @@ namespace AstroModLoader
                             {
                                 try
                                 {
-                                    using (var client = new NamedPipeClientStream(".", uniq_id, PipeDirection.Out))
+                                    using (var client = new NamedPipeClientStream(".", PipeUniqID, PipeDirection.Out))
                                     {
                                         client.Connect(5);
 
                                         using (var writer = new StreamWriter(client))
                                         {
-                                            writer.AutoFlush = true;
                                             writer.WriteLine("InstallThunderstore:" + Program.CommandLineOptions.InstallThunderstore);
+                                            writer.WriteLine("Disconnect");
+                                            writer.Flush();
                                         }
                                     }
                                 }
@@ -119,14 +513,15 @@ namespace AstroModLoader
                             {
                                 try
                                 {
-                                    using (var client = new NamedPipeClientStream(".", uniq_id, PipeDirection.Out))
+                                    using (var client = new NamedPipeClientStream(".", PipeUniqID, PipeDirection.Out))
                                     {
                                         client.Connect(5);
 
                                         using (var writer = new StreamWriter(client))
                                         {
-                                            writer.AutoFlush = true;
                                             writer.WriteLine("Focus");
+                                            writer.WriteLine("Disconnect");
+                                            writer.Flush();
                                         }
                                     }
                                 }
@@ -138,21 +533,9 @@ namespace AstroModLoader
                         Form1 f1 = new Form1();
 
                         // open named pipe server
-                        Task.Factory.StartNew(() =>
-                        {
-                            while (true)
-                            {
-                                using (var server = new NamedPipeServerStream(uniq_id))
-                                {
-                                    server.WaitForConnection();
+                        StartNamedPipeServer(PipeUniqID, f1, null, -1, false);
 
-                                    using (var reader = new StreamReader(server))
-                                    {
-                                        f1.ReceivePipe(reader.ReadLine());
-                                    }
-                                }
-                            }
-                        });
+                        // start
                         Application.Run(f1);
                     }
                 }
