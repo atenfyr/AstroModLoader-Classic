@@ -995,6 +995,13 @@ namespace AstroModLoader
         private volatile bool currentlyIntegrating = false;
         public void IntegrateMods(bool hasLooped = false)
         {
+#if DEBUG_CUSTOMROUTINETEST
+            // same-process handling makes it easier to debug exceptions in custom routines
+            IntegrateModsOld(hasLooped);
+            try { File.Copy("ModIntegrator.log", Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AstroModLoader", "ModIntegrator.log"), true); } catch { }
+            return;
+#endif
+
             // for now, we keep both the old (same process) and new (different process, with named pipes) approaches available, because:
             // a. there are probably edge cases that could break integration with the new experimental approach still
             // b. new approach is significantly slower, still perf work to do
@@ -1033,7 +1040,7 @@ namespace AstroModLoader
                 {
                     RefuseMismatchedConnections = RefuseMismatchedConnections,
                     Verbose = true,
-                    EnableCustomRoutines = false
+                    EnableCustomRoutines = EnableCustomRoutines
                 };
 
                 if (TableHandler.ShouldContainOptionalColumn()) OurIntegrator.OptionalModIDs = optionalMods;

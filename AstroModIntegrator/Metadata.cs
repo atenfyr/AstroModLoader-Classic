@@ -240,6 +240,17 @@ namespace AstroModIntegrator
         [JsonProperty("biome_placement_modifiers")]
         public List<PlacementModifier> BiomePlacementModifiers;
 
+        [JsonProperty("path_to_custom_routine_dll")]
+        public string PathToCustomRoutineDLL; // default AMLCustomRoutine.dll
+
+        [JsonExtensionData]
+        public IDictionary<string, JToken> ExtraFields;
+
+        public IntegratorEntries()
+        {
+            ExtraFields = new Dictionary<string, JToken>();
+        }
+
         public object Clone()
         {
             return this.MemberwiseClone();
@@ -293,9 +304,11 @@ namespace AstroModIntegrator
         [JsonProperty("integrator")]
         public IntegratorEntries IntegratorEntries;
 
-        // standard is ambiguous as to whether or not this field is optional, but it is de facto
         [JsonProperty("dependencies")]
         public Dictionary<string, object> Dependencies;
+
+        [JsonExtensionData]
+        public IDictionary<string, JToken> ExtraFields;
 
         public Dictionary<string, Dependency> ParseDependencies()
         {

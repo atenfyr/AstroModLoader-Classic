@@ -6,6 +6,10 @@
     <Nullable>enable</Nullable>
     <Configurations>Debug;Release;Debug_CustomRoutineTest</Configurations>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
   
   <ItemGroup>
     <Reference Include="AstroModIntegrator">

@@ -79,6 +79,20 @@ namespace AstroModIntegrator
         public IReadOnlyList<Metadata> GetAllMods();
 
         /// <summary>
+        /// Get the mod corresponding to a specific custom routine. May return null.
+        /// </summary>
+        /// <param name="routine">The routine for which the current mod should be obtained.</param>
+        /// <returns>The Metadata class corresponding to the desired mod.</returns>
+        public Metadata GetModFromRoutine(CustomRoutine routine);
+
+        /// <summary>
+        /// Fetch a specific custom routine from its ID. May return null.
+        /// </summary>
+        /// <param name="routineID">The ID of the custom routine to fetch</param>
+        /// <returns>The requested CustomRoutine, or null if it could not be found.</returns>
+        public CustomRoutine GetCustomRoutineFromID(string routineID);
+
+        /// <summary>
         /// Log some text to disk.
         /// </summary>
         /// <param name="text">The text to log to disk. The text will automatically be suffixed with a newline character.</param>
@@ -136,6 +150,16 @@ namespace AstroModIntegrator
             if (!Enabled) return new List<Metadata>().AsReadOnly<Metadata>();
             return Integrator.GetAllMods();
         }
+        public Metadata GetModFromRoutine(CustomRoutine routine)
+        {
+            if (!Enabled) return null;
+            return Integrator.GetModFromRoutine(routine);
+        }
+        public CustomRoutine GetCustomRoutineFromID(string routineID)
+        {
+            if (!Enabled) return null;
+            return Integrator.GetCustomRoutineFromID(routineID);
+        }
         public bool LogToDisk(string text, bool prefixWithMod = true)
         {
             if (!Enabled) return false;
@@ -181,7 +205,10 @@ namespace AstroModIntegrator
         private Dictionary<string, byte[]> CreatedPakData;
         private volatile Dictionary<string, byte[]> CreatedPakDataTemp;
         private volatile PakExtractor pakExtractorForCustomRoutines;
-        private volatile Metadata currentMod = null;
+        private volatile string currentMod; // RoutineID
+        private volatile List<Metadata> allMods;
+        private volatile Dictionary<string, CustomRoutine> customRoutinesMap;
+        private volatile Dictionary<string, Metadata> customRoutinesMap2;
         private volatile Dictionary<Guid, Metadata> customRoutineAssemblyToMetadata = null;
         private volatile bool isCurrentlyIntegrating = false;
         private volatile bool hasLoggedOnceAlready = false;
@@ -217,14 +244,15 @@ namespace AstroModIntegrator
                         .Allow(new TypeBinding(typeof(ICustomRoutineAPI), Accessibility.Public))
                         .Allow(new TypeBinding(typeof(CustomRoutineAPIWrapper), Accessibility.Public))
                         .Allow(new TypeBinding(typeof(CustomRoutine), Accessibility.Private))
-                        .Allow(new TypeBinding(typeof(Dependency), Accessibility.Public))
-                        .Allow(new TypeBinding(typeof(DownloadMode), Accessibility.Public))
-                        .Allow(new TypeBinding(typeof(DownloadInfo), Accessibility.Public))
-                        .Allow(new TypeBinding(typeof(SyncMode), Accessibility.Public))
-                        .Allow(new TypeBinding(typeof(IntegratorEntries), Accessibility.Public))
-                        .Allow(new TypeBinding(typeof(Metadata), Accessibility.Public))
+                        .Allow(new TypeBinding(typeof(Dependency), Accessibility.Private))
+                        .Allow(new TypeBinding(typeof(DownloadMode), Accessibility.Private))
+                        .Allow(new TypeBinding(typeof(DownloadInfo), Accessibility.Private))
+                        .Allow(new TypeBinding(typeof(SyncMode), Accessibility.Private))
+                        .Allow(new TypeBinding(typeof(IntegratorEntries), Accessibility.Private))
+                        .Allow(new TypeBinding(typeof(Metadata), Accessibility.Private))
                         .Allow(new TypeBinding(typeof(IntegratorUtils), Accessibility.Public))
-                        .Allow(new AssemblyBinding(typeof(UAsset).Assembly, Accessibility.Public))
+                        .Allow(new AssemblyBinding(typeof(UAssetAPI.UAsset).Assembly, Accessibility.Public))
+                        .Allow(new AssemblyBinding(typeof(Newtonsoft.Json.Linq.JObject).Assembly, Accessibility.Private))
                         .Deny(typeof(UAsset).GetMethods().Where(p => p.Name == "PathToStream" || p.Name == "Write" || p.Name == "SerializeJson" || p.Name == "SerializeJsonObject" || p.Name == "DeserializeJson" || p.Name == "DeserializeJsonObject" || p.Name == "PullSchemasFromAnotherAsset" || p.Name == "VerifyBinaryEquality"))
                         .Deny(typeof(UAsset).GetConstructors())
                         //.Deny(new TypeBinding(typeof(UAssetAPI.Unversioned.Usmap), Accessibility.Private))
@@ -266,7 +294,7 @@ namespace AstroModIntegrator
         public void AddFile(string outPath, UAsset outAsset)
         {
             if (outPath.StartsWith("/Game/")) outPath = IntegratorUtils.ConvertGamePathToAbsolutePath(outPath, ".uasset");
-            FName.FromString(outAsset, "AMLC CR: " + (currentMod?.ModID ?? "unknown mod")); // add watermark to name map for easily tracing what mods modify what files
+            FName.FromString(outAsset, "AMLC CR: " + (GetCurrentMod()?.ModID ?? "unknown mod")); // add watermark to name map for easily tracing what mods modify what files
             IntegratorUtils.SplitExportFiles(outAsset, outPath, CreatedPakDataTemp);
         }
 
@@ -344,12 +372,23 @@ namespace AstroModIntegrator
 
         public Metadata GetCurrentMod()
         {
-            return currentMod;
+            return GetModFromRoutine(GetCustomRoutineFromID(currentMod));
         }
 
         public IReadOnlyList<Metadata> GetAllMods()
         {
-            return customRoutineAssemblyToMetadata?.Values?.ToList()?.AsReadOnly<Metadata>() ?? (new List<Metadata>().AsReadOnly<Metadata>());
+            return allMods?.AsReadOnly<Metadata>();
+        }
+
+        public Metadata GetModFromRoutine(CustomRoutine routine)
+        {
+            if (customRoutinesMap2 == null || routine?.RoutineID == null || !customRoutinesMap2.ContainsKey(routine.RoutineID)) return null;
+            return customRoutinesMap2[routine.RoutineID];
+        }
+        public CustomRoutine GetCustomRoutineFromID(string routineID)
+        {
+            if (customRoutinesMap == null || routineID == null || !customRoutinesMap.ContainsKey(routineID)) return null;
+            return customRoutinesMap[routineID];
         }
 
         internal byte[] FindFile(string target, PakExtractor ourExtractor, out EngineVersion engVer)
@@ -578,6 +617,9 @@ namespace AstroModIntegrator
             CreatedPakData = null;
             CreatedPakDataTemp = null;
             currentMod = null;
+            allMods = null;
+            customRoutinesMap = null;
+            customRoutinesMap2 = null;
             pakExtractorForCustomRoutines = null;
             customRoutineAssemblyToMetadata = null;
             hasLoggedOnceAlready = false;
@@ -641,6 +683,7 @@ namespace AstroModIntegrator
             {
                 filesList.AddRange(Directory.GetFiles(paksPath, "*_P.pak", paksPath.Contains("LogicMods") ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly));
             }
+            filesList.Sort();
             string[] files = filesList.ToArray();
 
             string[] realPakPaths = Directory.GetFiles(installPath, "*.pak", SearchOption.TopDirectoryOnly);
@@ -667,7 +710,7 @@ namespace AstroModIntegrator
             List<string> newPersistentActors = new List<string>();
             List<string> newTrailheads = new List<string>();
             List<PlacementModifier> biomePlacementModifiers = new List<PlacementModifier>();
-            List<Metadata> allMods = new List<Metadata>();
+            allMods = new List<Metadata>();
             List<string> allPersistentActorMaps = DefaultMapPaths.ToList();
             List<Assembly> customRoutineAssemblies = new List<Assembly>();
             customRoutineAssemblyToMetadata = new Dictionary<Guid, Metadata>();
@@ -686,15 +729,16 @@ namespace AstroModIntegrator
                         us = newPakExtractor.ReadMetadata();
 
                         // add assembly if exists
-                        if (EnableCustomRoutines && newPakExtractor.HasPath("AMLCustomRoutine.dll"))
+                        string dllPath = us.IntegratorEntries.PathToCustomRoutineDLL ?? "AMLCustomRoutine.dll";
+                        if (EnableCustomRoutines && newPakExtractor.HasPath(dllPath))
                         {
-                            byte[] assemblyData = newPakExtractor.ReadRaw("AMLCustomRoutine.dll");
+                            byte[] assemblyData = newPakExtractor.ReadRaw(dllPath);
                             if (assemblyData != null && assemblyData.Length > 0)
                             {
                                 Assembly newAsm = EnableSandbox ? loadContext.LoadFromStream(new MemoryStream(assemblyData)) : Assembly.Load(assemblyData);
                                 customRoutineAssemblies.Add(newAsm);
                                 customRoutineAssemblyToMetadata[newAsm.ManifestModule.ModuleVersionId] = us;
-                                LogToDiskVerbose("Found AMLCustomRoutine.dll for mod " + (us?.ModID ?? file) + ", adding to list of assemblies");
+                                LogToDiskVerbose("Found custom routine DLL for mod " + (us?.ModID ?? file) + ", adding to list of assemblies");
                             }
                         }
                     }
@@ -1024,6 +1068,9 @@ namespace AstroModIntegrator
                     {
                         pakExtractorForCustomRoutines = ourExtractor;
                         currentMod = null;
+                        customRoutinesMap = new Dictionary<string, CustomRoutine>();
+                        customRoutinesMap2 = new Dictionary<string, Metadata>();
+                        List<CustomRoutine> customRoutineInstances = new List<CustomRoutine>();
                         for (int i = 0; i < customRoutineAssemblies.Count; i++)
                         {
                             Type[] alCRTypes = customRoutineAssemblies[i].GetTypes().Where(t => t.IsSubclassOf(typeof(CustomRoutine))).ToArray();
@@ -1036,42 +1083,11 @@ namespace AstroModIntegrator
 
                                     CustomRoutine customRoutineInstance = Activator.CreateInstance(currentCRType) as CustomRoutine;
                                     if (customRoutineInstance == null) continue;
+                                    customRoutineInstances.Add(customRoutineInstance);
+                                    customRoutinesMap[customRoutineInstance.RoutineID] = customRoutineInstance;
 
-                                    currentMod = customRoutineAssemblyToMetadata[customRoutineAssemblies[i].ManifestModule.ModuleVersionId];
-
-                                    string modId = currentMod?.ModID ?? "unknown mod";
-                                    LogToDiskVerbose("Executing custom routine for mod " + modId);
-
-                                    CreatedPakDataTemp = new Dictionary<string, byte[]>();
-
-                                    CustomRoutineAPIWrapper apiWrapper = new CustomRoutineAPIWrapper(this);
-                                    Thread workerThread = new Thread(() =>
-                                    {
-                                        try
-                                        {
-                                            customRoutineInstance.Execute(apiWrapper);
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            LogToDisk("[" + modId + "] " + ex.Message + "\n" + (ex.StackTrace ?? "null") + "\n" + (ex.InnerException?.Message ?? "null") + "\n" + (ex.InnerException?.StackTrace ?? "null"), false); // the method could get incorrect mod id so we prepend the mod id manually
-#if DEBUG_CUSTOMROUTINETEST
-                                            throw;
-#endif
-                                        }
-                                    });
-                                    workerThread.Start();
-
-                                    bool terminated = workerThread.Join(TimeSpan.FromSeconds(5));
-                                    if (terminated)
-                                    {
-                                        // copy saved assets
-                                        foreach (KeyValuePair<string, byte[]> entry in CreatedPakDataTemp) CreatedPakData[entry.Key] = entry.Value;
-                                    }
-                                    else
-                                    {
-                                        LogToDisk("[" + modId + "] Failed to terminate in time; discarding changes, disabling API, and moving on", false);
-                                    }
-                                    apiWrapper.Disable(); // disable all api methods
+                                    Metadata mod = customRoutineAssemblyToMetadata[customRoutineAssemblies[i].ManifestModule.ModuleVersionId];
+                                    customRoutinesMap2[customRoutineInstance.RoutineID] = mod;
                                 }
                                 catch (Exception ex)
                                 {
@@ -1082,6 +1098,60 @@ namespace AstroModIntegrator
                                     continue;
 #endif
                                 }
+                            }
+                        }
+
+                        LogToDiskVerbose("Executing " + customRoutineInstances.Count + " custom routines");
+                        for (int i = 0; i < customRoutineInstances.Count; i++)
+                        {
+                            CustomRoutine customRoutineInstance = customRoutineInstances[i];
+                            try
+                            {
+                                currentMod = customRoutineInstance.RoutineID;
+                                Metadata currentModMetadata = GetCurrentMod();
+
+                                string modId = currentModMetadata?.ModID ?? "unknown mod";
+                                LogToDiskVerbose("Executing custom routine " + customRoutineInstance.RoutineID + " for mod " + modId);
+
+                                CreatedPakDataTemp = new Dictionary<string, byte[]>();
+
+                                CustomRoutineAPIWrapper apiWrapper = new CustomRoutineAPIWrapper(this);
+                                Thread workerThread = new Thread(() =>
+                                {
+                                    try
+                                    {
+                                        customRoutineInstance.Execute(apiWrapper);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        LogToDisk("[" + modId + "] " + ex.Message + "\n" + (ex.StackTrace ?? "null") + "\n" + (ex.InnerException?.Message ?? "null") + "\n" + (ex.InnerException?.StackTrace ?? "null"), false); // the method could get incorrect mod id so we prepend the mod id manually
+#if DEBUG_CUSTOMROUTINETEST
+                                            throw;
+#endif
+                                    }
+                                });
+                                workerThread.Start();
+
+                                bool terminated = workerThread.Join(TimeSpan.FromSeconds(5));
+                                if (terminated)
+                                {
+                                    // copy saved assets
+                                    foreach (KeyValuePair<string, byte[]> entry in CreatedPakDataTemp) CreatedPakData[entry.Key] = entry.Value;
+                                }
+                                else
+                                {
+                                    LogToDisk("[" + modId + "] Failed to terminate in time; discarding changes, disabling API, and moving on", false);
+                                }
+                                apiWrapper.Disable(); // disable all api methods
+                            }
+                            catch (Exception ex)
+                            {
+                                LogToDisk(ex.Message + "\n" + (ex.StackTrace ?? "null") + "\n" + (ex.InnerException?.Message ?? "null") + "\n" + (ex.InnerException?.StackTrace ?? "null"), true);
+#if DEBUG_CUSTOMROUTINETEST
+                                    throw;
+#else
+                                continue;
+#endif
                             }
                         }
                     }

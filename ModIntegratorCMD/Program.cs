@@ -82,15 +82,6 @@ namespace ModIntegratorCMD
             }
             catch { }
 #endif
-            string optimizationDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AstroModLoader", "IntegratorProfileOptimization");
-            try
-            {
-                Directory.CreateDirectory(optimizationDirectory);
-            }
-            catch { }
-            ProfileOptimization.SetProfileRoot(optimizationDirectory);
-            ProfileOptimization.StartProfile("Startup.Profile");
-
             // single-argument options
             if (args.Length >= 1 && args[0] == "license")
             {
@@ -182,6 +173,16 @@ namespace ModIntegratorCMD
                 Console.WriteLine("\nExecute \"modintegrator license\" to receive a copy of the license agreement for this software.\nExecute \"modintegrator notice\" to receive a copy of the license agreements for the third-party material used in this software.");
                 return;
             }
+
+            // start optimization now that we know that we'll actually integrate
+            string optimizationDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AstroModLoader", "IntegratorProfileOptimization");
+            try
+            {
+                Directory.CreateDirectory(optimizationDirectory);
+            }
+            catch { }
+            ProfileOptimization.SetProfileRoot(optimizationDirectory);
+            ProfileOptimization.StartProfile("Startup.Profile");
 
             Stopwatch stopWatch = new Stopwatch();
             int numBenchmarkTrials = 1;
