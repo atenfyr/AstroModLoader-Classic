@@ -1249,7 +1249,12 @@ namespace AstroModLoader
 
         public void RefreshAllPriorites()
         {
-            for (int i = 0; i < Mods.Count; i++) Mods[i].Priority = i + 1; // The mod loader should never save a mod's priority as 0 to disk so that external applications can use 0 to force a mod to always load first
+            // The mod loader should never save a mod's priority as 0 to disk so that external applications can use 0 to force a mod to always load first
+            for (int i = 0; i < Mods.Count; i++)
+            {
+                Mods[i].Priority = i + 1;
+                if (Mods[i].Priority > 799) Mods[i].Priority = 799; // cap at 799 to avoid misinterpretation of 800 or 900-level priorities
+            }
         }
 
         public void SwapMod(Mod previouslySelectedMod, int newModIndex, bool updateAutomatically = true)

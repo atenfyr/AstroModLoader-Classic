@@ -8,7 +8,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModIntegratorCMD", "ModInte
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AstroModLoader", "AstroModLoader\AstroModLoader.csproj", "{2C9EBD7B-D624-45A6-A9AA-0A978EA7833B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AMLCustomRoutine", "AMLCustomRoutine\AMLCustomRoutine.csproj", "{A5BCA878-2F59-487E-AE20-1622CE3AF414}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AMLCustomRoutines", "AMLCustomRoutines\AMLCustomRoutines.csproj", "{A5BCA878-2F59-487E-AE20-1622CE3AF414}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

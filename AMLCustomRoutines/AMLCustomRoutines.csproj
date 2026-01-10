@@ -10,11 +10,12 @@
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AstroModIntegrator\AstroModIntegrator.csproj" />
+  </ItemGroup>
   
   <ItemGroup>
-    <Reference Include="AstroModIntegrator">
-      <HintPath>..\AstroModIntegrator\CustomRoutineDevKit\AstroModIntegrator.dll</HintPath>
-    </Reference>
     <Reference Include="UAssetAPI">
       <HintPath>..\AstroModIntegrator\CustomRoutineDevKit\UAssetAPI.dll</HintPath>
     </Reference>
