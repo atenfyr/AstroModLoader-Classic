@@ -113,56 +113,52 @@ namespace AstroModIntegrator
 
         public UAsset FindFile(string target)
         {
-            if (!Enabled) return null;
+            if (!Enabled) throw new InvalidOperationException("API is disabled because of thread timeout");
             return Integrator.FindFile(target);
         }
         public byte[] FindFileRaw(string target)
         {
-            if (!Enabled) return null;
+            if (!Enabled) throw new InvalidOperationException("API is disabled because of thread timeout");
             return Integrator.FindFileRaw(target);
         }
         public byte[] FindFileRaw(string target, out EngineVersion engVer)
         {
-            if (!Enabled)
-            {
-                engVer = EngineVersion.UNKNOWN;
-                return null;
-            }
+            if (!Enabled) throw new InvalidOperationException("API is disabled because of thread timeout");
             return Integrator.FindFileRaw(target, out engVer);
         }
         public void AddFile(string outPath, UAsset outAsset)
         {
-            if (!Enabled) return;
+            if (!Enabled) throw new InvalidOperationException("API is disabled because of thread timeout");
             Integrator.AddFile(outPath, outAsset);
         }
         public void AddFileRaw(string outPath, byte[] rawData)
         {
-            if (!Enabled) return;
+            if (!Enabled) throw new InvalidOperationException("API is disabled because of thread timeout");
             Integrator.AddFileRaw(outPath, rawData);
         }
         public Metadata GetCurrentMod()
         {
-            if (!Enabled) return null;
+            if (!Enabled) throw new InvalidOperationException("API is disabled because of thread timeout");
             return Integrator.GetCurrentMod();
         }
         public IReadOnlyList<Metadata> GetAllMods()
         {
-            if (!Enabled) return new List<Metadata>().AsReadOnly<Metadata>();
+            if (!Enabled) throw new InvalidOperationException("API is disabled because of thread timeout");
             return Integrator.GetAllMods();
         }
         public Metadata GetModFromRoutine(CustomRoutine routine)
         {
-            if (!Enabled) return null;
+            if (!Enabled) throw new InvalidOperationException("API is disabled because of thread timeout");
             return Integrator.GetModFromRoutine(routine);
         }
         public CustomRoutine GetCustomRoutineFromID(string routineID)
         {
-            if (!Enabled) return null;
+            if (!Enabled) throw new InvalidOperationException("API is disabled because of thread timeout");
             return Integrator.GetCustomRoutineFromID(routineID);
         }
         public bool LogToDisk(string text, bool prefixWithMod = true)
         {
-            if (!Enabled) return false;
+            if (!Enabled) throw new InvalidOperationException("API is disabled because of thread timeout");
             return Integrator.LogToDisk(text, prefixWithMod);
         }
         public bool ShouldExitNow()
@@ -213,33 +209,33 @@ namespace AstroModIntegrator
         private volatile bool isCurrentlyIntegrating = false;
         private volatile bool hasLoggedOnceAlready = false;
 
-        // handle policy initialization
-        internal volatile static bool EnableSandbox = false; // adds a few extra hundred milliseconds
+        // policy initialization fields
+        internal volatile static bool EnableGlobalSandbox = true; // can add a few extra hundred milliseconds unless no custom routines are loaded; always enabled
         internal volatile static CasPolicy policy = null;
         internal volatile static CasAssemblyLoader loadContext = null;
         internal volatile static Thread policyInitThread = null;
 
         static ModIntegrator()
         {
-            // always enable sandbox if not on Windows
+            /*// always enable sandbox if not on Windows
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                EnableSandbox = true;
+                EnableGlobalSandbox = true;
             }
             else if (!IntegrityLevelChecker.IsCurrentProcessLowIntegrity())
             {
                 // on Windows, enable sandbox only if not low-integrity
-                EnableSandbox = true;
+                EnableGlobalSandbox = true;
             }
 
-#if DEBUG || DEBUG_CUSTOMROUTINETEST
+//#if DEBUG || DEBUG_CUSTOMROUTINETEST
             // always enable sandbox in debug
-            EnableSandbox = true;
-#endif
+            EnableGlobalSandbox = true;
+//#endif*/
 
             // load sandbox policy
             // extremely slow (reflection) so we cache it
-            if (policy == null && EnableSandbox)
+            if (policy == null && EnableGlobalSandbox)
             {
                 policyInitThread = new Thread(() =>
                 {
@@ -274,7 +270,7 @@ namespace AstroModIntegrator
             byte[] data1 = FindFile(target, pakExtractorForCustomRoutines, out EngineVersion engVer);
             byte[] data2 = FindFile(Path.ChangeExtension(target, ".uexp"), pakExtractorForCustomRoutines, out EngineVersion _) ?? Array.Empty<byte>();
 
-            if (data1 == null || data2 == null || data1.Length == 0 || data2.Length == 0) throw new InvalidOperationException("Failed to find target file " + target + " (or .uexp counterpart)");
+            if (data1 == null || data2 == null || data1.Length == 0 || data2.Length == 0) throw new InvalidOperationException("Failed to find target file \"" + target + "\" (or .uexp counterpart)");
 
             UAsset y = new UAsset(engVer);
             y.UseSeparateBulkDataFiles = true;
@@ -630,7 +626,7 @@ namespace AstroModIntegrator
             client = null;
 
             // reload context if policy has already been initialized
-            if (policy != null)
+            if (EnableCustomRoutines && EnableGlobalSandbox && policy != null)
             {
                 loadContext.Unload();
                 loadContext = new CasAssemblyLoader(policy, true);
@@ -679,7 +675,7 @@ namespace AstroModIntegrator
             LogToDiskVerbose("EnableCustomRoutines: " + EnableCustomRoutines);
             LogToDiskVerbose("CallingExePath: " + CallingExePath);
             LogToDiskVerbose("Verbose: " + Verbose);
-            LogToDiskVerbose("EnableSandbox: " + EnableSandbox);
+            LogToDiskVerbose("EnableGlobalSandbox: " + EnableGlobalSandbox);
             LogToDiskVerbose(string.Empty);
 
             foreach (string paksPath in paksPaths) Directory.CreateDirectory(paksPath);
@@ -714,6 +710,7 @@ namespace AstroModIntegrator
             allMods = new List<Metadata>();
             List<string> allPersistentActorMaps = DefaultMapPaths.ToList();
             List<Assembly> customRoutineAssemblies = new List<Assembly>();
+            Dictionary<Guid, byte[]> assemblyBytesForDebugging = new Dictionary<Guid, byte[]>();
             customRoutineAssemblyToMetadata = new Dictionary<Guid, Metadata>();
             foreach (string file in files)
             {
@@ -737,16 +734,20 @@ namespace AstroModIntegrator
                             if (assemblyData != null && assemblyData.Length > 0)
                             {
                                 // wait for load context if needed
-                                if (EnableCustomRoutines && EnableSandbox && loadContext == null)
+                                if (EnableCustomRoutines && EnableGlobalSandbox && (policy == null || loadContext == null))
                                 {
-                                    policyInitThread.Join();
+                                    policyInitThread?.Join();
                                     policyInitThread = null;
                                 }
 
-                                Assembly newAsm = EnableSandbox ? loadContext.LoadFromStream(new MemoryStream(assemblyData)) : Assembly.Load(assemblyData);
+                                Assembly newAsm = EnableGlobalSandbox ? loadContext.LoadFromStream(new MemoryStream(assemblyData)) : Assembly.Load(assemblyData);
                                 customRoutineAssemblies.Add(newAsm);
                                 customRoutineAssemblyToMetadata[newAsm.ManifestModule.ModuleVersionId] = us;
                                 LogToDiskVerbose("Found custom routines DLL for mod " + (us?.ModID ?? file) + ", adding to list of assemblies");
+
+#if DEBUG_CUSTOMROUTINETEST
+                                assemblyBytesForDebugging[newAsm.ManifestModule.ModuleVersionId] = assemblyData;
+#endif
                             }
                         }
                     }
@@ -1043,16 +1044,21 @@ namespace AstroModIntegrator
                                     if (i == 0 || (allPossibleDlls[j].Contains("Debug_CustomRoutineTest") && allPossibleDlls[j].Contains("bin")))
                                     {
                                         // wait for load context if needed
-                                        if (EnableCustomRoutines && EnableSandbox && loadContext == null)
+                                        if (EnableCustomRoutines && EnableGlobalSandbox && (policy == null || loadContext == null))
                                         {
-                                            policyInitThread.Join();
+                                            policyInitThread?.Join();
                                             policyInitThread = null;
                                         }
 
                                         string chosenDll = allPossibleDlls[j];
-                                        Assembly newAsm = EnableSandbox ? loadContext.LoadFromStream(new MemoryStream(File.ReadAllBytes(chosenDll))) : Assembly.Load(File.ReadAllBytes(chosenDll));
+                                        byte[] byts = File.ReadAllBytes(chosenDll);
+                                        Assembly newAsm = EnableGlobalSandbox ? loadContext.LoadFromStream(new MemoryStream(byts)) : Assembly.Load(byts);
                                         customRoutineAssemblies.Add(newAsm);
                                         customRoutineAssemblyToMetadata[newAsm.ManifestModule.ModuleVersionId] = new Metadata() { ModID = "AMLCustomRoutines" }; // dummy metadata
+
+#if DEBUG_CUSTOMROUTINETEST
+                                        assemblyBytesForDebugging[newAsm.ManifestModule.ModuleVersionId] = byts;
+#endif
 
                                         foundDll = true;
                                         LogToDiskVerbose("Found AMLCustomRoutines.dll, adding to list of assemblies");
@@ -1103,6 +1109,19 @@ namespace AstroModIntegrator
 
                                     CustomRoutine customRoutineInstance = Activator.CreateInstance(currentCRType) as CustomRoutine;
                                     if (customRoutineInstance == null) continue;
+
+#if DEBUG_CUSTOMROUTINETEST
+                                    if (EnableGlobalSandbox && customRoutineInstance.RequestNoSandbox)
+                                    {
+                                        Assembly asm2 = Assembly.Load(assemblyBytesForDebugging[customRoutineAssemblies[i].ManifestModule.ModuleVersionId]);
+                                        Type[] crType2 = asm2.GetTypes().Where(t => t.Name == currentCRType.Name).ToArray();
+
+                                        customRoutineInstance = null;
+                                        if (crType2.Length > 0 && crType2[0] != null && !crType2[0].ContainsGenericParameters) customRoutineInstance = Activator.CreateInstance(crType2[0]) as CustomRoutine;
+                                    }
+                                    if (customRoutineInstance == null) continue;
+#endif
+
                                     if (customRoutineInstance.RoutineID == null || customRoutineInstance.RoutineID == "None") continue;
                                     if (!customRoutineInstance.Enabled) continue;
 
@@ -1123,6 +1142,8 @@ namespace AstroModIntegrator
                                 }
                             }
                         }
+
+                        assemblyBytesForDebugging.Clear();
 
                         LogToDiskVerbose("Executing " + customRoutineInstances.Count + " custom routines");
                         for (int i = 0; i < customRoutineInstances.Count; i++)
@@ -1155,7 +1176,13 @@ namespace AstroModIntegrator
                                 });
                                 workerThread.Start();
 
+#if DEBUG_CUSTOMROUTINETEST
+                                // in Debug_CustomRoutineTest, no time limit because of breakpoints
+                                workerThread.Join();
+                                bool terminated = true;
+#else
                                 bool terminated = workerThread.Join(TimeSpan.FromSeconds(5));
+#endif
                                 if (terminated)
                                 {
                                     // copy saved assets

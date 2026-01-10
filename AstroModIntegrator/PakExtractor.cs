@@ -198,6 +198,7 @@ namespace AstroModIntegrator
 
         public PakExtractor(Stream stream)
         {
+            ClearGetAllPathsCache();
             internal_stream = stream;
             this.reader = new BinaryReader(internal_stream);
             BuildDict();
@@ -264,31 +265,49 @@ namespace AstroModIntegrator
         }
 
         private IReadOnlyList<string> _cachedAllPaths = null;
+        private static readonly Object _cachedAllPathsObj = new Object();
         public IReadOnlyList<string> GetAllPaths()
         {
             if (_cachedAllPaths != null) return _cachedAllPaths;
+            
+            lock (_cachedAllPathsObj)
+            {
+                IReadOnlyList<string> output = null;
+                if (RepakBacked)
+                {
+                    output = pakReader.Files().ToList().AsReadOnly();
+                }
+                else
+                {
+                    output = new List<string>(PathToOffset.Keys).AsReadOnly();
+                }
+                _cachedAllPaths = output;
+            }
+            return _cachedAllPaths;
+        }
 
-            IReadOnlyList<string> output = null;
-            if (RepakBacked)
+        private HashSet<string> _cachedAllPathsHashSet = null;
+        private static readonly Object _cachedAllPathsHashSetObj = new Object();
+        private HashSet<string> GetAllPathsAsSet()
+        {
+            if (_cachedAllPathsHashSet != null) return _cachedAllPathsHashSet;
+
+            lock (_cachedAllPathsHashSetObj)
             {
-                output = pakReader.Files().ToList().AsReadOnly();
+                _cachedAllPathsHashSet = GetAllPaths().ToHashSet();
             }
-            else
-            {
-                output = new List<string>(PathToOffset.Keys).AsReadOnly();
-            }
-            _cachedAllPaths = output;
-            return output;
+            return _cachedAllPathsHashSet;
         }
 
         public void ClearGetAllPathsCache()
         {
             _cachedAllPaths = null;
+            _cachedAllPathsHashSet = null;
         }
 
         public bool HasPath(string searchPath)
         {
-            if (RepakBacked) return this.GetAllPaths().Contains(searchPath);
+            if (RepakBacked) return this.GetAllPathsAsSet().Contains(searchPath);
             return PathToOffset.ContainsKey(searchPath);
         }
 

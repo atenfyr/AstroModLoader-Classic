@@ -55,6 +55,13 @@
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
+  <Choose>
+    <When Condition="'$(Configuration)' == 'Debug_CustomRoutineTest'">
+        <ItemGroup>
+          <ProjectReference Include="..\AMLCustomRoutines\AMLCustomRoutines.csproj" />
+        </ItemGroup>
+    </When>
+  </Choose>
   <ItemGroup>
     <ProjectReference Include="..\AstroModIntegrator\AstroModIntegrator.csproj" />
     <ProjectReference Include="..\ModIntegratorCMD\ModIntegratorCMD.csproj">
