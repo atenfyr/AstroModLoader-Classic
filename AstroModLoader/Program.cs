@@ -278,10 +278,12 @@ namespace AstroModLoader
 
                                             while (true)
                                             {
+                                                string prefix = reader.ReadLine();
+                                                if (prefix == "!!!Stop") break;
+                                                if (prefix != "!!!File") throw new IOException("Invalid prefix in WriteFile:ClientTransmitUE4SSMods named pipe command; got \"" + prefix + "\", expected \"!!!File\"");
+
                                                 string modId = reader.ReadLine().Replace("..", "");
-                                                if (modId == "!!!Stop") break;
                                                 string modSubPath = reader.ReadLine().Replace("..", "");
-                                                if (modSubPath == "!!!Stop") break;
                                                 int numBytes1 = int.Parse(reader.ReadLine());
                                                 if (numBytes1 == 0) continue;
                                                 byte[] data1 = new byte[numBytes1];

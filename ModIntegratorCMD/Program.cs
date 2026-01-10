@@ -226,7 +226,8 @@ namespace ModIntegratorCMD
                             OptionalModIDs = o.OptionalModIDs?.ToList() ?? new List<string>(),
                             Verbose = o.Verbose,
                             PakToNamedPipe = o.PakToNamedPipe,
-                            CallingExePath = o.CallingExePath
+                            CallingExePath = o.CallingExePath,
+                            IsModIntegratorCMD = true
                         };
                         us.IntegrateMods(o.ModPakDirectories?.ToArray(), o.GamePakDirectory, o.OutputFolder, o.MountPoint, o.ExtractLua, !o.DisableCleanLua);
                     }
@@ -274,7 +275,8 @@ namespace ModIntegratorCMD
                 ModIntegrator us = new ModIntegrator()
                 {
                     RefuseMismatchedConnections = true,
-                    EnableCustomRoutines = enableCustomRoutines
+                    EnableCustomRoutines = enableCustomRoutines,
+                    IsModIntegratorCMD = true
                 };
                 us.IntegrateMods(paksPaths.ToArray(), args[startOtherParams], outputFolder, mountPoint, extractLua, cleanLua);
                 stopWatch.Stop();

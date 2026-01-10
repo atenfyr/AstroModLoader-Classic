@@ -240,8 +240,8 @@ namespace AstroModIntegrator
         [JsonProperty("biome_placement_modifiers")]
         public List<PlacementModifier> BiomePlacementModifiers;
 
-        [JsonProperty("path_to_custom_routine_dll")]
-        public string PathToCustomRoutineDLL; // default AMLCustomRoutine.dll
+        [JsonProperty("path_to_custom_routines_dll")]
+        public string PathToCustomRoutineDLL; // default AMLCustomRoutines.dll
 
         [JsonExtensionData]
         public IDictionary<string, JToken> ExtraFields;

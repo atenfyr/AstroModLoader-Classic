@@ -109,6 +109,7 @@ namespace AstroModIntegrator
     public class CustomRoutineAPIWrapper : ICustomRoutineAPI
     {
         private bool Enabled = true;
+        private bool bShouldExitNow = false;
         private ModIntegrator Integrator;
 
         public UAsset FindFile(string target)
@@ -163,16 +164,21 @@ namespace AstroModIntegrator
         }
         public bool ShouldExitNow()
         {
-            return !Enabled;
+            return bShouldExitNow;
         }
-        internal void Disable()
+        internal void SetEnabled(bool newVal)
         {
-            Enabled = false;
+            Enabled = newVal;
+        }
+        internal void SetShouldExitNow(bool newVal)
+        {
+            bShouldExitNow = newVal;
         }
 
         internal CustomRoutineAPIWrapper(ModIntegrator integrator)
         {
             Enabled = true;
+            bShouldExitNow = false;
             Integrator = integrator;
         }
     }
@@ -186,6 +192,7 @@ namespace AstroModIntegrator
         public bool Verbose = false;
         public string PakToNamedPipe = null;
         public string CallingExePath = null; // for debugging
+        public bool IsModIntegratorCMD = false;
         // End Settings //
 
         // Exposed Fields //
@@ -1182,6 +1189,14 @@ namespace AstroModIntegrator
                                 bool terminated = true;
 #else
                                 bool terminated = workerThread.Join(TimeSpan.FromSeconds(5));
+                                if (!terminated)
+                                {
+                                    // if the thread is still going, tell it that it should exit and give another 2 seconds to try and cleanly exit
+                                    // no matter what terminated = false still so that we don't keep changes
+                                    LogToDisk("[" + modId + "] Custom routine is taking too long; discarding changes and attempting to cancel safely", false);
+                                    apiWrapper.SetShouldExitNow(true);
+                                    workerThread.Join(TimeSpan.FromSeconds(2));
+                                }
 #endif
                                 if (terminated)
                                 {
@@ -1190,9 +1205,10 @@ namespace AstroModIntegrator
                                 }
                                 else
                                 {
-                                    LogToDisk("[" + modId + "] Failed to terminate in time; discarding changes, disabling API, and moving on", false);
+                                    LogToDisk("[" + modId + "] Custom routine is unresponsive; discarding changes, disabling API, and moving on", false);
+                                    if (IsModIntegratorCMD) LogToDisk("[" + modId + "] Thread will be killed after integration", false);
                                 }
-                                apiWrapper.Disable(); // disable all api methods
+                                apiWrapper.SetEnabled(false); // disable all api methods
                             }
                             catch (Exception ex)
                             {
@@ -1275,6 +1291,7 @@ namespace AstroModIntegrator
                                 if (usePipe)
                                 {
                                     byte[] rawData = us.ReadRaw(subPath);
+                                    client.WriteLine("!!!File");
                                     client.WriteLine(mtd.ModID);
                                     client.WriteLine(subPath.Substring(6));
                                     client.WriteLine(rawData.Length.ToString());
