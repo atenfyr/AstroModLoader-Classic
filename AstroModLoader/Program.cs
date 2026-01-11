@@ -77,6 +77,9 @@ namespace AstroModLoader
             out IntPtr lpbSaclPresent,
             out IntPtr pSacl,
             out IntPtr lpbSaclDefaulted);
+
+        [DllImport("user32.dll")]
+        public static extern bool SetProcessDPIAware();
     }
 
     public class InterProcessSecurity
@@ -142,9 +145,6 @@ namespace AstroModLoader
         public static volatile bool GotPak = false;
         public static volatile string Cwd = null;
         public static readonly string PipeUniqID = "AstroModLoader-Classic-192637418";
-
-        [DllImport("user32.dll")]
-        private static extern bool SetProcessDPIAware();
 
         internal static Task StartNamedPipeServer(string pipeID, Form1 f1, CancellationToken? cs, int numAllowedConnectionTimes, bool ExpectingPak)
         {
@@ -416,6 +416,8 @@ namespace AstroModLoader
                             {
                                 resource.CopyTo(file);
                             }
+
+                            NativeLibrary.Load(Path.Combine(rootFolder, "repak_bind.so"));
                         }
                     }
                 }
@@ -429,6 +431,8 @@ namespace AstroModLoader
                             {
                                 resource.CopyTo(file);
                             }
+
+                            NativeLibrary.Load(Path.Combine(rootFolder, "repak_bind.dll"));
                         }
                     }
                 }
@@ -450,7 +454,7 @@ namespace AstroModLoader
                     if (CommandLineOptions.ForceClient) CommandLineOptions.ServerMode = false;
                     else if (File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "AstroServer.exe"))) CommandLineOptions.ServerMode = true;
 
-                    if (Environment.OSVersion.Version.Major >= 6) SetProcessDPIAware();
+                    if (Environment.OSVersion.Version.Major >= 6) NativeMethods.SetProcessDPIAware();
                     Application.EnableVisualStyles();
                     Application.SetCompatibleTextRenderingDefault(false);
                     Application.SetDefaultFont(new Font(new FontFamily("Microsoft Sans Serif"), 8.25f)); // default font changed in .NET Core 3.0
