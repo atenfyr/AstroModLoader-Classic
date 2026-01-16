@@ -1004,13 +1004,18 @@ namespace AstroModIntegrator
                     customRoutinesMap = new Dictionary<string, CustomRoutine>();
                     customRoutinesMap2 = new Dictionary<string, Metadata>();
 
-                    CreatedPakDataTemp = new Dictionary<string, byte[]>();
-
                     // execute internal custom routines
-                    new CrateOverlayTexturesCustomRoutine().Execute(new CustomRoutineAPIWrapper(this));
+                    try
+                    {
+                        CreatedPakDataTemp = new Dictionary<string, byte[]>();
+                        new CrateOverlayTexturesCustomRoutine().Execute(new CustomRoutineAPIWrapper(this));
+                        foreach (KeyValuePair<string, byte[]> entry in CreatedPakDataTemp) CreatedPakData[entry.Key] = entry.Value;
+                    }
+                    catch (Exception ex)
+                    {
+                        LogToDisk("CrateOverlayTexturesCustomRoutine threw exception: " + ex.Message + "\n" + ex.StackTrace, false);
+                    }
                     // ...
-
-                    foreach (KeyValuePair<string, byte[]> entry in CreatedPakDataTemp) CreatedPakData[entry.Key] = entry.Value;
 
                     // custom routines
                     if (EnableCustomRoutines)
