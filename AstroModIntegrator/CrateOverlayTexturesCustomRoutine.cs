@@ -14,10 +14,10 @@ namespace AstroModIntegrator
         public override string RoutineID => "CrateOverlayTexturesCustomRoutine";
         public override bool Enabled => true;
 
-        public static readonly string TemplatePath = "/Game/Materials/modules/CrateMaterialInstances/CrateMaterialLogo_Ball";
-        public static readonly string TemplateName = "CrateMaterialLogo_Ball";
-        public static readonly string TemplateTexturePath = "/Game/UI/Textures/Icons/Packages/ui_icon_package_ball_generic";
-        public static readonly string TemplateTextureName = "ui_icon_package_ball_generic";
+        public static readonly string TemplatePath = "/Game/Materials/modules/CrateMaterialInstances/CrateMaterialLogo_Empty";
+        public static readonly string TemplateName = "CrateMaterialLogo_Empty";
+        public static readonly string TemplateTexturePath = "/Game/UI/Textures/Icons/Packages/ui_icon_package_empty";
+        public static readonly string TemplateTextureName = "ui_icon_package_empty";
         public override void Execute(ICustomRoutineAPI api)
         {
             UAsset crateMaterialTemplate = api.FindFile(TemplatePath);
@@ -70,6 +70,7 @@ namespace AstroModIntegrator
 
             MapPropertyData crateLogoMaterialInstances = cdo["CrateLogoMaterialInstances"] as MapPropertyData;
             int desiredTextureIdx = 0;
+            HashSet<string> alreadyUsedTextureNames = new HashSet<string>();
             foreach (string desiredTexturePath in texturePathsToAdd)
             {
                 try
@@ -79,19 +80,29 @@ namespace AstroModIntegrator
                     string newMIPath = "/Game/Integrator/CrateMaterialInstances/" + newMIName;
                     string desiredTextureName = desiredTexturePath.Split("/").Last();
 
+                    if (alreadyUsedTextureNames.Contains(desiredTextureName))
+                    {
+                        api.LogToDisk("Duplicate texture name " + desiredTextureName + " found; skipping", false);
+                        continue;
+                    }
+                    alreadyUsedTextureNames.Add(desiredTextureName);
+
                     crateMaterialTemplate.SetNameReference(miPath, FString.FromString(newMIPath));
                     crateMaterialTemplate.SetNameReference(miName, FString.FromString(newMIName));
                     crateMaterialTemplate.SetNameReference(texturePath, FString.FromString(desiredTexturePath));
                     crateMaterialTemplate.SetNameReference(textureName, FString.FromString(desiredTextureName));
 
-                    api.AddFile(newMIPath, crateMaterialTemplate); // AddFile immediately serializes the asset, so we are OK to continue modifying it afterwards
+                    api.AddFile(newMIPath, crateMaterialTemplate); // AddFile is guaranteed to immediately serialize the asset, so we are OK to continue modifying it afterwards
 
                     // add new imports to singletonInstance
                     FPackageIndex imp1 = singletonInstance.AddImport(new Import("/Script/CoreUObject", "Package", FPackageIndex.FromRawIndex(0), newMIPath, false, singletonInstance));
                     FPackageIndex imp2 = singletonInstance.AddImport(new Import("/Script/Engine", "MaterialInstanceConstant", imp1, newMIName, false, singletonInstance));
 
                     // add to crateLogoMaterialInstances
-                    crateLogoMaterialInstances.Value[new StrPropertyData() { Value = FString.FromString(desiredTextureName) }] = new ObjectPropertyData() { Value = imp2 };
+                    // Name is not serialized for map entries
+                    var keyProp = new StrPropertyData() { Name = FName.DefineDummy(singletonInstance, "Key"), Value = FString.FromString(desiredTextureName) };
+                    var valProp = new ObjectPropertyData() { Name = FName.DefineDummy(singletonInstance, "Value"), Value = imp2 };
+                    crateLogoMaterialInstances.Value[keyProp] = valProp;
                 }
                 catch (Exception ex)
                 {
