@@ -6,9 +6,9 @@
     <AssemblyTitle>ModIntegratorCMD</AssemblyTitle>
     <Product>AstroModIntegrator Classic</Product>
     <Copyright>Copyright © atenfyr 2026</Copyright>
-    <AssemblyVersion>1.8.0.0</AssemblyVersion>
-    <FileVersion>1.8.0.0</FileVersion>
-    <Version>1.8.0.0</Version>
+    <AssemblyVersion>1.8.1.0</AssemblyVersion>
+    <FileVersion>1.8.1.0</FileVersion>
+    <Version>1.8.1.0</Version>
     <AssemblyName>ModIntegrator</AssemblyName>
     <Configurations>Debug;Release;Debug_CustomRoutineTest</Configurations>
     <Authors>atenfyr</Authors>
@@ -26,13 +26,13 @@
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
   </ItemGroup>
   <Target Name="AutoPublish" AfterTargets="Build" Condition="'$(RuntimeIdentifier)' == 'win-x64' And '$(_IsPublishing)' == ''">
-    <Message Text="Automatically publishing after build" Importance="high"/>
+    <Message Text="Automatically publishing after build" Importance="high" />
     <CallTarget Targets="Publish" />
-    <Message Text="Copying published .exe to AstroModLoader" Importance="high"/>
+    <Message Text="Copying published .exe to AstroModLoader" Importance="high" />
     <Copy SourceFiles="$(MSBuildProjectDirectory)/$(PublishDir)$(AssemblyName)$(_NativeExecutableExtension)" DestinationFolder="../AstroModLoader/" SkipUnchangedFiles="true" />
   </Target>
   <Target Name="AfterPublish" AfterTargets="Publish" Condition="'$(RuntimeIdentifier)' == 'win-x64'">
-    <Message Text="Copying published .exe to AstroModLoader" Importance="high"/>
+    <Message Text="Copying published .exe to AstroModLoader" Importance="high" />
     <Copy SourceFiles="$(MSBuildProjectDirectory)/$(PublishDir)$(AssemblyName)$(_NativeExecutableExtension)" DestinationFolder="../AstroModLoader/" SkipUnchangedFiles="true" />
   </Target>
 </Project>

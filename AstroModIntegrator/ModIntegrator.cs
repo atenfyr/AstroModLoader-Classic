@@ -998,18 +998,23 @@ namespace AstroModIntegrator
                     }
 #endif
 
+                    // internal custom routines (always enabled)
+                    pakExtractorForCustomRoutines = ourExtractor;
+                    currentMod = null;
+                    customRoutinesMap = new Dictionary<string, CustomRoutine>();
+                    customRoutinesMap2 = new Dictionary<string, Metadata>();
+
+                    CreatedPakDataTemp = new Dictionary<string, byte[]>();
+
+                    // execute internal custom routines
+                    new CrateOverlayTexturesCustomRoutine().Execute(new CustomRoutineAPIWrapper(this));
+                    // ...
+
+                    foreach (KeyValuePair<string, byte[]> entry in CreatedPakDataTemp) CreatedPakData[entry.Key] = entry.Value;
+
                     // custom routines
                     if (EnableCustomRoutines)
                     {
-                        // add mod integrator assembly itself so we can make internal custom routines if desired
-                        Assembly selfAsm = typeof(ModIntegrator).Assembly;
-                        customRoutineAssemblies.Add(selfAsm);
-                        customRoutineAssemblyToMetadata[selfAsm.ManifestModule.ModuleVersionId] = new Metadata() { ModID = "AstroModIntegrator" };
-
-                        pakExtractorForCustomRoutines = ourExtractor;
-                        currentMod = null;
-                        customRoutinesMap = new Dictionary<string, CustomRoutine>();
-                        customRoutinesMap2 = new Dictionary<string, Metadata>();
                         List<CustomRoutine> customRoutineInstances = new List<CustomRoutine>();
                         for (int i = 0; i < customRoutineAssemblies.Count; i++)
                         {

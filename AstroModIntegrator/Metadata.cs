@@ -240,6 +240,9 @@ namespace AstroModIntegrator
         [JsonProperty("biome_placement_modifiers")]
         public List<PlacementModifier> BiomePlacementModifiers;
 
+        [JsonProperty("crate_overlay_textures")]
+        public List<string> CrateOverlayTextures;
+
         [JsonProperty("path_to_custom_routines_dll")]
         public string PathToCustomRoutineDLL; // default AMLCustomRoutines.dll
 
