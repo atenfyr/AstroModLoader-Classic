@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UAssetAPI;
@@ -31,7 +32,7 @@ namespace AstroModIntegrator
             for (int i = 0; i < crateMaterialTemplateNameMap.Count; i++)
             {
                 string nameEntry = crateMaterialTemplateNameMap[i].ToString();
-                if (nameEntry == TemplatePath)
+                if (nameEntry.ToLowerInvariant() == TemplatePath.ToLowerInvariant())
                 {
                     miPath = i;
                 }
@@ -39,7 +40,7 @@ namespace AstroModIntegrator
                 {
                     miName = i;
                 }
-                else if (nameEntry == TemplateTexturePath)
+                else if (nameEntry.ToLowerInvariant() == TemplateTexturePath.ToLowerInvariant())
                 {
                     texturePath = i;
                 }
@@ -60,6 +61,7 @@ namespace AstroModIntegrator
                 if (mod?.IntegratorEntries.CrateOverlayTextures == null) continue;
                 texturePathsToAdd.AddRange(mod.IntegratorEntries.CrateOverlayTextures);
             }
+            texturePathsToAdd = texturePathsToAdd.Distinct().ToList();
 
             // add entries to AstroGameSingletonInstance
             UAsset singletonInstance = api.FindFile("/Game/Globals/AstroGameSingletonInstance");
@@ -70,24 +72,33 @@ namespace AstroModIntegrator
             int desiredTextureIdx = 0;
             foreach (string desiredTexturePath in texturePathsToAdd)
             {
-                // modify asset
-                string newMIName = "CrateMaterialLogo_Modded" + desiredTextureIdx;
-                string newMIPath = "/Game/Materials/modules/CrateMaterialInstances/" + newMIName;
-                string desiredTextureName = desiredTexturePath.Split("/").Last();
+                try
+                {
+                    // modify asset
+                    string newMIName = "CrateMaterialLogo_Modded" + desiredTextureIdx;
+                    string newMIPath = "/Game/Integrator/CrateMaterialInstances/" + newMIName;
+                    string desiredTextureName = desiredTexturePath.Split("/").Last();
 
-                crateMaterialTemplate.SetNameReference(miPath, FString.FromString(newMIPath));
-                crateMaterialTemplate.SetNameReference(miName, FString.FromString(newMIName));
-                crateMaterialTemplate.SetNameReference(texturePath, FString.FromString(desiredTexturePath));
-                crateMaterialTemplate.SetNameReference(textureName, FString.FromString(desiredTextureName));
+                    crateMaterialTemplate.SetNameReference(miPath, FString.FromString(newMIPath));
+                    crateMaterialTemplate.SetNameReference(miName, FString.FromString(newMIName));
+                    crateMaterialTemplate.SetNameReference(texturePath, FString.FromString(desiredTexturePath));
+                    crateMaterialTemplate.SetNameReference(textureName, FString.FromString(desiredTextureName));
 
-                api.AddFile(newMIPath, crateMaterialTemplate); // AddFile immediately serializes the asset, so we are OK to continue modifying it afterwards
+                    api.AddFile(newMIPath, crateMaterialTemplate); // AddFile immediately serializes the asset, so we are OK to continue modifying it afterwards
 
-                // add new imports to singletonInstance
-                FPackageIndex imp1 = singletonInstance.AddImport(new Import("/Script/CoreUObject", "Package", FPackageIndex.FromRawIndex(0), newMIPath, false, singletonInstance));
-                FPackageIndex imp2 = singletonInstance.AddImport(new Import("/Script/Engine", "MaterialInstanceConstant", imp1, newMIName, false, singletonInstance));
+                    // add new imports to singletonInstance
+                    FPackageIndex imp1 = singletonInstance.AddImport(new Import("/Script/CoreUObject", "Package", FPackageIndex.FromRawIndex(0), newMIPath, false, singletonInstance));
+                    FPackageIndex imp2 = singletonInstance.AddImport(new Import("/Script/Engine", "MaterialInstanceConstant", imp1, newMIName, false, singletonInstance));
 
-                // add to crateLogoMaterialInstances
-                crateLogoMaterialInstances.Value[new StrPropertyData() { Value = FString.FromString(desiredTextureName) }] = new ObjectPropertyData() { Value = imp2 };
+                    // add to crateLogoMaterialInstances
+                    crateLogoMaterialInstances.Value[new StrPropertyData() { Value = FString.FromString(desiredTextureName) }] = new ObjectPropertyData() { Value = imp2 };
+                }
+                catch (Exception ex)
+                {
+                    api.LogToDisk("Failed to add texture path \"" + desiredTexturePath + "\": " + ex.Message + "\n" + ex.StackTrace, false);
+                    desiredTextureIdx++;
+                    continue;
+                }
 
                 desiredTextureIdx++;
             }

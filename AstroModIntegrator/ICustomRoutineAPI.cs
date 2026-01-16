@@ -17,7 +17,7 @@ namespace AstroModIntegrator
         /// <para>3rd. base game assets</para>
         /// </summary>
         /// <param name="target">The package name or raw file path to fetch.</param>
-        /// <returns>A UAsset containing the desired asset, or null.</returns>
+        /// <returns>A UAsset containing the desired asset, or null if it could not be found.</returns>
         public UAsset FindFile(string target);
 
         /// <summary>
@@ -28,7 +28,7 @@ namespace AstroModIntegrator
         /// <para>3rd. base game assets</para>
         /// </summary>
         /// <param name="target">The raw file path to fetch.</param>
-        /// <returns>A byte array containing the raw binary data of the file that was fetched.</returns>
+        /// <returns>A byte array containing the raw binary data of the file that was fetched, or null if it could not be found.</returns>
         public byte[] FindFileRaw(string target);
 
         /// <summary>
@@ -40,11 +40,13 @@ namespace AstroModIntegrator
         /// </summary>
         /// <param name="target">The raw file path to fetch.</param>
         /// <param name="engVer">An output variable containing the engine version of the asset, if appropriate.</param>
-        /// <returns>A byte array containing the raw binary data of the file that was fetched.</returns>
+        /// <returns>A byte array containing the raw binary data of the file that was fetched, or null if it could not be found.</returns>
         public byte[] FindFileRaw(string target, out EngineVersion engVer);
 
         /// <summary>
         /// Add an asset to be deployed in the integrator pak. Overrides any asset at the same path that have already been added to the integrator pak.
+        /// <para/>
+        /// This method will immediately serialize the asset so that outAsset can be modified after the method is called without changing the file at outPath.
         /// </summary>
         /// <param name="outPath">The desired output package name or raw file path of the asset.</param>
         /// <param name="outAsset">The asset to deploy.</param>

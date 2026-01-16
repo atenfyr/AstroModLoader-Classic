@@ -184,7 +184,7 @@ namespace AstroModIntegrator
             byte[] data1 = FindFile(target, pakExtractorForCustomRoutines, out EngineVersion engVer);
             byte[] data2 = FindFile(Path.ChangeExtension(target, ".uexp"), pakExtractorForCustomRoutines, out EngineVersion _) ?? Array.Empty<byte>();
 
-            if (data1 == null || data2 == null || data1.Length == 0 || data2.Length == 0) throw new InvalidOperationException("Failed to find target file \"" + target + "\" (or .uexp counterpart)");
+            if (data1 == null || data2 == null || data1.Length == 0 || data2.Length == 0) return null;
 
             UAsset y = new UAsset(engVer);
             y.UseSeparateBulkDataFiles = true;
