@@ -332,6 +332,11 @@ namespace AstroModIntegrator
             return res;
         }
 
+        public Metadata DeepClone()
+        {
+            return JsonConvert.DeserializeObject<Metadata>(JsonConvert.SerializeObject(this, Formatting.None));
+        }
+
         public object Clone()
         {
             return this.MemberwiseClone();

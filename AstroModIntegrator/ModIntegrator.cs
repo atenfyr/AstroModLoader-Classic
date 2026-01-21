@@ -295,18 +295,18 @@ namespace AstroModIntegrator
 
         public Metadata GetCurrentMod()
         {
-            return GetModFromRoutine(GetCustomRoutineFromID(currentMod));
+            return GetModFromRoutine(GetCustomRoutineFromID(currentMod))?.DeepClone();
         }
 
         public IReadOnlyList<Metadata> GetAllMods()
         {
-            return allMods?.AsReadOnly<Metadata>();
+            return (allMods?.Select(x => x?.DeepClone())?.ToList() ?? new List<Metadata>()).AsReadOnly<Metadata>();
         }
 
         public Metadata GetModFromRoutine(CustomRoutine routine)
         {
             if (customRoutinesMap2 == null || routine?.RoutineID == null || !customRoutinesMap2.ContainsKey(routine.RoutineID)) return null;
-            return customRoutinesMap2[routine.RoutineID];
+            return customRoutinesMap2[routine.RoutineID]?.DeepClone();
         }
         public CustomRoutine GetCustomRoutineFromID(string routineID)
         {

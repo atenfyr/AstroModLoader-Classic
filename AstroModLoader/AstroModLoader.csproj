@@ -8,9 +8,9 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
-    <AssemblyVersion>1.8.1.0</AssemblyVersion>
-    <FileVersion>1.8.1.0</FileVersion>
-    <Version>1.8.1.0</Version>
+    <AssemblyVersion>1.8.2.0</AssemblyVersion>
+    <FileVersion>1.8.2.0</FileVersion>
+    <Version>1.8.2.0</Version>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <Product>AstroModLoader Classic</Product>
     <Copyright>Copyright © AstroTechies, atenfyr 2026</Copyright>

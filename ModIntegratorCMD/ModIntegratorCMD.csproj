@@ -6,9 +6,9 @@
     <AssemblyTitle>ModIntegratorCMD</AssemblyTitle>
     <Product>AstroModIntegrator Classic</Product>
     <Copyright>Copyright © atenfyr 2026</Copyright>
-    <AssemblyVersion>1.8.1.0</AssemblyVersion>
-    <FileVersion>1.8.1.0</FileVersion>
-    <Version>1.8.1.0</Version>
+    <AssemblyVersion>1.8.2.0</AssemblyVersion>
+    <FileVersion>1.8.2.0</FileVersion>
+    <Version>1.8.2.0</Version>
     <AssemblyName>ModIntegrator</AssemblyName>
     <Configurations>Debug;Release;Debug_CustomRoutineTest</Configurations>
     <Authors>atenfyr</Authors>
