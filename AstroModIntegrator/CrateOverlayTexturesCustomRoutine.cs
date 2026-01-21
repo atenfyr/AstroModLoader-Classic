@@ -21,6 +21,8 @@ namespace AstroModIntegrator
         public static readonly string TemplateTextureName = "ui_icon_package_empty";
         public override void Execute(ICustomRoutineAPI api)
         {
+            api.LogToDisk("Starting built-in routine " + RoutineID, false);
+
             UAsset crateMaterialTemplate = api.FindFile(TemplatePath);
             var crateMaterialTemplateNameMap = crateMaterialTemplate.GetNameMapIndexList();
 
@@ -115,9 +117,9 @@ namespace AstroModIntegrator
                 desiredTextureIdx++;
             }
 
-            api.AddFile("/Game/Globals/AstroGameSingletonInstance", singletonInstance);
+            if (texturePathsToAdd.Count > 0) api.AddFile("/Game/Globals/AstroGameSingletonInstance", singletonInstance);
 
-            api.LogToDisk("Completed " + RoutineID, false);
+            api.LogToDisk("Completed built-in routine " + RoutineID, false);
         }
     }
 }

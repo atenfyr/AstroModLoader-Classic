@@ -44,11 +44,13 @@ namespace AstroModIntegrator
         {
             if (!Enabled) throw new InvalidOperationException("API is disabled because of thread timeout");
             Integrator.AddFile(outPath, outAsset);
+            if (Integrator.Verbose) Integrator.LogToDisk("Added file: \"" + outPath + "\"", Integrator.currentMod != null);
         }
         public void AddFileRaw(string outPath, byte[] rawData)
         {
             if (!Enabled) throw new InvalidOperationException("API is disabled because of thread timeout");
             Integrator.AddFileRaw(outPath, rawData);
+            if (Integrator.Verbose) Integrator.LogToDisk("Added file: \"" + outPath + "\"", Integrator.currentMod != null);
         }
         public Metadata GetCurrentMod()
         {
@@ -121,7 +123,7 @@ namespace AstroModIntegrator
         private Dictionary<string, byte[]> CreatedPakData;
         private volatile Dictionary<string, byte[]> CreatedPakDataTemp;
         private volatile PakExtractor pakExtractorForCustomRoutines;
-        private volatile string currentMod; // RoutineID
+        internal volatile string currentMod; // RoutineID
         private volatile List<Metadata> allMods;
         private volatile Dictionary<string, CustomRoutine> customRoutinesMap;
         private volatile Dictionary<string, Metadata> customRoutinesMap2;
@@ -215,7 +217,7 @@ namespace AstroModIntegrator
         public void AddFile(string outPath, UAsset outAsset)
         {
             if (outPath.StartsWith("/Game/")) outPath = IntegratorUtils.ConvertGamePathToAbsolutePath(outPath, ".uasset");
-            FName.FromString(outAsset, "AMLC CR: " + (GetCurrentMod()?.ModID ?? "unknown mod")); // add watermark to name map for easily tracing what mods modify what files
+            FName.FromString(outAsset, "AMLC CR: " + (GetCurrentMod()?.ModID ?? "Unknown")); // add watermark to name map for easily tracing what mods modify what files
             IntegratorUtils.SplitExportFiles(outAsset, outPath, CreatedPakDataTemp);
         }
 
@@ -238,7 +240,7 @@ namespace AstroModIntegrator
                     File.WriteAllText("ModIntegrator.log", "[" + DateTime.Now.ToString() + "] Begin ModIntegrator.log\n");
                 }
 
-                string desiredText = "[" + DateTime.Now.ToString() + "] " + (prefixWithMod ? ("[" + (GetCurrentMod()?.ModID ?? "unknown mod") + "] ") : "") + text + "\n";
+                string desiredText = "[" + DateTime.Now.ToString() + "] " + (prefixWithMod ? ("[" + (GetCurrentMod()?.ModID ?? "Unknown") + "] ") : "") + text + "\n";
                 if (usePipe)
                 {
                     logCache += desiredText;
@@ -1139,7 +1141,7 @@ namespace AstroModIntegrator
                                 currentMod = customRoutineInstance.RoutineID;
                                 Metadata currentModMetadata = GetCurrentMod();
 
-                                string modId = currentModMetadata?.ModID ?? "unknown mod";
+                                string modId = currentModMetadata?.ModID ?? "Unknown";
                                 LogToDiskVerbose("Executing custom routine " + customRoutineInstance.RoutineID + " for mod " + modId);
 
                                 CreatedPakDataTemp = new Dictionary<string, byte[]>();
