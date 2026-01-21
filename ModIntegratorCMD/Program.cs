@@ -158,6 +158,7 @@ namespace ModIntegratorCMD
                 catch { }
 
                 Console.WriteLine("AstroModIntegrator Classic " + IntegratorUtils.CurrentVersion.ToString() + ": Automatically integrates Astroneer .pak mods based on their metadata");
+                Console.WriteLine("Copyright (c) 2020 - " + DateTime.Now.Year.ToString() + " AstroTechies, atenfyr");
                 Console.WriteLine("\nParameters:");
 
                 var parser = new Parser(with =>
@@ -211,7 +212,9 @@ namespace ModIntegratorCMD
 
             if (argWithHyphenExists) // new
             {
-                Parser.Default.ParseArguments<Options>(args).WithParsed(o =>
+                var parserResult = new Parser(with => with.HelpWriter = null).ParseArguments<Options>(args);
+
+                parserResult.WithParsed(o =>
                 {
                     bool isBenchmark = o.BenchmarkTrials > 1;
                     numBenchmarkTrials = isBenchmark ? o.BenchmarkTrials : 1;
@@ -239,6 +242,16 @@ namespace ModIntegratorCMD
                         Console.WriteLine("(" + ((double)stopWatch.Elapsed.Ticks / TimeSpan.TicksPerMillisecond / (double)numBenchmarkTrials) + " ms per trial)");
                     }
                     Exit(0);
+                }).WithNotParsed<Options>(errs =>
+                {
+                    var helpText = HelpText.AutoBuild(parserResult, h =>
+                    {
+                        h.Heading = "AstroModIntegrator Classic " + IntegratorUtils.CurrentVersion.ToString() + ": Automatically integrates Astroneer .pak mods based on their metadata";
+                        h.Copyright = "Copyright (c) 2020 - " + DateTime.Now.Year.ToString() + " AstroTechies, atenfyr";
+                        h.AdditionalNewLineAfterOption = true;
+                        return HelpText.DefaultParsingErrorsHandler(parserResult, h);
+                    });
+                    Console.Error.WriteLine(helpText);
                 });
             }
             else // old
