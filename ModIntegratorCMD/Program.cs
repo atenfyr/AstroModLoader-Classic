@@ -248,7 +248,7 @@ namespace ModIntegratorCMD
                     {
                         h.Heading = "AstroModIntegrator Classic " + IntegratorUtils.CurrentVersion.ToString() + ": Automatically integrates Astroneer .pak mods based on their metadata";
                         h.Copyright = "Copyright (c) 2020 - " + DateTime.Now.Year.ToString() + " AstroTechies, atenfyr";
-                        h.AdditionalNewLineAfterOption = true;
+                        h.AdditionalNewLineAfterOption = false;
                         return HelpText.DefaultParsingErrorsHandler(parserResult, h);
                     });
                     Console.Error.WriteLine(helpText);
