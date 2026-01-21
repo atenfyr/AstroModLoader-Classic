@@ -128,6 +128,34 @@ namespace AstroModLoader
             ApplyGamePathDerivatives();
             VerifyIntegrity();
 
+            // check for 989-level (ModDeployer) mods
+            string[] modDeployerMods = Directory.GetFiles(this.InstallPath, "989-*_P.pak", SearchOption.TopDirectoryOnly);
+            if (modDeployerMods.Length > 0 && BaseForm != null)
+            {
+                int dialogRes = -1;
+                AMLUtils.InvokeUI(() => dialogRes = BaseForm.ShowBasicButton(modDeployerMods.Length + " deployment artifact" + (modDeployerMods.Length == 1 ? "" : "s") + " from the ModDeployer plugin " + (modDeployerMods.Length == 1 ? "is" : "are") + " present in your Paks directory.\nThese artifacts will not be visible in AstroModLoader Classic, but will still be integrated.\n\nWould you like to continue normally, delete all artifacts, or exit AstroModLoader Classic?", "Continue", "Delete artifacts", "Exit program"));
+                switch (dialogRes)
+                {
+                    case 0:
+                        // continue
+                        break;
+                    case 1:
+                        // delete artifacts
+                        int numFailed = 0;
+                        foreach (string modPath in modDeployerMods)
+                        {
+                            try { File.Delete(modPath); } catch { numFailed++; }
+                        }
+                        AMLUtils.InvokeUI(() => BaseForm.ShowBasicButton(numFailed > 0 ? (numFailed + " artifact" + (numFailed == 1 ? "" : "s") + " could not be deleted.") : "All artifacts have been deleted.", "OK", null, null));
+                        break;
+                    case -1:
+                    case 2:
+                        // exit
+                        Environment.Exit(0);
+                        break;
+                }
+            }
+
             foreach (Mod mod in Mods)
             {
                 mod.Dirty = true;
