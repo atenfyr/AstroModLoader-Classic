@@ -13,7 +13,13 @@ using UAssetAPI.UnrealTypes;
 
 namespace AstroModIntegrator
 {
-    public class CustomRoutineAPIWrapper : ICustomRoutineAPI
+    internal interface ICustomRoutineAPIWrapper
+    {
+        internal void SetEnabled(bool newVal);
+        internal void SetShouldExitNow(bool newVal);
+    }
+
+    public class CustomRoutineAPIWrapper_V1 : ICustomRoutineAPI, ICustomRoutineAPIWrapper
     {
         private bool Enabled = true;
         private bool bShouldExitNow = false;
@@ -73,16 +79,16 @@ namespace AstroModIntegrator
         {
             return bShouldExitNow;
         }
-        internal void SetEnabled(bool newVal)
+        void ICustomRoutineAPIWrapper.SetEnabled(bool newVal)
         {
             Enabled = newVal;
         }
-        internal void SetShouldExitNow(bool newVal)
+        void ICustomRoutineAPIWrapper.SetShouldExitNow(bool newVal)
         {
             bShouldExitNow = newVal;
         }
 
-        internal CustomRoutineAPIWrapper(ModIntegrator integrator)
+        internal CustomRoutineAPIWrapper_V1(ModIntegrator integrator)
         {
             Enabled = true;
             bShouldExitNow = false;
@@ -155,7 +161,8 @@ namespace AstroModIntegrator
                 {
                     policy = new CasPolicyBuilder().WithDefaultSandbox()
                         .Allow(new TypeBinding(typeof(ICustomRoutineAPI), Accessibility.Public))
-                        .Allow(new TypeBinding(typeof(CustomRoutineAPIWrapper), Accessibility.Public))
+                        .Allow(new TypeBinding(typeof(CustomRoutineAPIWrapper_V1), Accessibility.Public))
+                        // add other custom routine apis and wrappers for future api versions
                         .Allow(new TypeBinding(typeof(CustomRoutine), Accessibility.Private))
                         .Allow(new TypeBinding(typeof(Dependency), Accessibility.Private))
                         .Allow(new TypeBinding(typeof(DownloadMode), Accessibility.Private))
@@ -496,6 +503,53 @@ namespace AstroModIntegrator
             }
         }*/
 
+        public static IList<Metadata> GetAllModsWithCustomRoutines(string[] paksPaths)
+        {
+            foreach (string paksPath in paksPaths)
+            {
+                try
+                {
+                    Directory.CreateDirectory(paksPath);
+                }
+                catch { }
+            }
+
+            List<string> filesList = new List<string>();
+            foreach (string paksPath in paksPaths)
+            {
+                filesList.AddRange(Directory.GetFiles(paksPath, "*_P.pak", paksPath.Contains("LogicMods") ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly));
+            }
+            filesList.Sort();
+            string[] files = filesList.ToArray();
+
+            List<Metadata> outputData = new List<Metadata>();
+
+            foreach (string file in files)
+            {
+                try
+                {
+                    using (FileStream f = new FileStream(file, FileMode.Open, FileAccess.Read))
+                    {
+                        PakExtractor newPakExtractor = new PakExtractor(f);
+                        Metadata us = newPakExtractor.ReadMetadata();
+
+                        string dllPath = us.IntegratorEntries.PathToCustomRoutineDLL ?? "AMLCustomRoutines.dll";
+                        if (newPakExtractor.HasPath(dllPath))
+                        {
+                            outputData.Add(us);
+                        }
+                    }
+                }
+                catch
+                {
+                    continue;
+                }
+            }
+
+            return outputData;
+        }
+
+
         public void IntegrateMods(string paksPath, string installPath, string outputFolder = null, string mountPoint = null, bool extractLua = false, bool cleanLua = true)
         {
             IntegrateMods([paksPath], installPath, outputFolder, mountPoint, extractLua, cleanLua);
@@ -592,7 +646,14 @@ namespace AstroModIntegrator
             LogToDiskVerbose("EnableGlobalSandbox: " + EnableGlobalSandbox);
             LogToDiskVerbose(string.Empty);
 
-            foreach (string paksPath in paksPaths) Directory.CreateDirectory(paksPath);
+            foreach (string paksPath in paksPaths)
+            {
+                try
+                {
+                    Directory.CreateDirectory(paksPath);
+                }
+                catch { }
+            }
 
             /*if (IntegratorUtils.CompatibilityMode)
             {
@@ -1008,7 +1069,7 @@ namespace AstroModIntegrator
                     try
                     {
                         CreatedPakDataTemp = new Dictionary<string, byte[]>();
-                        new CrateOverlayTexturesCustomRoutine().Execute(new CustomRoutineAPIWrapper(this));
+                        new CrateOverlayTexturesCustomRoutine().Execute(new CustomRoutineAPIWrapper_V1(this));
                         foreach (KeyValuePair<string, byte[]> entry in CreatedPakDataTemp) CreatedPakData[entry.Key] = entry.Value;
                     }
                     catch (Exception ex)
@@ -1083,21 +1144,36 @@ namespace AstroModIntegrator
 
                                 CreatedPakDataTemp = new Dictionary<string, byte[]>();
 
-                                CustomRoutineAPIWrapper apiWrapper = new CustomRoutineAPIWrapper(this);
-                                Thread workerThread = new Thread(() =>
+                                ICustomRoutineAPIWrapper apiWrapper = null;
+                                Thread workerThread = null;
+
+                                switch(customRoutineInstance.APIVersion)
                                 {
-                                    try
-                                    {
-                                        customRoutineInstance.Execute(apiWrapper);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        LogToDisk("[" + modId + "] " + ex.Message + "\n" + (ex.StackTrace ?? "null") + "\n" + (ex.InnerException?.Message ?? "null") + "\n" + (ex.InnerException?.StackTrace ?? "null"), false); // the method could get incorrect mod id so we prepend the mod id manually
+                                    case 1:
+                                        apiWrapper = new CustomRoutineAPIWrapper_V1(this);
+                                        workerThread = new Thread(() =>
+                                        {
+                                            try
+                                            {
+                                                customRoutineInstance.Execute((CustomRoutineAPIWrapper_V1)apiWrapper);
+                                            }
+                                            catch (Exception ex)
+                                            {
+                                                LogToDisk("[" + modId + "] " + ex.Message + "\n" + (ex.StackTrace ?? "null") + "\n" + (ex.InnerException?.Message ?? "null") + "\n" + (ex.InnerException?.StackTrace ?? "null"), false); // the method could get incorrect mod id so we prepend the mod id manually
 #if DEBUG_CUSTOMROUTINETEST
                                             throw;
 #endif
-                                    }
-                                });
+                                            }
+                                        });
+                                        break;
+                                    default:
+                                        workerThread = new Thread(() =>
+                                        {
+                                            LogToDisk("[" + modId + "] Unable to execute custom routine due to unknown API version: " + customRoutineInstance.APIVersion.ToString(), false);
+                                        });
+                                        break;
+
+                                }
                                 workerThread.Start();
 
 #if DEBUG_CUSTOMROUTINETEST
@@ -1111,7 +1187,7 @@ namespace AstroModIntegrator
                                     // if the thread is still going, tell it that it should exit and give another 2 seconds to try and cleanly exit
                                     // no matter what terminated = false still so that we don't keep changes
                                     LogToDisk("[" + modId + "] Custom routine is taking too long; discarding changes and attempting to cancel safely", false);
-                                    apiWrapper.SetShouldExitNow(true);
+                                    apiWrapper?.SetShouldExitNow(true);
                                     workerThread.Join(TimeSpan.FromSeconds(2));
                                 }
 #endif
@@ -1125,7 +1201,7 @@ namespace AstroModIntegrator
                                     LogToDisk("[" + modId + "] Custom routine is unresponsive; discarding changes, disabling API, and moving on", false);
                                     if (IsModIntegratorCMD) LogToDisk("[" + modId + "] Thread will be killed after integration", false);
                                 }
-                                apiWrapper.SetEnabled(false); // disable all api methods
+                                apiWrapper?.SetEnabled(false); // disable all api methods
                             }
                             catch (Exception ex)
                             {

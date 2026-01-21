@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AstroModIntegrator;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -233,6 +234,36 @@ namespace AstroModLoader
 
         private void customRoutineBox_CheckedChanged(object sender, EventArgs e)
         {
+            if (BaseForm?.ModManager == null) return;
+
+            if (customRoutineBox.Checked && !ModHandler.EnableCustomRoutines)
+            {
+                // turning custom routines on; pop-up confirmation
+                IList<Metadata> modsWithCustomRoutines = ModIntegrator.GetAllModsWithCustomRoutines([BaseForm.ModManager.InstallPath]) ?? new List<Metadata>();
+                string bonusText = (modsWithCustomRoutines.Count > 0) ? ("\nThe following enabled mods have custom routines:\n" + string.Join(", ", modsWithCustomRoutines.Where(x => x?.ModID != null).Select(x => x.ModID))) : "None of your currently enabled mods have custom routines.";
+
+                int dialogRes = -1;
+                AMLUtils.InvokeUI(() => dialogRes = this.ShowBasicButton("Custom routines allow mods to execute custom code in\nAstroModLoader Classic. Custom routines are isolated\nand sandboxed for your protection, but some mods might\nstill try to execute malicious code on your computer.\n\nMake sure you trust all of your mods before continuing.\n" + bonusText, "Continue", "Cancel", null));
+                switch (dialogRes)
+                {
+                    case 0:
+                        // continue
+                        break;
+                    case -1:
+                    case 1:
+                    case 2:
+                        // cancel
+                        customRoutineBox.Checked = false;
+                        return;
+                }
+
+                HashSet<string> approvedMods = modsWithCustomRoutines.Where(x => x?.ModID != null).Select(x => x.ModID).ToHashSet();
+                foreach (Mod mod in BaseForm.ModManager.Mods)
+                {
+                    if (approvedMods.Contains(mod.CurrentModData.ModID)) mod.CustomRoutineApprovedByUser = true;
+                }
+            }
+
             ModHandler.EnableCustomRoutines = customRoutineBox.Checked;
             BaseForm.ModManager.SyncDependentConfigToDisk();
             AMLUtils.InvokeUI(BaseForm.TableManager.Refresh);

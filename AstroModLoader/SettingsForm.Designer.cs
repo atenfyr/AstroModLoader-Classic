@@ -299,9 +299,9 @@
             customRoutineBox.Location = new System.Drawing.Point(178, 229);
             customRoutineBox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             customRoutineBox.Name = "customRoutineBox";
-            customRoutineBox.Size = new System.Drawing.Size(243, 19);
+            customRoutineBox.Size = new System.Drawing.Size(210, 19);
             customRoutineBox.TabIndex = 17;
-            customRoutineBox.Text = "Enable custom integrator routines (WIP)";
+            customRoutineBox.Text = "Enable custom integrator routines";
             customRoutineBox.UseVisualStyleBackColor = true;
             customRoutineBox.CheckedChanged += customRoutineBox_CheckedChanged;
             // 

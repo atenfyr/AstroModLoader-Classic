@@ -6,6 +6,8 @@ namespace AstroModIntegrator
 {
     /// <summary>
     /// API for custom routines.
+    /// Version 1.
+    /// Custom routines always execute in the defined mod load order.
     /// </summary>
     public interface ICustomRoutineAPI
     {
@@ -99,5 +101,4 @@ namespace AstroModIntegrator
         /// <returns>Whether or not the custom routine should exit immediately.</returns>
         public bool ShouldExitNow();
     }
-
 }

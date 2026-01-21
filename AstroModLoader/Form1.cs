@@ -87,6 +87,8 @@ namespace AstroModLoader
             autoUpdater.DoWork += new DoWorkEventHandler(AutoUpdater_DoWork);
             autoUpdater.RunWorkerCompleted += new RunWorkerCompletedEventHandler(Simple_Refresh_RunWorkerCompleted);
             autoUpdater.RunWorkerAsync();
+
+            integratingLabel.LinkClicked += integratingLabel_LinkClicked;
         }
 
         private BackgroundWorker autoUpdater;
@@ -134,6 +136,7 @@ namespace AstroModLoader
                         {
                             mod.Enabled = true;
                             mod.Dirty = true;
+                            mod.CustomRoutineApprovedByUser = false;
                         }
                     }
                     if (numMalformatted > 0) throw new FormatException(numMalformatted + " mods were malformatted");
@@ -529,7 +532,7 @@ namespace AstroModLoader
                 }
                 catch (IOException) { }
             }
-            
+
             return outputs;
         }
 
@@ -617,7 +620,7 @@ namespace AstroModLoader
 
                     if (malformattedCount > 0)
                     {
-                        this.ShowBasicButton(malformattedCount + " mod" + (malformattedCount == 1 ? " was" : "s were") + " malformatted, and could not be installed.\nThe file name may be invalid, the metadata may be invalid, or both.\nPlease ensure that this mod meets the community-made standards.", "OK", null, null);
+                        this.ShowBasicButton(malformattedCount + " mod" + (malformattedCount == 1 ? " was" : "s were") + " malformatted, and could not be installed.\nThe file name may be invalid, the metadata may be invalid, or both.\nPlease ensure that this mod meets the community-established standards.", "OK", null, null);
                     }
 
                     if (newProfileCount > 0)
@@ -960,8 +963,8 @@ namespace AstroModLoader
             string[] parts = txt.Split(":");
             string cmd = parts[0];
             string data = string.Join(":", parts.Skip(1));
-            
-            switch(cmd)
+
+            switch (cmd)
             {
                 case "InstallThunderstore":
                     AMLUtils.InvokeUI(() =>
@@ -1021,6 +1024,7 @@ namespace AstroModLoader
                                 {
                                     mod.Enabled = true;
                                     mod.Dirty = true;
+                                    mod.CustomRoutineApprovedByUser = false;
                                 }
                                 ModManager.FullUpdate();
                             }
@@ -1071,8 +1075,8 @@ namespace AstroModLoader
             if (!ModManager.UE4SSInstalled && needUE4SS)
             {
                 int dialogRes = -1;
-                AMLUtils.InvokeUI(() => dialogRes = this.ShowBasicButton("The following mods use UE4SS:\n\n" + string.Join(", ", modsNeedUE4SS) + "\n\nYou do not currently have UE4SS installed.\nThese mods may not operate as expected.\n\nWould you like to automatically install UE4SS now?", "Install", "Play anyways", "Cancel"));
-                switch(dialogRes)
+                AMLUtils.InvokeUI(() => dialogRes = this.ShowBasicButton("The following mods use UE4SS:\n\n" + string.Join(", ", modsNeedUE4SS) + "\n\nYou do not currently have UE4SS installed.\nThese mods may not operate as expected.\n\nWould you like to automatically install UE4SS now?", "Install", "Continue anyways", "Cancel"));
+                switch (dialogRes)
                 {
                     case 0:
                         // install
@@ -1122,7 +1126,7 @@ namespace AstroModLoader
             if (missingDependencies.Count > 0)
             {
                 int dialogRes = -1;
-                AMLUtils.InvokeUI(() => dialogRes = this.ShowBasicButton("One or more of your mods require the following missing dependencies:\n\n" + string.Join(", ", missingDependencies) + "\n\nThese mods may not operate as expected without these dependencies.\nWould you like to continue anyways?", "Play", "Cancel", null));
+                AMLUtils.InvokeUI(() => dialogRes = this.ShowBasicButton("One or more of your mods require the following missing dependencies:\n\n" + string.Join(", ", missingDependencies) + "\n\nThese mods may not operate as expected without these dependencies.\nWould you like to continue anyways?", "Continue", "Cancel", null));
                 switch (dialogRes)
                 {
                     case 0:
@@ -1139,7 +1143,7 @@ namespace AstroModLoader
             if (disabledDependencies.Count > 0)
             {
                 int dialogRes = -1;
-                AMLUtils.InvokeUI(() => dialogRes = this.ShowBasicButton("One or more of your mods have these required dependencies disabled:\n\n" + string.Join(", ", disabledDependencies) + "\n\nThese mods may not operate as expected without these dependencies.\nWould you like to continue anyways?", "Play", "Cancel", null));
+                AMLUtils.InvokeUI(() => dialogRes = this.ShowBasicButton("One or more of your mods have these required dependencies disabled:\n\n" + string.Join(", ", disabledDependencies) + "\n\nThese mods may not operate as expected without these dependencies.\nWould you like to continue anyways?", "Continue", "Cancel", null));
                 switch (dialogRes)
                 {
                     case 0:
@@ -1150,6 +1154,34 @@ namespace AstroModLoader
                     case 2:
                         // cancel
                         return;
+                }
+            }
+
+            // check mods that use custom routines if we have custom routines disabled
+            if (!ModHandler.EnableCustomRoutines)
+            {
+                List<string> allModsWithCustomRoutines = null;
+                try
+                {
+                    allModsWithCustomRoutines = (ModIntegrator.GetAllModsWithCustomRoutines([ModManager.InstallPath]) ?? new List<Metadata>()).Where(x => x?.ModID != null).Select(x => x.ModID).ToList();
+                }
+                catch { }
+
+                if (allModsWithCustomRoutines != null && allModsWithCustomRoutines.Count > 0)
+                {
+                    int dialogRes = -1;
+                    AMLUtils.InvokeUI(() => dialogRes = this.ShowBasicButton("The following mods use custom routines:\n\n" + string.Join(", ", allModsWithCustomRoutines) + "\n\nCustom routines are currently disabled.\nSo, these mods may not operate as expected.\nWould you like to continue anyways?", "Continue", "Cancel", null));
+                    switch (dialogRes)
+                    {
+                        case 0:
+                            // nothing
+                            break;
+                        case -1:
+                        case 1:
+                        case 2:
+                            // cancel
+                            return;
+                    }
                 }
             }
 
@@ -1307,6 +1339,27 @@ namespace AstroModLoader
         private void dataGridView1_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
             if (TableManager != null) AMLUtils.InvokeUI(() => TableManager.PaintCell(sender, e));
+        }
+
+        private void integratingLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            try
+            {
+                string fileToOpen = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AstroModLoader", "ModIntegrator.log");
+                if (File.Exists(fileToOpen))
+                {
+                    var process = new Process();
+                    process.StartInfo = new ProcessStartInfo(fileToOpen)
+                    {
+                        UseShellExecute = true
+                    };
+                    process.Start();
+                }
+            }
+            catch
+            {
+
+            }
         }
     }
 }

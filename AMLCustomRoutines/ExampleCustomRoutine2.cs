@@ -8,6 +8,7 @@ namespace AMLCustomRoutines
     {
         public override string RoutineID => "ExampleCustomRoutine2";
         public override bool Enabled => true;
+        public override int APIVersion => 1;
 
         public override void Execute(ICustomRoutineAPI api)
         {

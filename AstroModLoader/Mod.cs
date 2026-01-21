@@ -77,6 +77,10 @@ namespace AstroModLoader
         [JsonIgnore]
         internal bool CannotCurrentlyUpdate = false;
 
+        [JsonProperty("custom_routines_approved_by_user")]
+        [DefaultValue(false)]
+        public bool CustomRoutineApprovedByUser;
+
         public Mod() { }
 
         public Mod(Metadata modData, string nameOnDisk)
@@ -191,7 +195,6 @@ namespace AstroModLoader
             }
             return origUrl;
         }
-
 
         public static IndexFile GetIndexFileFromDownloadInfo(DownloadInfo di, string modId, Dictionary<string, string> cachedUrls)
         {
@@ -342,6 +345,7 @@ namespace AstroModLoader
             modClone.Enabled = this.Enabled;
             modClone.IsOptional = this.IsOptional;
             modClone.Priority = this.Priority;
+            modClone.CustomRoutineApprovedByUser = this.CustomRoutineApprovedByUser;
             return modClone;
         }
     }

@@ -135,6 +135,18 @@ namespace AstroModLoader
             FullUpdateSynchronous(false, false);
             SortMods();
             RefreshAllPriorites();
+
+            if (ModHandler.EnableCustomRoutines)
+            {
+                HashSet<string> modsWithCustomRoutines = (ModIntegrator.GetAllModsWithCustomRoutines([this.InstallPath]) ?? new List<Metadata>()).Where(x => x?.ModID != null).Select(x => x.ModID).ToHashSet(); ;
+                foreach (Mod mod in Mods)
+                {
+                    if (mod?.CurrentModData?.ModID == null) continue;
+
+                    // if the mod was already enabled on boot, we assume that it was implicitly approved, e.g. in AMLC 1.8.0.0
+                    if (mod.Enabled && modsWithCustomRoutines.Contains(mod.CurrentModData.ModID)) mod.CustomRoutineApprovedByUser = true;
+                }
+            }
             SyncConfigToDisk();
 
             // integrate async so we can open the window first
@@ -930,6 +942,7 @@ namespace AstroModLoader
                     ModLookup[entry.Key].Priority = entry.Value.Priority;
                     ModLookup[entry.Key].IsOptional = entry.Value.IsOptional;
                     ModLookup[entry.Key].ForceLatest = entry.Value.ForceLatest;
+                    ModLookup[entry.Key].CustomRoutineApprovedByUser = entry.Value.CustomRoutineApprovedByUser;
                     if (entry.Value.ForceLatest || !ModLookup[entry.Key].AllModData.ContainsKey(ModLookup[entry.Key].InstalledVersion))
                     {
                         ModLookup[entry.Key].InstalledVersion = ModLookup[entry.Key].AvailableVersions[0];
@@ -1024,7 +1037,11 @@ namespace AstroModLoader
             {
                 AMLUtils.InvokeUI(() =>
                 {
-                    if (BaseForm.integratingLabel != null) BaseForm.integratingLabel.Text = "Integrating...";
+                    if (BaseForm.integratingLabel != null)
+                    {
+                        BaseForm.integratingLabel.Text = "Integrating...";
+                        BaseForm.integratingLabel.LinkArea = new LinkArea(0, 0);
+                    }
                 });
 
                 Stopwatch sw = new Stopwatch();
@@ -1051,7 +1068,11 @@ namespace AstroModLoader
 
                 AMLUtils.InvokeUI(() =>
                 {
-                    if (BaseForm.integratingLabel != null) BaseForm.integratingLabel.Text = "Integrated in " + tm + " ms";
+                    if (BaseForm.integratingLabel != null)
+                    {
+                        BaseForm.integratingLabel.Text = "Integrated in " + tm + " ms";
+                        BaseForm.integratingLabel.LinkArea = new LinkArea(0, BaseForm.integratingLabel.Text.Length);
+                    }
                 });
             }
             catch
@@ -1060,7 +1081,11 @@ namespace AstroModLoader
                 {
                     AMLUtils.InvokeUI(() =>
                     {
-                        if (BaseForm.integratingLabel != null) BaseForm.integratingLabel.Text = "Failed to integrate!";
+                        if (BaseForm.integratingLabel != null)
+                        {
+                            BaseForm.integratingLabel.Text = "Failed to integrate!";
+                            BaseForm.integratingLabel.LinkArea = new LinkArea(0, BaseForm.integratingLabel.Text.Length);
+                        }
                     });
                 }
                 else
@@ -1085,7 +1110,57 @@ namespace AstroModLoader
             {
                 AMLUtils.InvokeUI(() =>
                 {
-                    if (BaseForm.integratingLabel != null) BaseForm.integratingLabel.Text = "Integrating...";
+                    if (BaseForm.integratingLabel != null)
+                    {
+                        BaseForm.integratingLabel.Text = "Integrating...";
+                        BaseForm.integratingLabel.LinkArea = new LinkArea(0, 0);
+                    }
+                });
+
+                // seek approval for unapproved custom routines
+                HashSet<string> modsWithCustomRoutines = (ModIntegrator.GetAllModsWithCustomRoutines([BaseForm.ModManager.InstallPath]) ?? new List<Metadata>()).Where(x => x?.ModID != null).Select(x => x.ModID).ToHashSet();
+                AMLUtils.InvokeUI(() =>
+                {
+                    List<Mod> modsNeedingApproval = new List<Mod>();
+                    foreach (Mod mod in BaseForm.ModManager.Mods)
+                    {
+                        if (modsWithCustomRoutines.Contains(mod.CurrentModData.ModID) && !mod.CustomRoutineApprovedByUser)
+                        {
+                            // this mod has a custom routine and has not yet been approved
+                            modsNeedingApproval.Add(mod);
+                        }
+                    }
+
+                    if (modsNeedingApproval.Count > 0)
+                    {
+                        int dialogRes = -1;
+                        AMLUtils.InvokeUI(() => dialogRes = BaseForm.ShowBasicButton("The following mods use custom routines:\n\n" + string.Join(", ", modsNeedingApproval.Where(x => x?.CurrentModData?.ModID != null).Select(x => x.CurrentModData.ModID)) + "\n\nAstroModLoader Classic is requesting your approval\nto integrate these mods. Custom routines are isolated\nand sandboxed for your protection, but some mods might\nstill try to execute malicious code on your computer.\n\nMake sure you fully trust these mods.\nWould you like to continue?", "Continue", "No, disable mods", null));
+                        switch (dialogRes)
+                        {
+                            case 0:
+                                // all good (mark mods as approved)
+                                foreach (Mod mod in modsNeedingApproval)
+                                {
+                                    mod.CustomRoutineApprovedByUser = true;
+                                }
+                                SyncConfigToDisk();
+                                break;
+                            case -1:
+                            case 1:
+                            case 2:
+                                // cancel (disable those mods and finish integration)
+                                foreach (Mod mod in modsNeedingApproval)
+                                {
+                                    if (mod == null) continue;
+                                    mod.CustomRoutineApprovedByUser = false;
+                                    mod.Enabled = false;
+                                }
+                                SyncConfigToDisk();
+                                SyncModsToDisk();
+                                BaseForm.TableManager.Refresh();
+                                break;
+                        }
+                    }
                 });
 
                 // manually clean up lua if requested
@@ -1219,7 +1294,11 @@ namespace AstroModLoader
 
                 AMLUtils.InvokeUI(() =>
                 {
-                    if (BaseForm.integratingLabel != null) BaseForm.integratingLabel.Text = "Integrated in " + tm + " ms";
+                    if (BaseForm.integratingLabel != null)
+                    {
+                        BaseForm.integratingLabel.Text = "Integrated in " + tm + " ms";
+                        BaseForm.integratingLabel.LinkArea = new LinkArea(0, BaseForm.integratingLabel.Text.Length);
+                    }
                 });
             }
             catch
@@ -1230,7 +1309,11 @@ namespace AstroModLoader
                 {
                     AMLUtils.InvokeUI(() =>
                     {
-                        if (BaseForm.integratingLabel != null) BaseForm.integratingLabel.Text = "Failed to integrate!";
+                        if (BaseForm.integratingLabel != null)
+                        {
+                            BaseForm.integratingLabel.Text = "Failed to integrate!";
+                            BaseForm.integratingLabel.LinkArea = new LinkArea(0, BaseForm.integratingLabel.Text.Length);
+                        }
                     });
                 }
                 else

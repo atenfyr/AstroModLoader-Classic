@@ -13,6 +13,7 @@ namespace AstroModIntegrator
     {
         public override string RoutineID => "CrateOverlayTexturesCustomRoutine";
         public override bool Enabled => true;
+        public override int APIVersion => 1;
 
         public static readonly string TemplatePath = "/Game/Materials/modules/CrateMaterialInstances/CrateMaterialLogo_Empty";
         public static readonly string TemplateName = "CrateMaterialLogo_Empty";
