@@ -59,7 +59,7 @@ namespace AstroModLoader
 
                 try
                 {
-                    Directory.Delete(Path.Combine(binaryDir, "Mods"), true);
+                    Directory.Delete(Path.Combine(binaryDir, "ue4ss", "Mods"), true);
                 }
                 catch { }
             }
