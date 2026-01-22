@@ -93,6 +93,10 @@ namespace AstroModLoader
                         catch { }
                     }
                 }
+
+                // delete LogicMods directory
+                string logicModsDir = Path.Combine(binaryDir, "..", "..", "Content", "Paks", "LogicMods");
+                if (Directory.Exists(logicModsDir)) Directory.Delete(logicModsDir, true);
             }
             catch
             {
