@@ -519,7 +519,7 @@ namespace AstroModIntegrator
             List<string> filesList = new List<string>();
             foreach (string paksPath in paksPaths)
             {
-                filesList.AddRange(Directory.GetFiles(paksPath, "*_P.pak", paksPath.Contains("LogicMods") ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly));
+                filesList.AddRange(Directory.GetFiles(paksPath, "*_P.pak", (paksPath.Contains("LogicMods") || paksPath.Contains("shimloader")) ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly));
             }
             filesList.Sort();
             string[] files = filesList.ToArray();
@@ -665,7 +665,7 @@ namespace AstroModIntegrator
             List<string> filesList = new List<string>();
             foreach (string paksPath in paksPaths)
             {
-                filesList.AddRange(Directory.GetFiles(paksPath, "*_P.pak", paksPath.Contains("LogicMods") ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly));
+                filesList.AddRange(Directory.GetFiles(paksPath, "*_P.pak", (paksPath.Contains("LogicMods") || paksPath.Contains("shimloader")) ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly));
             }
             filesList.Sort();
             string[] files = filesList.ToArray();
