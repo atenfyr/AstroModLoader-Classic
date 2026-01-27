@@ -873,11 +873,12 @@ namespace AstroModIntegrator
             using (FileStream f = new FileStream(realPakPath, FileMode.Open, FileAccess.Read))
             {
                 PakExtractor ourExtractor = null;
-                try
+                // deliberately throw an exception if we cant access the main pak
+                //try
                 {
                     ourExtractor = new PakExtractor(f);
                 }
-                catch { }
+                //catch { }
 
                 if (ourExtractor != null)
                 {
@@ -1216,6 +1217,10 @@ namespace AstroModIntegrator
                             }
                         }
                     }
+                }
+                else
+                {
+                    LogToDiskVerbose("Failed to parse game pak");
                 }
             }
 

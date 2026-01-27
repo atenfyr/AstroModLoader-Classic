@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace ModIntegratorCMD
@@ -52,6 +53,9 @@ namespace ModIntegratorCMD
         [Option("optional_mod_ids", Required = false, Default = null, HelpText = "List of optional mod IDs. Defaults to an empty list (i.e., clients are required to install all server-client mods).")]
         public IEnumerable<string> OptionalModIDs { get; set; }
 
+        [Option('p', "proton", Required = false, Default = false, HelpText = "If specified, attempt to find default values for -i and -g assuming a Proton game environment.")]
+        public bool ProtonFlag { get; set; }
+
         public Options()
         {
 
@@ -61,13 +65,20 @@ namespace ModIntegratorCMD
     public class Program
     {
         // exit immediately, ensures dangling threads are killed
+        private static bool waitForInputAtEnd = false;
         private static void Exit(int exitCode)
         {
+            if (waitForInputAtEnd)
+            {
+                Console.WriteLine("Press any key to continue...");
+                Console.ReadKey(true);
+            }
             Environment.Exit(exitCode);
         }
 
-        public static void Main(string[] args)
+        public static void Main(string[] args_raw)
         {
+            string[] args = args_raw;
 #if DEBUG
             // if in debug configuration and no parameters, attempt to connect to main AML pipe
             try
@@ -126,6 +137,7 @@ namespace ModIntegratorCMD
             bool argWithHyphenExists = false;
             bool printHelp = false;
             bool printVersion = false;
+            bool protonFlag = false;
             for (int i = 0; i < args.Length; i++)
             {
                 if (args[i].Length > 0 && args[i][0] == '-')
@@ -140,12 +152,94 @@ namespace ModIntegratorCMD
                 {
                     printVersion = true;
                 }
+                if (args[i] == "-p" || args[i] == "--proton")
+                {
+                    protonFlag = true;
+                }
+            }
+            // set protonFlag = true if on Linux and no arguments specified
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && args.Length == 0)
+            {
+                protonFlag = true;
+                waitForInputAtEnd = true;
             }
 
             if (printVersion)
             {
                 Console.WriteLine(IntegratorUtils.CurrentVersion.ToString());
                 return;
+            }
+
+            string copyrightNotice = "AstroModIntegrator Classic " + IntegratorUtils.CurrentVersion.ToString() + ": Automatically integrates Astroneer .pak mods based on their metadata";
+            copyrightNotice += "\nCopyright (c) 2020 - " + DateTime.Now.Year.ToString() + " AstroTechies, atenfyr";
+
+            if (protonFlag)
+            {
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    Console.Error.WriteLine("--proton flag is not valid when executing on Windows");
+                    return;
+                }
+
+                // attempt to find default paths for proton
+                string gameID = "361420";
+                string defaultI = "";
+                string defaultG = "";
+
+                string basePath = "";
+                string homeDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                string[] basePathOptions = [Path.Combine(homeDir, ".steam", "steam", "steamapps"), Path.Combine(homeDir, ".local", "share", "Steam", "steamapps")];
+                foreach (string option in basePathOptions)
+                {
+                    if (Path.Exists(option))
+                    {
+                        basePath = option;
+                        break;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(basePath))
+                {
+                    defaultI = Path.Join(basePath, "compatdata", gameID, "pfx", "drive_c", "users", "steamuser", "AppData", "Local", "Astro");
+                    if (Path.Exists(defaultI))
+                    {
+                        defaultI = Path.Join(defaultI, "Saved");
+                        Directory.CreateDirectory(defaultI);
+                        defaultI = Path.Join(defaultI, "Paks");
+                        Directory.CreateDirectory(defaultI);
+                    }
+
+                    defaultG = Path.Join(basePath, "common", "ASTRONEER", "Astro", "Content", "Paks");
+                }
+
+                if (!string.IsNullOrEmpty(defaultI) && !string.IsNullOrEmpty(defaultG) && Path.Exists(defaultI) && Path.Exists(defaultG))
+                {
+                    Console.WriteLine(copyrightNotice);
+                    Console.WriteLine("\nPlace your mods in the following directory:\n\n" + defaultI + "\n\nYou must execute this program every time that the game updates or you change your list of mods.\n");
+
+                    try { File.Delete(Path.Combine(defaultI, "999-AstroModIntegrator_P.pak")); } catch {}
+                    if (Directory.GetFiles(defaultI).Length == 0)
+                    {
+                        Console.WriteLine("No mods are currently installed, so integration will be skipped this time.");
+                        Exit(0);
+                    }
+
+                    string[] newArgs = new string[args.Length + 5];
+                    newArgs[0] = "-v";
+                    newArgs[1] = "-i";
+                    newArgs[2] = defaultI;
+                    newArgs[3] = "-g";
+                    newArgs[4] = defaultG;
+                    Array.Copy(args, 0, newArgs, 5, args.Length);
+
+                    args = newArgs;
+                    argWithHyphenExists = true;
+                }
+                else
+                {
+                    Console.Error.WriteLine("Failed to find default paths for a Proton installation of Astroneer");
+                    return;  
+                }
             }
 
             if (args.Length < 2 || printHelp)
@@ -157,8 +251,7 @@ namespace ModIntegratorCMD
                 }
                 catch { }
 
-                Console.WriteLine("AstroModIntegrator Classic " + IntegratorUtils.CurrentVersion.ToString() + ": Automatically integrates Astroneer .pak mods based on their metadata");
-                Console.WriteLine("Copyright (c) 2020 - " + DateTime.Now.Year.ToString() + " AstroTechies, atenfyr");
+                Console.WriteLine(copyrightNotice);
                 Console.WriteLine("\nParameters:");
 
                 var parser = new Parser(with =>
