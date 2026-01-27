@@ -238,7 +238,7 @@ namespace ModIntegratorCMD
                 else
                 {
                     Console.Error.WriteLine("Failed to find default paths for a Proton installation of Astroneer");
-                    return;  
+                    printHelp = true;
                 }
             }
 
