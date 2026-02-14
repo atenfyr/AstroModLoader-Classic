@@ -4,6 +4,7 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
+using System.IO.Compression;
 using System.IO.Pipes;
 using System.Runtime;
 using System.Runtime.InteropServices;
@@ -408,13 +409,16 @@ namespace AstroModLoader
                 // dump repak_bind ourselves because low-integrity uassetapi cannot
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
-                    using (var resource = typeof(UAssetAPI.PropertyTypes.Objects.PropertyData).Assembly.GetManifestResourceStream("UAssetAPI.repak_bind.so"))
+                    using (var resource = typeof(UAssetAPI.PropertyTypes.Objects.PropertyData).Assembly.GetManifestResourceStream("UAssetAPI.repak_bind.so.gz"))
                     {
                         if (resource != null)
                         {
                             using (var file = new FileStream(Path.Combine(rootFolder, "repak_bind.so"), FileMode.Create, FileAccess.Write))
                             {
-                                resource.CopyTo(file);
+                                using (var gzipStream = new GZipStream(resource, CompressionMode.Decompress))
+                                {
+                                    gzipStream.CopyTo(file);
+                                }
                             }
 
                             NativeLibrary.Load(Path.Combine(rootFolder, "repak_bind.so"));
@@ -423,13 +427,16 @@ namespace AstroModLoader
                 }
                 else
                 {
-                    using (var resource = typeof(UAssetAPI.PropertyTypes.Objects.PropertyData).Assembly.GetManifestResourceStream("UAssetAPI.repak_bind.dll"))
+                    using (var resource = typeof(UAssetAPI.PropertyTypes.Objects.PropertyData).Assembly.GetManifestResourceStream("UAssetAPI.repak_bind.dll.gz"))
                     {
                         if (resource != null)
                         {
                             using (var file = new FileStream(Path.Combine(rootFolder, "repak_bind.dll"), FileMode.Create, FileAccess.Write))
                             {
-                                resource.CopyTo(file);
+                                using (var gzipStream = new GZipStream(resource, CompressionMode.Decompress))
+                                {
+                                    gzipStream.CopyTo(file);
+                                }
                             }
 
                             NativeLibrary.Load(Path.Combine(rootFolder, "repak_bind.dll"));
