@@ -58,7 +58,7 @@ AstroModLoader Classic has support for the following command line parameters:
 ## Linux Setup
 If you would like to set up AstroModLoader Classic for Linux (Proton), perform the following steps:
 
-1. If needed, install Wine: https://gitlab.winehq.org/wine/wine/-/wikis/Download
+1. If needed, install Steam and Astroneer on your computer.
 2. Install the latest version of winetricks. See this guide: https://github.com/Winetricks/winetricks?tab=readme-ov-file#installing. If you are on Debian/Ubuntu, you should perform the steps under "Manual Install" on the winetricks GitHub page to make sure that winetricks is up-to-date.
 3. Install the latest version of protontricks. See this guide: https://github.com/Matoking/protontricks?tab=readme-ov-file#pipx. Using pipx is a good idea to make sure you have the latest version of protontricks. Execute `pipx ensurepath` on the command line after installing protontricks.
 4. To download necessary prerequisites, execute `protontricks --no-bwrap 361420 dotnetdesktop8 micross` on the command line and go through all prompts that appear.
