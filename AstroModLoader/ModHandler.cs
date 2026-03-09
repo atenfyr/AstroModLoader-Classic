@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -1043,16 +1044,58 @@ namespace AstroModLoader
             return;
 #endif
 
-            // for now, we keep both the old (same process) and new (different process, with named pipes) approaches available, because:
-            // a. there are probably edge cases that could break integration with the new experimental approach still
-            // b. new approach is significantly slower, still perf work to do
-            if (EnableCustomRoutines)
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+
+            try
             {
-                IntegrateModsNew(hasLooped);
+                // check if we actually have any enabled mods; if not, we should not output any pak
+                string[] allModsInPaksDirectory = Directory.GetFiles(InstallPath, "*.pak");
+                bool anyModsEnabled = false;
+                foreach (string pakModPath in allModsInPaksDirectory)
+                {
+                    if (Path.GetFileName(pakModPath) != IntegratorUtils.OutputFileName)
+                    {
+                        anyModsEnabled = true;
+                        break;
+                    }
+                }
+                if (!anyModsEnabled)
+                {
+                    // delete integrator pak and exit
+                    string pathToDelete = Path.Combine(InstallPath, IntegratorUtils.OutputFileName);
+                    string pathToDelete2 = Path.Combine(InstallPath, "UE4SS");
+                    try { if (File.Exists(pathToDelete)) File.Delete(pathToDelete); } catch { }
+                    try { if (!DisableLuaCleanup && Directory.Exists(pathToDelete2)) Directory.Delete(pathToDelete2, true); } catch { }
+
+                    AMLUtils.InvokeUI(() =>
+                    {
+                        sw.Stop();
+                        string tm = sw.Elapsed.TotalMilliseconds.ToString("#.##");
+                        if (tm.StartsWith('.') || tm.StartsWith(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator)) tm = "0" + tm;
+
+                        if (BaseForm.integratingLabel != null)
+                        {
+                            BaseForm.integratingLabel.Text = "Integrated in " + tm + " ms";
+                            BaseForm.integratingLabel.LinkArea = new LinkArea(0, 0);
+                        }
+                    });
+
+                    return;
+                }
+
+                if (EnableCustomRoutines)
+                {
+                    IntegrateModsNew(hasLooped);
+                }
+                else
+                {
+                    IntegrateModsOld(hasLooped);
+                }
             }
-            else
+            finally
             {
-                IntegrateModsOld(hasLooped);
+                sw.Stop();
             }
         }
 
@@ -1393,7 +1436,7 @@ namespace AstroModLoader
         {
             try
             {
-                string targetPath = Path.Combine(InstallPath, "999-AstroModIntegrator_P.pak");
+                string targetPath = Path.Combine(InstallPath, IntegratorUtils.OutputFileName);
                 if (!File.Exists(targetPath)) return false;
                 using (FileStream f = new FileStream(targetPath, FileMode.Open, FileAccess.Write, FileShare.None)) { }
             }

@@ -1,4 +1,5 @@
-﻿using CommandLine;
+﻿using AstroModIntegrator;
+using CommandLine;
 using Microsoft.Win32;
 using System;
 using System.ComponentModel;
@@ -250,7 +251,7 @@ namespace AstroModLoader
                                                 server.Read(pakData, 0, numBytes);
                                                 if (pakData != null && pakData.Length > 0)
                                                 {
-                                                    File.WriteAllBytes(Path.Combine(f1.ModManager.InstallPath, "999-AstroModIntegrator_P.pak"), pakData);
+                                                    File.WriteAllBytes(Path.Combine(f1.ModManager.InstallPath, IntegratorUtils.OutputFileName), pakData);
                                                     GotPak = true;
                                                 }
                                             }

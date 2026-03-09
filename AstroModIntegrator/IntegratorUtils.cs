@@ -38,6 +38,8 @@ namespace AstroModIntegrator
             "ModIntegrator"
         };
 
+        public static readonly string OutputFileName = "999-AstroModIntegrator_P.pak";
+
         static IntegratorUtils()
         {
             CurrentVersion = typeof(IntegratorUtils).Assembly.GetName().Version;

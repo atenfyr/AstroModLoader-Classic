@@ -1241,7 +1241,7 @@ namespace AstroModIntegrator
             }
             else
             {
-                using (FileStream f = new FileStream(Path.Combine(outputFolder, @"999-AstroModIntegrator_P.pak"), FileMode.Create, FileAccess.Write))
+                using (FileStream f = new FileStream(Path.Combine(outputFolder, IntegratorUtils.OutputFileName), FileMode.Create, FileAccess.Write))
                 {
                     f.Write(pakData, 0, pakData.Length);
                 }
