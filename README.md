@@ -60,7 +60,7 @@ To completely reset your installation of AstroModLoader Classic and remove all m
 
 1. If necessary, open AstroModLoader Classic and click "Uninstall UE4SS..." under the "Settings" page. If the button instead says "Install UE4SS...", you can move on to the next step. Make sure that AstroModLoader Classic is fully closed before continuing.
 2. Delete the folders `%localappdata%\Astro\Saved\Paks`, `%localappdata%\Astro\Saved\Mods`, and `%localappdata%\AstroModLoader`.
-    * If using Proton on Linux, you can do this by opening a terminal window and executing `protontricks --no-bwrap 361420 shell` followed by `cd users/steamuser/AppData/Local && rm -r Astro/Saved/Paks Astro/Saved/Mods AstroModLoader && exit`.
+    * If using Proton on Linux, you can do this by opening a terminal window and executing `protontricks --no-bwrap 361420 shell` followed by `cd users/steamuser/AppData/Local && rm -r Astro/Saved/Paks Astro/Saved/Mods AstroModLoader; exit`.
 3. You're done!
 
 ## Linux Setup
