@@ -536,9 +536,21 @@ namespace AstroModLoader
             return outputs;
         }
 
-        private async void Form1_DragDrop(object sender, DragEventArgs e)
+        private Task UserInstallMods(string installingModsPath)
         {
-            string[] installingModPaths = (string[])e.Data.GetData(DataFormats.FileDrop);
+            return UserInstallMods([installingModsPath]);
+        }
+
+        private Task UserInstallMods(string[] installingModsPaths)
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                UserInstallModsSynchronously(installingModsPaths);
+            });
+        }
+
+        private void UserInstallModsSynchronously(string[] installingModPaths)
+        {
             if (installingModPaths.Length > 0)
             {
                 Dictionary<string, List<Version>> newMods = new Dictionary<string, List<Version>>();
@@ -598,7 +610,7 @@ namespace AstroModLoader
                     }
                 }
 
-                await ModManager.FullUpdate();
+                ModManager.FullUpdate().Wait();
 
                 AMLUtils.InvokeUI(() =>
                 {
@@ -634,6 +646,12 @@ namespace AstroModLoader
                     }
                 });
             }
+        }
+
+        private void Form1_DragDrop(object sender, DragEventArgs e)
+        {
+            string[] installingModPaths = (string[])e.Data.GetData(DataFormats.FileDrop);
+            UserInstallMods(installingModPaths);
         }
 
         private void DataGridView1_CellEndEdit(object sender, DataGridViewCellEventArgs e)
@@ -864,6 +882,7 @@ namespace AstroModLoader
 
             refresh.Location = new Point(dataGridView1.Location.X, dataGridView1.Location.Y + dataGridView1.Height + 10);
             loadButton.Location = new Point(refresh.Location.X + refresh.Width + 5, dataGridView1.Location.Y + dataGridView1.Height + 10);
+            addModButton.Location = new Point(loadButton.Location.X + loadButton.Width + 5, dataGridView1.Location.Y + dataGridView1.Height + 10);
             syncButton.Location = new Point(modPanel.Width - syncButton.Width, dataGridView1.Location.Y + dataGridView1.Height + 10);
             exitButton.Location = new Point(syncButton.Location.X + syncButton.Width - exitButton.Width, (footerPanel.Height - exitButton.Height) / 2);
 
@@ -1359,6 +1378,21 @@ namespace AstroModLoader
             catch
             {
 
+            }
+        }
+
+        private void addModButton_Click(object sender, EventArgs e)
+        {
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                openFileDialog.Filter = "Mod archive (*.pak, *.zip)|*.pak;*.zip|All files (*.*)|*.*";
+                openFileDialog.FilterIndex = 1;
+                openFileDialog.RestoreDirectory = true;
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    UserInstallMods(openFileDialog.FileName);
+                }
             }
         }
     }

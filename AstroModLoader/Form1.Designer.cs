@@ -46,9 +46,9 @@
             CheckAllDirty = new System.Windows.Forms.Timer(components);
             ForceAutoUpdateRefresh = new System.Windows.Forms.Timer(components);
             contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(components);
+            addModButton = new CoolButton();
             footerPanel.SuspendLayout();
             modPanel.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
             SuspendLayout();
             // 
             // headerLabel
@@ -158,6 +158,7 @@
             modPanel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             modPanel.BackColor = System.Drawing.Color.Transparent;
             modPanel.Controls.Add(dataGridView1);
+            modPanel.Controls.Add(addModButton);
             modPanel.Controls.Add(refresh);
             modPanel.Controls.Add(loadButton);
             modPanel.Controls.Add(syncButton);
@@ -212,7 +213,7 @@
             refresh.Location = new System.Drawing.Point(12, 236);
             refresh.MinimumSize = new System.Drawing.Size(0, 26);
             refresh.Name = "refresh";
-            refresh.Size = new System.Drawing.Size(75, 26);
+            refresh.Size = new System.Drawing.Size(80, 26);
             refresh.TabIndex = 1;
             refresh.Text = "Refresh";
             refresh.UseVisualStyleBackColor = false;
@@ -271,6 +272,22 @@
             contextMenuStrip1.Name = "contextMenuStrip1";
             contextMenuStrip1.Size = new System.Drawing.Size(61, 4);
             // 
+            // addModButton
+            // 
+            addModButton.Anchor = System.Windows.Forms.AnchorStyles.None;
+            addModButton.BackColor = System.Drawing.Color.FromArgb(51, 51, 51);
+            addModButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            addModButton.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+            addModButton.ForeColor = System.Drawing.Color.FromArgb(225, 225, 225);
+            addModButton.Location = new System.Drawing.Point(173, 236);
+            addModButton.MinimumSize = new System.Drawing.Size(0, 26);
+            addModButton.Name = "addModButton";
+            addModButton.Size = new System.Drawing.Size(80, 26);
+            addModButton.TabIndex = 4;
+            addModButton.Text = "Add mod...";
+            addModButton.UseVisualStyleBackColor = false;
+            addModButton.Click += addModButton_Click;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
@@ -291,7 +308,6 @@
             Resize += Form1_SizeChanged;
             footerPanel.ResumeLayout(false);
             modPanel.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -312,5 +328,6 @@
         private System.Windows.Forms.Timer ForceAutoUpdateRefresh;
         public System.Windows.Forms.LinkLabel integratingLabel;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
+        private CoolButton addModButton;
     }
 }
