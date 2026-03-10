@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -308,6 +309,22 @@ namespace AstroModLoader
             }
             catch (IOException) { }
 
+            // add default paths used by proton if available
+            try
+            {
+                string userEnvrVariable = Environment.GetEnvironmentVariable("USER");
+                if (!string.IsNullOrWhiteSpace(userEnvrVariable) && userEnvrVariable != "steamuser")
+                {
+                    potentialInstallDirs.Add(@"Z:\home\" + userEnvrVariable + @"\.local\share\Steam");
+                    potentialInstallDirs.Add(@"Z:\home\" + userEnvrVariable + @"\.steam\steam");
+                }
+            }
+            catch (SecurityException)
+            {
+
+            }
+
+            // filter out invalid paths
             List<string> astroInstallDirs = new List<string>();
             foreach (string installPath in potentialInstallDirs)
             {
