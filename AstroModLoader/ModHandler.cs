@@ -1054,10 +1054,12 @@ namespace AstroModLoader
         private volatile bool currentlyIntegrating = false;
         public void IntegrateMods(bool hasLooped = false)
         {
+            string cwd = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AstroModLoader");
+            Program.Cwd = cwd;
+
 #if DEBUG_CUSTOMROUTINETEST
             // same-process handling makes it easier to debug exceptions in custom routines
             IntegrateModsOld(hasLooped);
-            try { File.Copy("ModIntegrator.log", Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AstroModLoader", "ModIntegrator.log"), true); } catch { }
             return;
 #endif
 
@@ -1150,6 +1152,8 @@ namespace AstroModLoader
 
                 if (TableHandler.ShouldContainOptionalColumn()) OurIntegrator.OptionalModIDs = optionalMods;
                 OurIntegrator.IntegrateMods(InstallPath, Path.Combine(GamePath, "Astro", "Content", "Paks"), null, null, true, !DisableLuaCleanup);
+
+                try { File.Move("ModIntegrator.log", Path.Combine(Program.Cwd, "ModIntegrator.log"), true); } catch { }
 
                 sw.Stop();
                 string tm = sw.Elapsed.TotalMilliseconds.ToString("#.##");
@@ -1261,18 +1265,16 @@ namespace AstroModLoader
                     catch { }
                 }
 
-                string cwd = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AstroModLoader");
-                Program.Cwd = cwd;
-                File.WriteAllText(Path.Combine(cwd, "ModIntegrator.log"), "");
+                File.WriteAllText(Path.Combine(Program.Cwd, "ModIntegrator.log"), "");
 
                 bool useEmbedded = true;
                 try
                 {
-                    if (File.Exists(Path.Combine(cwd, "ModIntegratorOverride.exe"))) useEmbedded = false;
+                    if (File.Exists(Path.Combine(Program.Cwd, "ModIntegratorOverride.exe"))) useEmbedded = false;
                 }
                 catch { }
 
-                string pathToExe = useEmbedded ? Path.Combine(cwd, "ModIntegrator.exe") : Path.Combine(cwd, "ModIntegratorOverride.exe");
+                string pathToExe = useEmbedded ? Path.Combine(Program.Cwd, "ModIntegrator.exe") : Path.Combine(Program.Cwd, "ModIntegratorOverride.exe");
                 string errorTextToAppend = "";
 
                 // try to reduce integrity to low
@@ -1345,7 +1347,7 @@ namespace AstroModLoader
                 process.StartInfo.RedirectStandardError = true;
                 process.StartInfo.UseShellExecute = false;
                 process.StartInfo.CreateNoWindow = true;
-                process.StartInfo.WorkingDirectory = cwd;
+                process.StartInfo.WorkingDirectory = Program.Cwd;
                 process.StartInfo.FileName = pathToExe;
                 process.StartInfo.Arguments = parms;
                 process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
@@ -1353,17 +1355,17 @@ namespace AstroModLoader
 
                 string integratorOut = process.StandardOutput.ReadToEnd().Trim();
                 string integratorError = process.StandardError.ReadToEnd().Trim();
-                File.AppendAllText(Path.Combine(cwd, "ModIntegrator.log"), "\n" + process.StartInfo.Arguments + "\n" + integratorOut + "\n" + integratorError + "\n\n" + errorTextToAppend + "\n");
+                File.AppendAllText(Path.Combine(Program.Cwd, "ModIntegrator.log"), "\n" + process.StartInfo.Arguments + "\n" + integratorOut + "\n" + integratorError + "\n\n" + errorTextToAppend + "\n");
 
                 bool success = process.WaitForExit(15000);
                 if (!success)
                 {
                     process.Kill();
-                    File.AppendAllText(Path.Combine(cwd, "ModIntegrator.log"), "Integrator process timed out");
+                    File.AppendAllText(Path.Combine(Program.Cwd, "ModIntegrator.log"), "Integrator process timed out");
                 }
                 if (success && process.ExitCode != 0)
                 {
-                    File.AppendAllText(Path.Combine(cwd, "ModIntegrator.log"), "Integrator process responded with exit code " + process.ExitCode.ToString());
+                    File.AppendAllText(Path.Combine(Program.Cwd, "ModIntegrator.log"), "Integrator process responded with exit code " + process.ExitCode.ToString());
                     success = false;
                 }
 
