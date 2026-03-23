@@ -381,6 +381,8 @@ namespace AstroModLoader
             });
         }
 
+        internal static string RepakBindPath = null;
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
@@ -422,7 +424,8 @@ namespace AstroModLoader
                                 }
                             }
 
-                            NativeLibrary.Load(Path.Combine(rootFolder, "repak_bind.so"));
+                            RepakBindPath = Path.Combine(rootFolder, "repak_bind.so");
+                            NativeLibrary.Load(RepakBindPath);
                         }
                     }
                 }
@@ -440,7 +443,8 @@ namespace AstroModLoader
                                 }
                             }
 
-                            NativeLibrary.Load(Path.Combine(rootFolder, "repak_bind.dll"));
+                            RepakBindPath = Path.Combine(rootFolder, "repak_bind.dll");
+                            NativeLibrary.Load(RepakBindPath);
                         }
                     }
                 }

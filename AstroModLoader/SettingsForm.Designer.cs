@@ -48,6 +48,7 @@
             ue4ssButton = new CoolButton();
             cleanLuaBox = new System.Windows.Forms.CheckBox();
             customRoutineBox = new System.Windows.Forms.CheckBox();
+            resetButton = new CoolButton();
             SuspendLayout();
             // 
             // label1
@@ -77,7 +78,7 @@
             gamePathBox.Location = new System.Drawing.Point(178, 80);
             gamePathBox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             gamePathBox.Name = "gamePathBox";
-            gamePathBox.Size = new System.Drawing.Size(235, 23);
+            gamePathBox.Size = new System.Drawing.Size(240, 23);
             gamePathBox.TabIndex = 2;
             // 
             // label3
@@ -158,7 +159,7 @@
             exitButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             exitButton.MinimumSize = new System.Drawing.Size(0, 30);
             exitButton.Name = "exitButton";
-            exitButton.Size = new System.Drawing.Size(88, 30);
+            exitButton.Size = new System.Drawing.Size(69, 30);
             exitButton.TabIndex = 9;
             exitButton.Text = "Close";
             exitButton.UseVisualStyleBackColor = false;
@@ -172,7 +173,7 @@
             setPathButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             setPathButton.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
             setPathButton.ForeColor = System.Drawing.Color.FromArgb(225, 225, 225);
-            setPathButton.Location = new System.Drawing.Point(421, 73);
+            setPathButton.Location = new System.Drawing.Point(425, 73);
             setPathButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             setPathButton.MinimumSize = new System.Drawing.Size(0, 30);
             setPathButton.Name = "setPathButton";
@@ -187,7 +188,7 @@
             localPathBox.Location = new System.Drawing.Point(178, 110);
             localPathBox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             localPathBox.Name = "localPathBox";
-            localPathBox.Size = new System.Drawing.Size(235, 23);
+            localPathBox.Size = new System.Drawing.Size(240, 23);
             localPathBox.TabIndex = 4;
             // 
             // label6
@@ -209,7 +210,7 @@
             setPathButton2.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             setPathButton2.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
             setPathButton2.ForeColor = System.Drawing.Color.FromArgb(225, 225, 225);
-            setPathButton2.Location = new System.Drawing.Point(421, 106);
+            setPathButton2.Location = new System.Drawing.Point(425, 106);
             setPathButton2.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             setPathButton2.MinimumSize = new System.Drawing.Size(0, 30);
             setPathButton2.Name = "setPathButton2";
@@ -251,7 +252,7 @@
             aboutButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             aboutButton.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
             aboutButton.ForeColor = System.Drawing.Color.FromArgb(225, 225, 225);
-            aboutButton.Location = new System.Drawing.Point(380, 291);
+            aboutButton.Location = new System.Drawing.Point(384, 291);
             aboutButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             aboutButton.MinimumSize = new System.Drawing.Size(0, 30);
             aboutButton.Name = "aboutButton";
@@ -269,7 +270,7 @@
             ue4ssButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             ue4ssButton.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
             ue4ssButton.ForeColor = System.Drawing.Color.FromArgb(225, 225, 225);
-            ue4ssButton.Location = new System.Drawing.Point(244, 291);
+            ue4ssButton.Location = new System.Drawing.Point(248, 291);
             ue4ssButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             ue4ssButton.MinimumSize = new System.Drawing.Size(0, 30);
             ue4ssButton.Name = "ue4ssButton";
@@ -305,12 +306,31 @@
             customRoutineBox.UseVisualStyleBackColor = true;
             customRoutineBox.CheckedChanged += customRoutineBox_CheckedChanged;
             // 
+            // resetButton
+            // 
+            resetButton.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
+            resetButton.BackColor = System.Drawing.Color.FromArgb(51, 51, 51);
+            resetButton.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(255, 231, 149);
+            resetButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            resetButton.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+            resetButton.ForeColor = System.Drawing.Color.FromArgb(225, 225, 225);
+            resetButton.Location = new System.Drawing.Point(168, 291);
+            resetButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            resetButton.MinimumSize = new System.Drawing.Size(0, 30);
+            resetButton.Name = "resetButton";
+            resetButton.Size = new System.Drawing.Size(72, 30);
+            resetButton.TabIndex = 18;
+            resetButton.Text = "Reset...";
+            resetButton.UseVisualStyleBackColor = false;
+            resetButton.Click += resetButton_Click;
+            // 
             // SettingsForm
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             BackColor = System.Drawing.Color.FromArgb(40, 42, 45);
-            ClientSize = new System.Drawing.Size(482, 335);
+            ClientSize = new System.Drawing.Size(486, 335);
+            Controls.Add(resetButton);
             Controls.Add(customRoutineBox);
             Controls.Add(cleanLuaBox);
             Controls.Add(ue4ssButton);
@@ -364,5 +384,6 @@
         private CoolButton ue4ssButton;
         private System.Windows.Forms.CheckBox cleanLuaBox;
         private System.Windows.Forms.CheckBox customRoutineBox;
+        private CoolButton resetButton;
     }
 }

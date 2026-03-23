@@ -322,10 +322,10 @@
         private CoolButton settingsButton;
         private CoolButton exitButton;
         private System.Windows.Forms.Panel modPanel;
-        private System.Windows.Forms.Timer PeriodicCheckTimer;
-        private System.Windows.Forms.Timer CheckAllDirty;
+        internal System.Windows.Forms.Timer PeriodicCheckTimer;
+        internal System.Windows.Forms.Timer CheckAllDirty;
         public System.Windows.Forms.LinkLabel modInfo;
-        private System.Windows.Forms.Timer ForceAutoUpdateRefresh;
+        internal System.Windows.Forms.Timer ForceAutoUpdateRefresh;
         public System.Windows.Forms.LinkLabel integratingLabel;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private CoolButton addModButton;

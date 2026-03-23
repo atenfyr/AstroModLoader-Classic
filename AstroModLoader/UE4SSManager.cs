@@ -70,7 +70,7 @@ namespace AstroModLoader
             return true;
         }
 
-        public static bool Uninstall(string binaryDir, Form displayForm = null)
+        public static bool Uninstall(string binaryDir, Form displayForm = null, bool showDialogs = true)
         {
             try
             {
@@ -100,13 +100,13 @@ namespace AstroModLoader
             }
             catch
             {
-                if (displayForm != null) AMLUtils.InvokeUI(() => displayForm.ShowBasicButton("Failed to uninstall UE4SS!", "OK", null, null));
+                if (displayForm != null && showDialogs) AMLUtils.InvokeUI(() => displayForm.ShowBasicButton("Failed to uninstall UE4SS!", "OK", null, null));
                 return false;
             }
 
             if (Directory.Exists(Path.Combine(binaryDir, "ue4ss")))
             {
-                if (displayForm != null) AMLUtils.InvokeUI(() => displayForm.ShowBasicButton("Failed to uninstall UE4SS!", "OK", null, null));
+                if (displayForm != null && showDialogs) AMLUtils.InvokeUI(() => displayForm.ShowBasicButton("Failed to uninstall UE4SS!", "OK", null, null));
                 return false;
             }
 

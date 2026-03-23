@@ -2,8 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using UAssetAPI;
 
 namespace AstroModLoader
 {
@@ -269,6 +272,70 @@ namespace AstroModLoader
             AMLUtils.InvokeUI(BaseForm.TableManager.Refresh);
 
             this.UpdateLabels();
+        }
+
+        private void resetButton_Click(object sender, EventArgs e)
+        {
+            AMLUtils.InvokeUI(() =>
+            {
+                bool actuallyDeleteEverything = false;
+                int dialogRes = this.ShowBasicButton("This action will reset your entire AstroModLoader Classic configuration.\nALL YOUR MODS AND CONFIGURATION FILES WILL BE PERMANENTLY DELETED!\nNo trace will be left of AstroModLoader Classic's presence.\nYour save files will be unaffected.\nWould you like to continue?", "Continue", "Cancel", null);
+                if (dialogRes == 0)
+                {
+                    int dialogRes2 = this.ShowBasicButton("Please confirm one more time that you would actually like to reset everything.\nALL YOUR MODS AND CONFIGURATION FILES WILL BE PERMANENTLY DELETED!\nTHIS IS DESTRUCTIVE AND CANNOT BE UNDONE!\nWould you like to continue?", "Continue", "Cancel", null);
+                    if (dialogRes2 == 0) actuallyDeleteEverything = true;
+                }
+
+                if (actuallyDeleteEverything)
+                {
+                    bool success = UE4SSManager.Uninstall(BaseForm.ModManager.GetBinaryDir(), BaseForm, false);
+                    if (!success)
+                    {
+                        this.ShowBasicButton("Failed to uninstall UE4SS! Aborting.\nPlease follow the Purge Installation guide at https://github.com/atenfyr/AstroModLoader-Classic to manually reset AstroModLoader Classic.", "OK", null, null);
+                        return;
+                    }
+
+                    bool deleteSuccess = true;
+
+                    BaseForm.PeriodicCheckTimer.Enabled = false;
+                    BaseForm.CheckAllDirty.Enabled = false;
+                    BaseForm.ForceAutoUpdateRefresh.Enabled = false;
+
+                    // unload repak_bind
+                    if (Program.RepakBindPath != null)
+                    {
+                        // make sure uassetapi has loaded repak_bind so we always get number of frees correct
+                        PakBuilder dummy = new PakBuilder();
+                        dummy.Dispose();
+
+                        // free repak_bind
+                        nint libHandle = NativeLibrary.Load(Program.RepakBindPath);
+                        NativeLibrary.Free(libHandle); // the load we just did
+                        NativeLibrary.Free(libHandle); // NativeLibrary.Load in Program.cs
+                        NativeLibrary.Free(libHandle); // uassetapi interop load
+                    }
+
+                    try
+                    {
+                        Directory.Delete(BaseForm.ModManager.InstallPath, true);
+                        Directory.Delete(BaseForm.ModManager.DownloadPath, true);
+                        Directory.Delete(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AstroModLoader"), true);
+                    }
+                    catch
+                    {
+                        deleteSuccess = false;
+                    }
+
+                    if (!deleteSuccess)
+                    {
+                        this.ShowBasicButton("An exception occurred while attempting to reset AstroModLoader Classic.\nPlease follow the Purge Installation guide at https://github.com/atenfyr/AstroModLoader-Classic to manually reset AstroModLoader Classic.", "OK", null, null);
+                        Environment.Exit(0);
+                    }
+
+                    this.ShowBasicButton("The operation completed successfully.\nAstroModLoader Classic will now close.", "OK", null, null);
+                    Environment.Exit(0);
+                }
+            });
         }
     }
 }
