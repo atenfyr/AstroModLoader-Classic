@@ -279,10 +279,10 @@ namespace AstroModLoader
             AMLUtils.InvokeUI(() =>
             {
                 bool actuallyDeleteEverything = false;
-                int dialogRes = this.ShowBasicButton("This action will reset your entire AstroModLoader Classic configuration.\nALL YOUR MODS AND CONFIGURATION FILES WILL BE PERMANENTLY DELETED!\nNo trace will be left of AstroModLoader Classic's presence.\nYour save files will be unaffected.\nWould you like to continue?", "Continue", "Cancel", null);
+                int dialogRes = this.ShowBasicButton("This operation will reset your entire AstroModLoader Classic configuration.\nALL YOUR MODS AND MOD LOADER CONFIGURATION FILES WILL BE PERMANENTLY DELETED!\nNo trace will be left of AstroModLoader Classic's presence.\nYour save files will not be affected, but a backup is nonetheless advised.\n\nWould you like to continue?", "Continue", "Cancel", null);
                 if (dialogRes == 0)
                 {
-                    int dialogRes2 = this.ShowBasicButton("Please confirm one more time that you would actually like to reset everything.\nALL YOUR MODS AND CONFIGURATION FILES WILL BE PERMANENTLY DELETED!\nTHIS IS DESTRUCTIVE AND CANNOT BE UNDONE!\nWould you like to continue?", "Continue", "Cancel", null);
+                    int dialogRes2 = this.ShowBasicButton("Please confirm one more time that you would actually like to reset everything.\nALL YOUR MODS AND MOD LOADER CONFIGURATION FILES WILL BE PERMANENTLY DELETED!\nTHIS IS DESTRUCTIVE AND CANNOT BE UNDONE!\n\nWould you like to continue?", "Continue", "Cancel", null);
                     if (dialogRes2 == 0) actuallyDeleteEverything = true;
                 }
 
