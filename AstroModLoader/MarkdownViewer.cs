@@ -1,10 +1,9 @@
-﻿using AstroModLoader;
-using Markdig;
+﻿using Markdig;
 using System;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace UAssetGUI
+namespace AstroModLoader
 {
     public partial class MarkdownViewer : Form
     {

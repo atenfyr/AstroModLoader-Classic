@@ -1,6 +1,4 @@
-﻿using AstroModLoader;
-
-namespace UAssetGUI
+﻿namespace AstroModLoader
 {
     partial class MarkdownViewer
     {
