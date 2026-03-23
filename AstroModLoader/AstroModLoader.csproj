@@ -20,7 +20,9 @@
     <ApplicationIcon>Resources\icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="LICENSE.md" />
     <None Remove="ModIntegrator.exe" />
+    <None Remove="NOTICE.md" />
     <None Remove="UAssetAPI.dll" />
   </ItemGroup>
   <ItemGroup>
@@ -35,18 +37,15 @@
     <Content Include="next_patch_notes.txt" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="LICENSE.md" />
     <EmbeddedResource Include="ModIntegrator.exe" />
+    <EmbeddedResource Include="NOTICE.md" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CommandLineParser">
       <Version>2.9.1</Version>
     </PackageReference>
-    <PackageReference Include="Costura.Fody" Version="5.7.0">
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="Fody" Version="6.5.5">
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
+    <PackageReference Include="Markdig" Version="0.40.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="Ookii.Dialogs.WinForms">
       <Version>4.0.0</Version>
