@@ -52,6 +52,11 @@ namespace AstroModIntegrator
             Integrator.AddFileRaw(outPath, rawData);
             if (Integrator.Verbose) Integrator.LogToDisk("Added file: \"" + outPath + "\"", Integrator.currentMod != null);
         }
+        public IReadOnlyList<string> GetAllPaths()
+        {
+            if (!Enabled) throw new InvalidOperationException("API is disabled because of thread timeout");
+            return Integrator.GetAllPaths();
+        }
         public Metadata GetCurrentMod()
         {
             if (!Enabled) throw new InvalidOperationException("API is disabled because of thread timeout");
@@ -224,6 +229,13 @@ namespace AstroModIntegrator
         public void AddFileRaw(string outPath, byte[] rawData)
         {
             CreatedPakDataTemp[outPath] = rawData;
+        }
+
+        public IReadOnlyList<string> GetAllPaths()
+        {
+            List<string> res = SearchLookup.Keys.ToList();
+            res.AddRange(pakExtractorForCustomRoutines.GetAllPaths());
+            return res.ToList().AsReadOnly();
         }
 
         private string logCache = string.Empty;

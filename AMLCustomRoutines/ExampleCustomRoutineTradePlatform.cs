@@ -15,7 +15,7 @@ namespace AMLCustomRoutines
     public class ExampleCustomRoutineTradePlatform : CustomRoutine
     {
         public override string RoutineID => "ExampleCustomRoutineTradePlatform";
-        public override bool Enabled => true;
+        public override bool Enabled => false;
         public override int APIVersion => 1;
         public override bool RequestNoSandbox => false;
         // "RequestNoSandbox => true" disables the sandbox if and only if AstroModLoader/AstroModIntegrator is in the Debug_CustomRoutineTest configuration

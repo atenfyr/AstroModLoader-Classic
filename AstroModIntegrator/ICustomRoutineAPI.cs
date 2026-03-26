@@ -46,6 +46,12 @@ namespace AstroModIntegrator
         public byte[] FindFileRaw(string target, out EngineVersion engVer);
 
         /// <summary>
+        /// Returns a list of all file paths that can be accessed.
+        /// </summary>
+        /// <returns>A list of all file paths that can be accessed.</returns>
+        public IReadOnlyList<string> GetAllPaths();
+
+        /// <summary>
         /// Add an asset to be deployed in the integrator pak. Overrides any asset at the same path that have already been added to the integrator pak.
         /// <para/>
         /// This method will immediately serialize the asset so that outAsset can be modified after the method is called without changing the file at outPath.
