@@ -224,7 +224,7 @@ namespace AstroModLoader
 
                 if (mod.CurrentModData.GameBuild == null)
                 {
-                    row.Cells[4].Value = mod.CurrentModData.Sync == AstroModIntegrator.SyncMode.None ? "" : "Any";
+                    row.Cells[4].Value = mod.CurrentModData.Sync == AstroModIntegrator.SyncMode.None ? "" : "Unknown";
                 }
                 else
                 {
