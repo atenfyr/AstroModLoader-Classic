@@ -909,6 +909,8 @@ namespace AstroModIntegrator
                     var levelBaker = new LevelBaker(ourExtractor, this);
 
                     // add version to GUI
+                    // now deprecated, replaced by CR_IntegratorTabButton
+                    /*
                     var gmdoBaker = new GameMenuDisplayOptionsBaker(this);
                     string gmdoPath = "Astro/Content/UI/PauseMenu/SubMenus/GameMenuOptionsSubmenu.uasset";
                     byte[] gmdoData1 = FindFile(gmdoPath, ourExtractor, out EngineVersion gmdoEngVer);
@@ -921,7 +923,7 @@ namespace AstroModIntegrator
                     else
                     {
                         LogToDiskVerbose("Failed to bake GameMenuOptionsSubmenu");
-                    }
+                    }*/
 
                     // Patch levels for biome placement modifiers and missions, as well as persistent actors if we can just do that here to avoid reading twice
                     if (biomePlacementModifiers.Count > 0 || newTrailheads.Count > 0)
@@ -1084,14 +1086,24 @@ namespace AstroModIntegrator
                     try
                     {
                         CreatedPakDataTemp = new Dictionary<string, byte[]>();
-                        new CrateOverlayTexturesCustomRoutine().Execute(new CustomRoutineAPIWrapper_V1(this));
+                        new CR_CrateOverlayTextures().Execute(new CustomRoutineAPIWrapper_V1(this));
                         foreach (KeyValuePair<string, byte[]> entry in CreatedPakDataTemp) CreatedPakData[entry.Key] = entry.Value;
                     }
                     catch (Exception ex)
                     {
-                        LogToDisk("CrateOverlayTexturesCustomRoutine threw exception: " + ex.Message + "\n" + ex.StackTrace, false);
+                        LogToDisk("CR_CrateOverlayTextures threw exception: " + ex.Message + "\n" + ex.StackTrace, false);
                     }
-                    // ...
+
+                    try
+                    {
+                        CreatedPakDataTemp = new Dictionary<string, byte[]>();
+                        new CR_IntegratorTabButton().Execute(new CustomRoutineAPIWrapper_V1(this));
+                        foreach (KeyValuePair<string, byte[]> entry in CreatedPakDataTemp) CreatedPakData[entry.Key] = entry.Value;
+                    }
+                    catch (Exception ex)
+                    {
+                        LogToDisk("CR_IntegratorTabButton threw exception: " + ex.Message + "\n" + ex.StackTrace, false);
+                    }
 
                     // custom routines
                     if (EnableCustomRoutines)

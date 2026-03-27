@@ -9,9 +9,9 @@ using UAssetAPI.UnrealTypes;
 
 namespace AstroModIntegrator
 {
-    public class CrateOverlayTexturesCustomRoutine : CustomRoutine
+    public class CR_CrateOverlayTextures : CustomRoutine
     {
-        public override string RoutineID => "CrateOverlayTexturesCustomRoutine";
+        public override string RoutineID => "CR_CrateOverlayTextures";
         public override bool Enabled => true;
         public override int APIVersion => 1;
 
