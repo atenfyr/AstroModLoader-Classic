@@ -243,6 +243,9 @@ namespace AstroModIntegrator
         [JsonProperty("crate_overlay_textures")]
         public List<string> CrateOverlayTextures;
 
+        [JsonProperty("path_to_mod_config")]
+        public string PathToModConfig;
+
         [JsonProperty("path_to_custom_routines_dll")]
         public string PathToCustomRoutineDLL; // default AMLCustomRoutines.dll
 
