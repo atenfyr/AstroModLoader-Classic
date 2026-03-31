@@ -22,57 +22,61 @@ namespace AstroModIntegrator
         {
             api.LogToDisk("Starting built-in routine " + RoutineID, false);
 
-            string targetPath = "/Game/Globals/AstroUIStylingDatabase";
-            UAsset asset = api.FindFile(targetPath);
-            bool success = false;
+            string[] targetPaths = ["/Game/Globals/AstroUIStylingDatabase", "/Game/U32_Expansion/AstroGlitchwalkersUIStylingDatabase"];
 
-            FPackageIndex newImp = null;
-            foreach (Export exp in asset.Exports)
+            foreach (string targetPath in targetPaths)
             {
-                if (exp is NormalExport nexp)
+                UAsset asset = api.FindFile(targetPath);
+                bool success = false;
+
+                FPackageIndex newImp = null;
+                foreach (Export exp in asset.Exports)
                 {
-                    foreach (PropertyData prop in nexp.Data)
+                    if (exp is NormalExport nexp)
                     {
-                        if (prop is StructPropertyData structDat && MenuBarsToAddTo.Contains(prop.Name.ToString()))
+                        foreach (PropertyData prop in nexp.Data)
                         {
-                            StructPropertyData structDat2 = structDat["TabBarAuthoringData"] as StructPropertyData;
-                            if (structDat2 == null) continue;
-
-                            ArrayPropertyData arrDat = structDat2["LeftTabBarGroupButtons"] as ArrayPropertyData;
-                            if (arrDat == null) continue;
-
-                            for (int i = 0; i < arrDat.Value.Length; i++)
+                            if (prop is StructPropertyData structDat && MenuBarsToAddTo.Contains(prop.Name.ToString()))
                             {
-                                if (arrDat.Value[i] is ObjectPropertyData objProp && objProp.Value.IsImport() && objProp.Value.ToImport(asset).ObjectName.ToString() == "GameMenuTabBarButtonOptions_C")
+                                StructPropertyData structDat2 = structDat["TabBarAuthoringData"] as StructPropertyData;
+                                if (structDat2 == null) continue;
+
+                                ArrayPropertyData arrDat = structDat2["LeftTabBarGroupButtons"] as ArrayPropertyData;
+                                if (arrDat == null) continue;
+
+                                for (int i = 0; i < arrDat.Value.Length; i++)
                                 {
-                                    if (newImp == null)
+                                    if (arrDat.Value[i] is ObjectPropertyData objProp && objProp.Value.IsImport() && objProp.Value.ToImport(asset).ObjectName.ToString() == "GameMenuTabBarButtonOptions_C")
                                     {
-                                        string bpClass = Path.GetFileNameWithoutExtension(NewTabBarButtonPath) + "_C";
-                                        FPackageIndex newIdx = asset.AddImport(new Import(FName.FromString(asset, "/Script/CoreUObject"), FName.FromString(asset, "Package"), FPackageIndex.FromRawIndex(0), FName.FromString(asset, NewTabBarButtonPath), false));
-                                        newImp = asset.AddImport(new Import(FName.FromString(asset, "/Script/Engine"), FName.FromString(asset, "WidgetBlueprintGeneratedClass"), newIdx, FName.FromString(asset, bpClass), false));
+                                        if (newImp == null)
+                                        {
+                                            string bpClass = Path.GetFileNameWithoutExtension(NewTabBarButtonPath) + "_C";
+                                            FPackageIndex newIdx = asset.AddImport(new Import(FName.FromString(asset, "/Script/CoreUObject"), FName.FromString(asset, "Package"), FPackageIndex.FromRawIndex(0), FName.FromString(asset, NewTabBarButtonPath), false));
+                                            newImp = asset.AddImport(new Import(FName.FromString(asset, "/Script/Engine"), FName.FromString(asset, "WidgetBlueprintGeneratedClass"), newIdx, FName.FromString(asset, bpClass), false));
+                                        }
+                                        ObjectPropertyData newObjProp = new ObjectPropertyData(FName.DefineDummy(asset, "")) { Value = newImp };
+
+                                        List<PropertyData> newArrDatList = arrDat.Value.ToList();
+                                        newArrDatList.Insert(i + 1, newObjProp);
+                                        arrDat.Value = newArrDatList.ToArray();
+
+                                        success = true;
+                                        break;
                                     }
-                                    ObjectPropertyData newObjProp = new ObjectPropertyData(FName.DefineDummy(asset, "")) { Value = newImp };
-
-                                    List<PropertyData> newArrDatList = arrDat.Value.ToList();
-                                    newArrDatList.Insert(i + 1, newObjProp);
-                                    arrDat.Value = newArrDatList.ToArray();
-
-                                    success = true;
-                                    break;
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            if (success)
-            {
-                api.AddFile(targetPath, asset);
-            }
-            else
-            {
-                api.LogToDisk("Failed to modify " + targetPath, false);
+                if (success)
+                {
+                    api.AddFile(targetPath, asset);
+                }
+                else
+                {
+                    api.LogToDisk("Failed to modify " + targetPath, false);
+                }
             }
 
             // now populate ID_to_ModConfig_Class
