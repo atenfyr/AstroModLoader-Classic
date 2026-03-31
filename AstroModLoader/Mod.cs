@@ -25,6 +25,13 @@ namespace AstroModLoader
             }
             set
             {
+                if (value && (IsBannedURL || IsTooOld))
+                {
+                    // we cannot enable this mod
+                    _enabled = false;
+                    Dirty = true;
+                    return;
+                }
                 _enabled = value;
                 Dirty = true;
             }
@@ -80,6 +87,35 @@ namespace AstroModLoader
         [JsonProperty("custom_routines_approved_by_user")]
         [DefaultValue(false)]
         public bool CustomRoutineApprovedByUser;
+
+        // banned URLs are sites where all mods are outdated, either because they have been abandoned or are read-only archives
+        // sites that distribute malicious software could be added to this list as well in the future, if any exist
+        public static readonly HashSet<string> BannedURLSegments = new HashSet<string>()
+        {
+            "//astromod.space",
+            "//astroneermods.space",
+            "//atenfyr.com/ams-archive",
+        };
+
+        [JsonIgnore]
+        public bool IsBannedURL
+        {
+            get
+            {
+                if (AllModData == null || InstalledVersion == null || !AllModData.TryGetValue(InstalledVersion, out Metadata val) || val.Homepage == null) return false;
+                foreach (string bannedSegment in BannedURLSegments)
+                {
+                    if (val.Homepage.Contains(bannedSegment)) return true;
+                }
+                return false;
+            }
+        }
+
+        [JsonIgnore]
+        public bool IsTooOld
+        {
+            get { return AllModData != null && InstalledVersion != null && AllModData.ContainsKey(InstalledVersion) && AllModData[InstalledVersion].GameBuild != null && AllModData[InstalledVersion].GameBuild.Major == 1 && AllModData[InstalledVersion].GameBuild.Minor < 36; }
+        }
 
         public Mod() { }
 

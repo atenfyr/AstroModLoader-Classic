@@ -851,9 +851,23 @@ namespace AstroModLoader
                 if (!string.IsNullOrEmpty(kosherDescription)) realText += "\nDescription: " + kosherDescription;
                 realText += "\nSync: " + kosherSync;
                 realText += additionalData;
-                realText += hasHomepage ? "\nWebsite: " : "";
 
-                AdjustModInfoText(realText, hasHomepage ? selectedMod.CurrentModData.Homepage : "");
+                if (selectedMod.IsTooOld)
+                {
+                    realText += "\n\nThis mod is outdated and cannot be enabled!";
+                    AdjustModInfoText(realText, string.Empty);
+                }
+                else if (selectedMod.IsBannedURL)
+                {
+                    realText += "\n\nThis mod is from an outdated source and cannot be enabled!";
+                    AdjustModInfoText(realText, string.Empty);
+                }
+                else
+                {
+                    realText += hasHomepage ? "\nWebsite: " : string.Empty;
+                    AdjustModInfoText(realText, hasHomepage ? selectedMod.CurrentModData.Homepage : string.Empty);
+                }
+
             });
         }
 
