@@ -17,7 +17,7 @@ This code allows you to retrieve a list of mods. If the user is using AstroModIn
 
 ## ModConfig
 
-In AMLC v1.8.2.0+, it is possible to create custom configuration menus for users to use when interfacing with your mod. Custom configuration menus should be created as widgets inheriting from UserWidgetBlueprintDesignable in the Unreal Editor. The root element of the custom widget should be a VerticalBox containing Astroneer UI component widgets (GameMenuEntryDoubleText, GameMenuEntrySlider, GameMenuEntryCheckbox, etc.).
+In AMLC v1.8.2.0+, it is possible to create custom configuration menus for users to use when interfacing with your mod. Please note that this is currently an experimental future, and the API for custom configuration menus may change in the future. Custom configuration menus should be created as widgets inheriting from UserWidgetBlueprintDesignable in the Unreal Editor. The root element of the custom widget should be a VerticalBox containing Astroneer UI component widgets (GameMenuEntryDoubleText, GameMenuEntrySlider, GameMenuEntryCheckbox, etc.).
 
 You may use the ModConfigExample widget located at Content/Integrator/ModConfig/ModConfigExample as a reference. This widget contains example implementations for a slider, a checkbox, and a simple option select, along with reference implementations for saving and loading configuration values from disk. In-game, this widget appears as follows:
 
