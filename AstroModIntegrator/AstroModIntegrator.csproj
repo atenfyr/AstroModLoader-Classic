@@ -48,14 +48,9 @@
     <PackageReference Include="DouglasDwyer.CasCore" Version="0.2.1" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="UAssetAPI">
-      <HintPath>UAssetAPI.dll</HintPath>
-    </Reference>
+    <PackageReference Include="UAssetAPI" Version="1.1.0" />
   </ItemGroup>
   <Target Name="AfterBuildMigrated" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
-    <Copy SourceFiles="$(ProjectDir)UAssetAPI.dll" DestinationFolder="CustomRoutineDevKit/" SkipUnchangedFiles="true" />
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="CustomRoutineDevKit/" SkipUnchangedFiles="true" />
   </Target>
 </Project>
