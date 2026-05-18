@@ -56,7 +56,9 @@ AstroModLoader Classic has support for the following command line parameters:
 * An installed copy of Astroneer
 
 ## Purge Installation
-To completely reset your installation of AstroModLoader Classic and remove all mods, perform the following steps:
+To completely reset your installation of AstroModLoader Classic and remove all mods, open AstroModLoader Classic, press "Settings...", and press "Reset...". You should purge your installation of AstroModLoader Classic if you would like to stop using AstroModLoader Classic in favor of a different mod manager. You may also wish to perform this step if you are facing environment-related issues with AstroModLoader Classic.
+
+Alternatively, if this is not possible, you can instead perform the following steps:
 
 1. If necessary, open AstroModLoader Classic and click "Uninstall UE4SS..." under the "Settings" page. If the button instead says "Install UE4SS...", you can move on to the next step. Make sure that AstroModLoader Classic is fully closed before continuing.
 2. Delete the folders `%localappdata%\Astro\Saved\Paks`, `%localappdata%\Astro\Saved\Mods`, and `%localappdata%\AstroModLoader`.
