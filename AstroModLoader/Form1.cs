@@ -342,7 +342,7 @@ namespace AstroModLoader
 
             string desiredName = testMod.ConstructName(0);
             string realName = "000-" + normalFilePath.Substring(4);
-            return desiredName.Equals(realName);
+            return desiredName != null && desiredName.Equals(realName);
         }
 
         private string AddModFromPakPath(string newInstallingMod, out bool wasMalformatted)
