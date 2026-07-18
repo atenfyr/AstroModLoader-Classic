@@ -1292,43 +1292,51 @@ namespace AstroModIntegrator
 
                 foreach (string file in files)
                 {
-                    using (FileStream f = new FileStream(file, FileMode.Open, FileAccess.Read))
+                    try
                     {
-                        PakExtractor us = null;
-                        try
+                        using (FileStream f = new FileStream(file, FileMode.Open, FileAccess.Read))
                         {
-                            us = new PakExtractor(f);
-                        }
-                        catch
-                        {
-                            continue;
-                        }
-
-                        Metadata mtd = us.ReadMetadata();
-                        if (mtd == null || IntegratorUtils.IgnoredModIDs.Contains(mtd.ModID) || !mtd.EnableUE4SS) continue;
-
-                        // extract any files that exists in a root folder called UE4SS into the Lua\ModID folder
-                        foreach (string subPath in us.GetAllPaths())
-                        {
-                            if (subPath.StartsWith("UE4SS/"))
+                            PakExtractor us = null;
+                            try
                             {
-                                if (usePipe)
+                                us = new PakExtractor(f);
+                            }
+                            catch
+                            {
+                                continue;
+                            }
+
+                            Metadata mtd = us?.ReadMetadata();
+                            if (mtd == null || IntegratorUtils.IgnoredModIDs.Contains(mtd.ModID) || !mtd.EnableUE4SS) continue;
+
+                            // extract any files that exists in a root folder called UE4SS into the Lua\ModID folder
+                            foreach (string subPath in us.GetAllPaths())
+                            {
+                                if (subPath.StartsWith("UE4SS/"))
                                 {
-                                    byte[] rawData = us.ReadRaw(subPath);
-                                    client.WriteLine("!!!File");
-                                    client.WriteLine(mtd.ModID);
-                                    client.WriteLine(subPath.Substring(6));
-                                    client.WriteLine(rawData.Length.ToString());
-                                    client.Write(rawData, 0, rawData.Length);
-                                }
-                                else
-                                {
-                                    string newPath = Path.Combine(outputFolder, "UE4SS", mtd.ModID, subPath.Substring(6));
-                                    Directory.CreateDirectory(Path.GetDirectoryName(newPath));
-                                    File.WriteAllBytes(newPath, us.ReadRaw(subPath));
+                                    if (usePipe)
+                                    {
+                                        byte[] rawData = us.ReadRaw(subPath);
+                                        client.WriteLine("!!!File");
+                                        client.WriteLine(mtd.ModID);
+                                        client.WriteLine(subPath.Substring(6));
+                                        client.WriteLine(rawData.Length.ToString());
+                                        client.Write(rawData, 0, rawData.Length);
+                                    }
+                                    else
+                                    {
+                                        string newPath = Path.Combine(outputFolder, "UE4SS", mtd.ModID, subPath.Substring(6));
+                                        Directory.CreateDirectory(Path.GetDirectoryName(newPath));
+                                        File.WriteAllBytes(newPath, us.ReadRaw(subPath));
+                                    }
                                 }
                             }
                         }
+                    }
+                    catch (Exception ex)
+                    {
+                        LogToDiskVerbose("Failed to extract " + file + ": " + ex.Message + "\n" + ex.StackTrace);
+                        continue;
                     }
                 }
 
