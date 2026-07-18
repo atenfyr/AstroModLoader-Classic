@@ -1272,6 +1272,7 @@ namespace AstroModIntegrator
                 LogToDiskVerbose("Wrote to disk");
             }
 
+            List<string> logsCache = new List<string>();
             if (extractLua)
             {
                 LogToDiskVerbose("Extracting UE4SS mods");
@@ -1335,7 +1336,7 @@ namespace AstroModIntegrator
                     }
                     catch (Exception ex)
                     {
-                        LogToDiskVerbose("Failed to extract " + file + ": " + ex.Message + "\n" + ex.StackTrace);
+                        logsCache.Add("Failed to extract " + file + ": " + ex.Message + "\n" + ex.StackTrace);
                         continue;
                     }
                 }
@@ -1392,6 +1393,11 @@ namespace AstroModIntegrator
                     client.WriteLine("0"); // UEHelpers.lua
                     client.WriteLine("0"); // AstroHelpers.lua
                 }
+            }
+
+            foreach (string extraLog in logsCache)
+            {
+                LogToDiskVerbose(extraLog);
             }
 
             LogToDiskVerbose("All done");
