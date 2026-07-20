@@ -43,7 +43,7 @@ namespace AstroModLoader
                     //Directory.CreateDirectory(Path.Combine(binaryDir, "UE4SS_Signatures"));
                     //File.WriteAllText(Path.Combine(binaryDir, "UE4SS_Signatures", "GUObjectArray.lua"), "function Register()\n    return \"8B 05 ?? ?? ?? ?? 3B 05 ?? ?? ?? ?? 75 ?? 48 8D 15 ?? ?? ?? ?? 48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 8D 05\"\nend\n\nfunction OnMatchFound(MatchAddress)\n    local JmpInstr = MatchAddress + 24\n    return JmpInstr + DerefToInt32(JmpInstr) + 4\nend");
 
-                    // custom FText signature IS necessary; bundled with .zip now on atenfyr/RE-UE4SS repository
+                    // custom FText signature is also no longer necessary with newer versions of UE4SS
 
                     string modifiedText = File.ReadAllText(Path.Combine(binaryDir, "ue4ss", "UE4SS-settings.ini")).Replace("[General]", "; AMLC\n+ModsFolderPaths = " + InstallPathLua + "\n\n[General]");
                     modifiedText = Regex.Replace(modifiedText, "MajorVersion =.+\n", "MajorVersion = 4\n");

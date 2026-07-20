@@ -4,8 +4,26 @@ local UEHelpers = require("UEHelpers")
 
 local AstroHelpers = {}
 
+---@param ObjectFullName string
+---@param VariableName string
+---@param ForceInvalidateCache boolean?
+---@return UObject
+local function CacheDefaultObject(ObjectFullName, VariableName, ForceInvalidateCache)
+    local DefaultObject = CreateInvalidObject()
+
+    if not ForceInvalidateCache then
+        DefaultObject = ModRef:GetSharedVariable(VariableName)
+        if DefaultObject and DefaultObject:IsValid() then return DefaultObject end
+    end
+
+    DefaultObject = StaticFindObject(ObjectFullName)
+    ModRef:SetSharedVariable(VariableName, DefaultObject)
+
+    return DefaultObject
+end
+
 function AstroHelpers.GetIntegratorAPI(ForceInvalidateCache)
-    return UEHelpers.CacheDefaultObject("/Game/Integrator/IntegratorAPI.Default__IntegratorAPI_C", "AstroHelpers_IntegratorAPI", ForceInvalidateCache)
+    return CacheDefaultObject("/Game/Integrator/IntegratorAPI.Default__IntegratorAPI_C", "AstroHelpers_IntegratorAPI", ForceInvalidateCache)
 end
 
 local statics_cache = nil
@@ -25,7 +43,7 @@ function AstroHelpers.GetIntegratorVersion()
 end
 
 function AstroHelpers.GetGameVersion(ForceInvalidateCache)
-    return UEHelpers.CacheDefaultObject("/Script/EngineSettings.Default__GeneralProjectSettings", "AstroHelpers_GeneralProjectSettings", ForceInvalidateCache)["ProjectVersion"]:ToString()
+    return CacheDefaultObject("/Script/EngineSettings.Default__GeneralProjectSettings", "AstroHelpers_GeneralProjectSettings", ForceInvalidateCache)["ProjectVersion"]:ToString()
 end
 
 function AstroHelpers.Sleep(n)

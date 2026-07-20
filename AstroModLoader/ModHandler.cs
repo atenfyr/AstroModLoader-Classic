@@ -1210,50 +1210,53 @@ namespace AstroModLoader
                 });
 
                 // seek approval for unapproved custom routines
-                HashSet<string> modsWithCustomRoutines = (ModIntegrator.GetAllModsWithCustomRoutines([BaseForm.ModManager.InstallPath]) ?? new List<Metadata>()).Where(x => x?.ModID != null).Select(x => x.ModID).ToHashSet();
-                AMLUtils.InvokeUI(() =>
+                if (EnableCustomRoutines)
                 {
-                    List<Mod> modsNeedingApproval = new List<Mod>();
-                    foreach (Mod mod in BaseForm.ModManager.Mods)
+                    HashSet<string> modsWithCustomRoutines = (ModIntegrator.GetAllModsWithCustomRoutines([BaseForm.ModManager.InstallPath]) ?? new List<Metadata>()).Where(x => x?.ModID != null).Select(x => x.ModID).ToHashSet();
+                    AMLUtils.InvokeUI(() =>
                     {
-                        if (modsWithCustomRoutines.Contains(mod.CurrentModData.ModID) && !mod.CustomRoutineApprovedByUser)
+                        List<Mod> modsNeedingApproval = new List<Mod>();
+                        foreach (Mod mod in BaseForm.ModManager.Mods)
                         {
-                            // this mod has a custom routine and has not yet been approved
-                            modsNeedingApproval.Add(mod);
+                            if (modsWithCustomRoutines.Contains(mod.CurrentModData.ModID) && !mod.CustomRoutineApprovedByUser)
+                            {
+                                // this mod has a custom routine and has not yet been approved
+                                modsNeedingApproval.Add(mod);
+                            }
                         }
-                    }
 
-                    if (modsNeedingApproval.Count > 0)
-                    {
-                        int dialogRes = -1;
-                        AMLUtils.InvokeUI(() => dialogRes = BaseForm.ShowBasicButton("The following mods use custom routines:\n\n" + string.Join(", ", modsNeedingApproval.Where(x => x?.CurrentModData?.ModID != null).Select(x => x.CurrentModData.ModID)) + "\n\nAstroModLoader Classic is requesting your approval\nto integrate these mods. Custom routines are isolated\nand sandboxed for your protection, but some mods might\nstill try to execute malicious code on your computer.\n\nMake sure you fully trust these mods.\nWould you like to continue?", "Continue", "No, disable mods", null));
-                        switch (dialogRes)
+                        if (modsNeedingApproval.Count > 0)
                         {
-                            case 0:
-                                // all good (mark mods as approved)
-                                foreach (Mod mod in modsNeedingApproval)
-                                {
-                                    mod.CustomRoutineApprovedByUser = true;
-                                }
-                                SyncConfigToDisk();
-                                break;
-                            case -1:
-                            case 1:
-                            case 2:
-                                // cancel (disable those mods and finish integration)
-                                foreach (Mod mod in modsNeedingApproval)
-                                {
-                                    if (mod == null) continue;
-                                    mod.CustomRoutineApprovedByUser = false;
-                                    mod.Enabled = false;
-                                }
-                                SyncConfigToDisk();
-                                SyncModsToDisk();
-                                BaseForm.TableManager.Refresh();
-                                break;
+                            int dialogRes = -1;
+                            AMLUtils.InvokeUI(() => dialogRes = BaseForm.ShowBasicButton("The following mods use custom routines:\n\n" + string.Join(", ", modsNeedingApproval.Where(x => x?.CurrentModData?.ModID != null).Select(x => x.CurrentModData.ModID)) + "\n\nAstroModLoader Classic is requesting your approval\nto integrate these mods. Custom routines are isolated\nand sandboxed for your protection, but some mods might\nstill try to execute malicious code on your computer.\n\nMake sure you fully trust these mods.\nWould you like to continue?", "Continue", "No, disable mods", null));
+                            switch (dialogRes)
+                            {
+                                case 0:
+                                    // all good (mark mods as approved)
+                                    foreach (Mod mod in modsNeedingApproval)
+                                    {
+                                        mod.CustomRoutineApprovedByUser = true;
+                                    }
+                                    SyncConfigToDisk();
+                                    break;
+                                case -1:
+                                case 1:
+                                case 2:
+                                    // cancel (disable those mods and finish integration)
+                                    foreach (Mod mod in modsNeedingApproval)
+                                    {
+                                        if (mod == null) continue;
+                                        mod.CustomRoutineApprovedByUser = false;
+                                        mod.Enabled = false;
+                                    }
+                                    SyncConfigToDisk();
+                                    SyncModsToDisk();
+                                    BaseForm.TableManager.Refresh();
+                                    break;
+                            }
                         }
-                    }
-                });
+                    });
+                }
 
                 // manually clean up lua if requested
                 if (!DisableLuaCleanup)

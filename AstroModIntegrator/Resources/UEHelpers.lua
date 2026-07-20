@@ -23,7 +23,6 @@
 -- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 -- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 -- SOFTWARE.
-
 local UEHelpers = {}
 -- Uncomment the below require to use the Lua VM profiler on these functions
 -- local jsb = require("jsbProfiler.jsbProfi")
@@ -37,7 +36,7 @@ local Version = 3
 ---@param VariableName string
 ---@param ForceInvalidateCache boolean?
 ---@return UObject
-function UEHelpers.CacheDefaultObject(ObjectFullName, VariableName, ForceInvalidateCache)
+local function CacheDefaultObject(ObjectFullName, VariableName, ForceInvalidateCache)
     local DefaultObject = CreateInvalidObject()
 
     if not ForceInvalidateCache then
@@ -47,7 +46,6 @@ function UEHelpers.CacheDefaultObject(ObjectFullName, VariableName, ForceInvalid
 
     DefaultObject = StaticFindObject(ObjectFullName)
     ModRef:SetSharedVariable(VariableName, DefaultObject)
-    if not DefaultObject:IsValid() then error(string.format("%s not found", ObjectFullName)) end
 
     return DefaultObject
 end
@@ -89,27 +87,23 @@ function UEHelpers.GetGameViewportClient()
     return CreateInvalidObject() ---@type UGameViewportClient
 end
 
-local PlayerControllerCache = CreateInvalidObject() ---@cast PlayerControllerCache APlayerController
 ---Returns first player controller.<br>
 ---In most games, a valid player controller is available from the start.<br>
 ---There are no player controllers on the server until a player joins the server.
 ---@return APlayerController
 function UEHelpers.GetPlayerController()
-    if PlayerControllerCache:IsValid() then return PlayerControllerCache end
-
     -- local Controllers = jsb.simpleBench("FindAllOf: PlayerController", FindAllOf, "PlayerController")
     -- Controllers = jsb.simpleBench("FindAllOf: Controller", FindAllOf, "Controller")
     local Controllers = FindAllOf("PlayerController") or FindAllOf("Controller") ---@type AController[]?
     if Controllers then
         for _, Controller in ipairs(Controllers) do
             if Controller:IsValid() and (Controller.IsPlayerController and Controller:IsPlayerController() or Controller:IsLocalPlayerController()) then
-                PlayerControllerCache = Controller
-                break
+                return Controller
             end
         end
     end
 
-    return PlayerControllerCache
+    return CreateInvalidObject() ---@type APlayerController
 end
 
 ---Returns local player pawn
@@ -122,22 +116,19 @@ function UEHelpers.GetPlayer()
     return CreateInvalidObject() ---@type APawn
 end
 
-local WorldCache = CreateInvalidObject() ---@cast WorldCache UWorld
 ---Returns the main UWorld
 ---@return UWorld
 function UEHelpers.GetWorld()
-    if WorldCache:IsValid() then return WorldCache end
-
     local PlayerController = UEHelpers.GetPlayerController()
     if PlayerController:IsValid() then
-        WorldCache = PlayerController:GetWorld()
+        return PlayerController:GetWorld()
     else
         local GameInstance = UEHelpers.GetGameInstance()
         if GameInstance:IsValid() then
-            WorldCache = GameInstance:GetWorld()
+            return GameInstance:GetWorld()
         end
     end
-    return WorldCache
+    return CreateInvalidObject() ---@type UWorld
 end
 
 ---Returns UWorld->PersistentLevel
@@ -221,12 +212,12 @@ function UEHelpers.GetAllPlayers()
 end
 
 ---Returns hit actor from FHitResult.<br>
----The function handles the struct differance between UE4 and UE5
+---The function handles the struct difference between different UE versions
 ---@param HitResult FHitResult
 ---@return AActor|UObject
 function UEHelpers.GetActorFromHitResult(HitResult)
-    if not HitResult or not HitResult:IsValid() then
-        return CreateInvalidObject() ---@type AActor
+    if not HitResult then
+        return CreateInvalidObject()
     end
 
     if UnrealVersion:IsBelow(5, 0) then
@@ -241,42 +232,42 @@ end
 ---@return UGameplayStatics
 function UEHelpers.GetGameplayStatics(ForceInvalidateCache)
     ---@type UGameplayStatics
-    return UEHelpers.CacheDefaultObject("/Script/Engine.Default__GameplayStatics", "UEHelpers_GameplayStatics", ForceInvalidateCache)
+    return CacheDefaultObject("/Script/Engine.Default__GameplayStatics", "UEHelpers_GameplayStatics", ForceInvalidateCache)
 end
 
 ---@param ForceInvalidateCache boolean? # Force update the cache
 ---@return UKismetSystemLibrary
 function UEHelpers.GetKismetSystemLibrary(ForceInvalidateCache)
     ---@type UKismetSystemLibrary
-    return UEHelpers.CacheDefaultObject("/Script/Engine.Default__KismetSystemLibrary", "UEHelpers_KismetSystemLibrary", ForceInvalidateCache)
+    return CacheDefaultObject("/Script/Engine.Default__KismetSystemLibrary", "UEHelpers_KismetSystemLibrary", ForceInvalidateCache)
 end
 
 ---@param ForceInvalidateCache boolean? # Force update the cache
 ---@return UKismetMathLibrary
 function UEHelpers.GetKismetMathLibrary(ForceInvalidateCache)
     ---@type UKismetMathLibrary
-    return UEHelpers.CacheDefaultObject("/Script/Engine.Default__KismetMathLibrary", "UEHelpers_KismetMathLibrary", ForceInvalidateCache)
+    return CacheDefaultObject("/Script/Engine.Default__KismetMathLibrary", "UEHelpers_KismetMathLibrary", ForceInvalidateCache)
 end
 
 ---@param ForceInvalidateCache boolean? # Force update the cache
 ---@return UKismetStringLibrary
 function UEHelpers.GetKismetStringLibrary(ForceInvalidateCache)
     ---@type UKismetStringLibrary
-    return UEHelpers.CacheDefaultObject("/Script/Engine.Default__KismetStringLibrary", "UEHelpers_KismetStringLibrary", ForceInvalidateCache)
+    return CacheDefaultObject("/Script/Engine.Default__KismetStringLibrary", "UEHelpers_KismetStringLibrary", ForceInvalidateCache)
 end
 
 ---@param ForceInvalidateCache boolean? # Force update the cache
 ---@return UKismetTextLibrary
 function UEHelpers.GetKismetTextLibrary(ForceInvalidateCache)
     ---@type UKismetTextLibrary
-    return UEHelpers.CacheDefaultObject("/Script/Engine.Default__KismetTextLibrary", "UEHelpers_KismetTextLibrary", ForceInvalidateCache)
+    return CacheDefaultObject("/Script/Engine.Default__KismetTextLibrary", "UEHelpers_KismetTextLibrary", ForceInvalidateCache)
 end
 
 ---@param ForceInvalidateCache boolean? # Force update the cache
 ---@return UGameMapsSettings
 function UEHelpers.GetGameMapsSettings(ForceInvalidateCache)
     ---@type UGameMapsSettings
-    return UEHelpers.CacheDefaultObject("/Script/EngineSettings.Default__GameMapsSettings", "UEHelpers_GameMapsSettings", ForceInvalidateCache)
+    return CacheDefaultObject("/Script/EngineSettings.Default__GameMapsSettings", "UEHelpers_GameMapsSettings", ForceInvalidateCache)
 end
 
 ---Returns found FName or "None" FName if the operation faled
