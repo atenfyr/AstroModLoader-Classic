@@ -1385,6 +1385,24 @@ namespace AstroModIntegrator
                         Directory.CreateDirectory(Path.Combine(luaDir, "shared", "AstroHelpers"));
                         File.WriteAllBytes(Path.Combine(luaDir, "shared", "UEHelpers", "UEHelpers.lua"), Properties.Resources.UEHelpers);
                         File.WriteAllBytes(Path.Combine(luaDir, "shared", "AstroHelpers", "AstroHelpers.lua"), Properties.Resources.AstroHelpers);
+
+                        // if exists, also write these to binaryDir\ue4ss\Mods
+                        string binaryDir1 = Path.Combine(installPath, "..", "..", "Binaries");
+                        if (Directory.Exists(binaryDir1))
+                        {
+                            string[] binaryDir1_subDirs = Directory.GetDirectories(binaryDir1);
+                            if (binaryDir1_subDirs.Length > 0)
+                            {
+                                string binaryDir2 = Path.Combine(binaryDir1_subDirs[0], "ue4ss", "Mods");
+                                if (Directory.Exists(binaryDir2))
+                                {
+                                    Directory.CreateDirectory(Path.Combine(binaryDir2, "shared", "UEHelpers"));
+                                    Directory.CreateDirectory(Path.Combine(binaryDir2, "shared", "AstroHelpers"));
+                                    File.WriteAllBytes(Path.Combine(binaryDir2, "shared", "UEHelpers", "UEHelpers.lua"), Properties.Resources.UEHelpers);
+                                    File.WriteAllBytes(Path.Combine(binaryDir2, "shared", "AstroHelpers", "AstroHelpers.lua"), Properties.Resources.AstroHelpers);
+                                }
+                            }
+                        }
                     }
                 }
                 else if (usePipe)

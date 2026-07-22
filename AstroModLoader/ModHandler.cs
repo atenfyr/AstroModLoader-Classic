@@ -1481,12 +1481,26 @@ namespace AstroModLoader
 
         public string GetBinaryDir()
         {
-            return Directory.GetDirectories(Path.Combine(GamePath, "Astro", "Binaries"))[0];
+            try
+            {
+                return Directory.GetDirectories(Path.Combine(GamePath, "Astro", "Binaries"))[0];
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         public void CheckUE4SSInstalled()
         {
-            UE4SSInstalled = File.Exists(Path.Combine(GetBinaryDir(), "dwmapi.dll"));
+            try
+            {
+                UE4SSInstalled = File.Exists(Path.Combine(GetBinaryDir(), "dwmapi.dll"));
+            }
+            catch
+            {
+                UE4SSInstalled = false;
+            }
         }
 
         private Semaphore fullUpdateSemaphore = new Semaphore(1, 1);

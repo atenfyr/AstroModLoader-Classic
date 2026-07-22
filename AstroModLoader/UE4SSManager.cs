@@ -57,9 +57,12 @@ namespace AstroModLoader
                     return false;
                 }
 
+                // we do not delete all of the UE4SS mods because some mods designed for manually-installed UE4SS may rely on these
+                // with our default configuration, ue4ss will load mods both from the Mods directory and from AMLC 
+                // we delete "shared" for good measure since it will be manually filled by integrator
                 try
                 {
-                    Directory.Delete(Path.Combine(binaryDir, "ue4ss", "Mods"), true);
+                    Directory.Delete(Path.Combine(binaryDir, "ue4ss", "Mods", "shared"), true);
                 }
                 catch { }
             }
