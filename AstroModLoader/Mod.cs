@@ -152,7 +152,7 @@ namespace AstroModLoader
             AvailableVersions = new List<Version>();
             if (InstalledVersion != null && !AvailableVersions.Contains(InstalledVersion)) AvailableVersions.Add(InstalledVersion);
 
-            if (AllModData[InstalledVersion].Name.Length > 32) AllModData[InstalledVersion].Name = AllModData[InstalledVersion].Name.Substring(0, 32);
+            if (AllModData[InstalledVersion].Name.Length > 64) AllModData[InstalledVersion].Name = AllModData[InstalledVersion].Name.Substring(0, 64);
         }
 
         // . is allowed in mod IDs these days, to include author name
