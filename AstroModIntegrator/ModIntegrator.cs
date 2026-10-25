@@ -1,13 +1,9 @@
 ﻿using DouglasDwyer.CasCore;
-using System;
-using System.Collections.Generic;
-using System.IO;
+using System.IO.Compression;
 using System.IO.Pipes;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
 using UAssetAPI;
 using UAssetAPI.UnrealTypes;
 
@@ -56,6 +52,11 @@ namespace AstroModIntegrator
         {
             if (!Enabled) throw new InvalidOperationException("API is disabled because of thread timeout");
             return Integrator.GetAllPaths();
+        }
+        public UeSaveGame.SaveGame ReadSave(string target)
+        {
+            if (!Enabled) throw new InvalidOperationException("API is disabled because of thread timeout");
+            return Integrator.ReadSave(target);
         }
         public Metadata GetCurrentMod()
         {
@@ -133,6 +134,7 @@ namespace AstroModIntegrator
         private volatile Dictionary<string, CustomRoutine> customRoutinesMap;
         private volatile Dictionary<string, Metadata> customRoutinesMap2;
         private volatile Dictionary<Guid, Metadata> customRoutineAssemblyToMetadata = null;
+        private volatile string[] allPakPaths;
         private volatile bool isCurrentlyIntegrating = false;
         private volatile bool hasLoggedOnceAlready = false;
 
@@ -180,6 +182,8 @@ namespace AstroModIntegrator
                         .Allow(new TypeBinding(typeof(IntegratorUtils), Accessibility.Public))
                         .Allow(new AssemblyBinding(typeof(UAssetAPI.UAsset).Assembly, Accessibility.Public))
                         .Allow(new AssemblyBinding(typeof(Newtonsoft.Json.Linq.JObject).Assembly, Accessibility.Private))
+                        .Allow(typeof(CustomRoutine).Assembly.GetTypes().Where(t => t.Namespace != null && t.Namespace.StartsWith("UeSaveGame")).SelectMany(x => x.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)))
+                        .Allow(typeof(CustomRoutine).Assembly.GetTypes().Where(t => t.Namespace != null && t.Namespace.StartsWith("UeSaveGame")).SelectMany(x => x.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)))
                         .Deny(typeof(UAsset).GetMethods().Where(p => p.Name == "PathToStream" || p.Name == "Write" || p.Name == "SerializeJson" || p.Name == "SerializeJsonObject" || p.Name == "DeserializeJson" || p.Name == "DeserializeJsonObject" || p.Name == "PullSchemasFromAnotherAsset" || p.Name == "VerifyBinaryEquality"))
                         .Deny(typeof(UAsset).GetConstructors())
                         //.Deny(new TypeBinding(typeof(UAssetAPI.Unversioned.Usmap), Accessibility.Private))
@@ -236,6 +240,47 @@ namespace AstroModIntegrator
             List<string> res = SearchLookup.Keys.ToList();
             res.AddRange(pakExtractorForCustomRoutines.GetAllPaths());
             return res.ToList().AsReadOnly();
+        }
+
+        public UeSaveGame.SaveGame ReadSave(string target)
+        {
+            string saveDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Astro", "Saved", "SaveGames");
+            if (!Directory.Exists(saveDir) && allPakPaths != null)
+            {
+                // try backtracking from Paks directory
+                foreach (string pakPath in allPakPaths)
+                {
+                    string potentialSaveDir = Path.Combine(pakPath, "..", "SaveGames");
+                    if (Directory.Exists(potentialSaveDir))
+                    {
+                        saveDir = potentialSaveDir;
+                        break;
+                    }
+                }
+            }
+            if (!Directory.Exists(saveDir)) return null;
+
+            string savePath = Path.Combine(saveDir, Path.GetFileName(target));
+            try
+            {
+                byte[] file = File.ReadAllBytes(savePath);
+                byte[] decompressed = null;
+
+                using (var compressed = new MemoryStream(file, 16, file.Length - 16, writable: false))
+                using (var zlib = new ZLibStream(compressed, CompressionMode.Decompress))
+                using (MemoryStream outStream = new())
+                {
+                    zlib.CopyTo(outStream);
+                    decompressed = outStream.ToArray();
+                }
+
+                return UeSaveGame.SaveGame.LoadFrom(new MemoryStream(decompressed, false));
+            }
+            catch (Exception ex)
+            {
+                LogToDiskVerbose("Exception while reading save: " + ex.Message + "\n\n" + ex.StackTrace);
+                return null;
+            }
         }
 
         private string logCache = string.Empty;
@@ -604,6 +649,7 @@ namespace AstroModIntegrator
             customRoutinesMap2 = null;
             pakExtractorForCustomRoutines = null;
             customRoutineAssemblyToMetadata = null;
+            allPakPaths = paksPaths;
             hasLoggedOnceAlready = false;
             client = null;
 

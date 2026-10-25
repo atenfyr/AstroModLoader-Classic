@@ -52,6 +52,13 @@ namespace AstroModIntegrator
         public IReadOnlyList<string> GetAllPaths();
 
         /// <summary>
+        /// Reads a save file within the user's SaveGames directory. Useful for accessing mod config files.
+        /// </summary>
+        /// <param name="target">The file name (including extension) of the save file.</param>
+        /// <returns>A populated UeSaveGame.SaveGame class containing the save data, or null if the file could not be found.</returns>
+        public UeSaveGame.SaveGame ReadSave(string target);
+
+        /// <summary>
         /// Add an asset to be deployed in the integrator pak. Overrides any asset at the same path that have already been added to the integrator pak.
         /// <para/>
         /// This method will immediately serialize the asset so that outAsset can be modified after the method is called without changing the file at outPath.

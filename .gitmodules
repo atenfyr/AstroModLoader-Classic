@@ -1,0 +1,3 @@
+[submodule "UeSaveGame"]
+	path = AstroModIntegrator/UeSaveGame
+	url = https://github.com/atenfyr/UeSaveGame.git

@@ -90,7 +90,9 @@ namespace AstroModIntegrator
 
             // allow accessing the example mod config by choosing the mod integrator
             // (temporary debug feature)
-            //modIdToModConfigPath.Add("AstroModIntegrator", "/Game/Integrator/ModConfig/ModConfigExample");
+#if DEBUG || DEBUG_CUSTOMROUTINETEST
+            modIdToModConfigPath.Add("AstroModIntegrator", "/Game/Integrator/ModConfig/ModConfigExample");
+#endif
 
             if (modIdToModConfigPath.Count > 0)
             {
