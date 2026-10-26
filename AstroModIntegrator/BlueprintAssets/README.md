@@ -17,7 +17,9 @@ This code allows you to retrieve a list of mods. If the user is using AstroModIn
 
 ## ModConfig
 
-In AMLC v1.8.2.0+, it is possible to create custom configuration menus for users to use when interfacing with your mod. Please note that this is currently an experimental future, and the API for custom configuration menus may change in the future. Custom configuration menus should be created as widgets inheriting from UserWidgetBlueprintDesignable in the Unreal Editor. The root element of the custom widget should be a VerticalBox containing Astroneer UI component widgets (GameMenuEntryDoubleText, GameMenuEntrySlider, GameMenuEntryCheckbox, etc.).
+In AMLC v1.8.2.0+, it is possible to create ModConfigs (custom configuration menus) for users to use when interfacing with your mod AstroModIntegrator Classic blueprint API. Custom configuration menus should be created as widgets inheriting from UserWidgetBlueprintDesignable in the Unreal Editor. The root element of the custom widget should be a VerticalBox containing Astroneer UI component widgets (GameMenuEntryDoubleText, GameMenuEntrySlider, GameMenuEntryCheckbox, etc.).
+
+To use the AstroModIntegrator Classic blueprint API, first install the [AstroTechies ModdingKit](https://github.com/AstroTechies/ModdingKit), delete the Content/Integrator directory, and replace it with the Content/Integrator directory provided here in this directory. 
 
 You may use the ModConfigExample widget located at Content/Integrator/ModConfig/ModConfigExample as a reference. This widget contains example implementations for a slider, a checkbox, and a simple option select, along with reference implementations for saving and loading configuration values from disk. In-game, this widget appears as follows:
 
@@ -33,4 +35,10 @@ Once you have created your widget, add an entry to your metadata.json within the
 "path_to_mod_config": "/Game/Mods/path/to/your/ModConfig"
 ```
 
-Then, cook and package your mod, and select your mod under the Mod Options tab in-game to view the widget. To access the user's selected configuration variables, it is recommended to use the "Load Game from Slot" method within your blueprint of choice, just like the "Load" method does in ModConfigExample.
+Then, cook and package your mod, and select your mod under the Mod Options tab in-game to view the widget.
+
+To access the user's selected configuration variables, you can use the "Load Game from Slot" method within your blueprint of choice, just like the "Load" method does in ModConfigExample.
+
+![](https://i.imgur.com/xVMmnX2.png)
+
+You can also access the selected configuration variables within custom routines by using the "ICustomRoutineAPI.ReadSave" method in AMLC v1.8.3.0+. A save game stored at a slot called "ModConfigExample" can be read by executing `api.ReadSave("ModConfigExample.savecfg")`, as can be seen in the [ExampleCustomRoutineSaveGame.cs](https://github.com/atenfyr/AstroModLoader-Classic/blob/master/AMLCustomRoutines/ExampleCustomRoutineSaveGame.cs) example.
