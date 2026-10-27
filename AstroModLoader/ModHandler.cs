@@ -166,6 +166,8 @@ namespace AstroModLoader
             SortMods();
             RefreshAllPriorites();
 
+            // if the mod was already enabled on boot, we no longer assume that it was implicitly approved, and instead allow the default of unapproved
+            /*
             if (ModHandler.EnableCustomRoutines)
             {
                 HashSet<string> modsWithCustomRoutines = (ModIntegrator.GetAllModsWithCustomRoutines([this.InstallPath]) ?? new List<Metadata>()).Where(x => x?.ModID != null).Select(x => x.ModID).ToHashSet(); ;
@@ -173,10 +175,11 @@ namespace AstroModLoader
                 {
                     if (mod?.CurrentModData?.ModID == null) continue;
 
-                    // if the mod was already enabled on boot, we assume that it was implicitly approved, e.g. in AMLC 1.8.0.0
                     if (mod.Enabled && modsWithCustomRoutines.Contains(mod.CurrentModData.ModID)) mod.CustomRoutineApprovedByUser = true;
                 }
             }
+            */
+
             SyncConfigToDisk();
 
             // integrate async so we can open the window first
@@ -1228,7 +1231,7 @@ namespace AstroModLoader
                         if (modsNeedingApproval.Count > 0)
                         {
                             int dialogRes = -1;
-                            AMLUtils.InvokeUI(() => dialogRes = BaseForm.ShowBasicButton("The following mods use custom routines:\n\n" + string.Join(", ", modsNeedingApproval.Where(x => x?.CurrentModData?.ModID != null).Select(x => x.CurrentModData.ModID)) + "\n\nAstroModLoader Classic is requesting your approval\nto integrate these mods. Custom routines are isolated\nand sandboxed for your protection, but some mods might\nstill try to execute malicious code on your computer.\n\nMake sure you fully trust these mods.\nWould you like to continue?", "Continue", "No, disable mods", null));
+                            AMLUtils.InvokeUI(() => dialogRes = BaseForm.ShowBasicButton("The following mods use custom routines:\n\n" + string.Join(", ", modsNeedingApproval.Where(x => x?.CurrentModData?.ModID != null).Select(x => x.CurrentModData.ModID)) + "\n\nAstroModLoader Classic is requesting your approval\nto integrate these mods. Custom routines are isolated\nand sandboxed for your protection, but some mods might\nstill try to execute malicious code on your computer.\nYou can disable custom routines in Settings.\n\nMake sure you fully trust these mods.\nWould you like to continue?", "Continue", "No, disable mods", null));
                             switch (dialogRes)
                             {
                                 case 0:

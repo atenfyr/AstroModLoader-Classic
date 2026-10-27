@@ -27,7 +27,7 @@ namespace AstroModLoader
         public bool DisableLuaCleanup;
 
         [JsonProperty("enable_custom_routines", DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(false)]
+        [DefaultValue(true)]
         public bool EnableCustomRoutines;
 
         [JsonProperty("current")]
