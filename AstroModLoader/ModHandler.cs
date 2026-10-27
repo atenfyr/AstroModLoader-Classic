@@ -1150,13 +1150,12 @@ namespace AstroModLoader
                 {
                     RefuseMismatchedConnections = RefuseMismatchedConnections,
                     Verbose = true,
+                    LogPath = Path.Combine(Program.Cwd, "ModIntegrator.log"),
                     EnableCustomRoutines = EnableCustomRoutines
                 };
 
                 if (TableHandler.ShouldContainOptionalColumn()) OurIntegrator.OptionalModIDs = optionalMods;
                 OurIntegrator.IntegrateMods(InstallPath, Path.Combine(GamePath, "Astro", "Content", "Paks"), null, null, true, !DisableLuaCleanup);
-
-                try { File.Move("ModIntegrator.log", Path.Combine(Program.Cwd, "ModIntegrator.log"), true); } catch { }
 
                 sw.Stop();
                 string tm = sw.Elapsed.TotalMilliseconds.ToString("#.##");
