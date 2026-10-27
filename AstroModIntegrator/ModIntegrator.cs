@@ -1309,7 +1309,7 @@ namespace AstroModIntegrator
                                 workerThread.Join();
                                 bool terminated = true;
 #else
-                                bool terminated = workerThread.Join(TimeSpan.FromSeconds(5));
+                                bool terminated = workerThread.Join(TimeSpan.FromSeconds(8));
                                 if (!terminated)
                                 {
                                     // if the thread is still going, tell it that it should exit and give another 2 seconds to try and cleanly exit
