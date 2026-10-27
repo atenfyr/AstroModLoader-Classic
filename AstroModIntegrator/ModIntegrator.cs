@@ -140,7 +140,8 @@ namespace AstroModIntegrator
         private volatile bool hasLoggedOnceAlready = false;
 
         // policy initialization fields
-        internal volatile static bool EnableGlobalSandbox = true; // can add a few extra hundred milliseconds unless no custom routines are loaded; always enabled
+        internal readonly static bool EnableGlobalSandbox = true; // can add a few extra hundred milliseconds unless no custom routines are loaded; always enabled
+        internal readonly static bool SeparateLoadContextPerMod = true;
         internal volatile static CasPolicy policy = null;
         internal volatile static CasAssemblyLoader loadContext = null;
         internal volatile static Thread policyInitThread = null;
@@ -190,7 +191,11 @@ namespace AstroModIntegrator
                         //.Deny(new TypeBinding(typeof(UAssetAPI.Unversioned.Usmap), Accessibility.Private))
                         .Deny(new TypeBinding(typeof(UAssetAPI.Unversioned.SaveGame), Accessibility.Private))
                     .Build();
-                    loadContext = new CasAssemblyLoader(policy, true);
+
+                    if (!SeparateLoadContextPerMod)
+                    {
+                        loadContext = new CasAssemblyLoader(policy, true);
+                    }
                 });
                 policyInitThread.Start();
             }
@@ -695,9 +700,9 @@ namespace AstroModIntegrator
             client = null;
 
             // reload context if policy has already been initialized
-            if (EnableCustomRoutines && EnableGlobalSandbox && policy != null)
+            if (!SeparateLoadContextPerMod && EnableCustomRoutines && EnableGlobalSandbox && policy != null)
             {
-                loadContext.Unload();
+                loadContext?.Unload();
                 loadContext = new CasAssemblyLoader(policy, true);
             }
 
@@ -811,13 +816,14 @@ namespace AstroModIntegrator
                             if (assemblyData != null && assemblyData.Length > 0)
                             {
                                 // wait for load context if needed
-                                if (EnableCustomRoutines && EnableGlobalSandbox && (policy == null || loadContext == null))
+                                if (EnableCustomRoutines && EnableGlobalSandbox && policy == null)
                                 {
                                     policyInitThread?.Join();
                                     policyInitThread = null;
                                 }
 
-                                Assembly newAsm = EnableGlobalSandbox ? loadContext.LoadFromStream(new MemoryStream(assemblyData)) : Assembly.Load(assemblyData);
+                                var thisLoadContext = SeparateLoadContextPerMod ? new CasAssemblyLoader(policy, true) : loadContext;
+                                Assembly newAsm = EnableGlobalSandbox ? thisLoadContext.LoadFromStream(new MemoryStream(assemblyData)) : Assembly.Load(assemblyData);
                                 customRoutineAssemblies.Add(newAsm);
                                 customRoutineAssemblyToMetadata[newAsm.ManifestModule.ModuleVersionId] = us;
                                 LogToDiskNoPrefix("Found custom routines DLL for mod " + (us?.ModID ?? file) + ", adding to list of assemblies");
@@ -1125,7 +1131,7 @@ namespace AstroModIntegrator
                                     if (i == 0 || (allPossibleDlls[j].Contains("Debug_CustomRoutineTest") && allPossibleDlls[j].Contains("bin")))
                                     {
                                         // wait for load context if needed
-                                        if (EnableCustomRoutines && EnableGlobalSandbox && (policy == null || loadContext == null))
+                                        if (EnableCustomRoutines && EnableGlobalSandbox && policy == null)
                                         {
                                             policyInitThread?.Join();
                                             policyInitThread = null;
@@ -1133,7 +1139,8 @@ namespace AstroModIntegrator
 
                                         string chosenDll = allPossibleDlls[j];
                                         byte[] byts = File.ReadAllBytes(chosenDll);
-                                        Assembly newAsm = EnableGlobalSandbox ? loadContext.LoadFromStream(new MemoryStream(byts)) : Assembly.Load(byts);
+                                        var thisLoadContext = SeparateLoadContextPerMod ? new CasAssemblyLoader(policy, true) : loadContext;
+                                        Assembly newAsm = EnableGlobalSandbox ? thisLoadContext.LoadFromStream(new MemoryStream(byts)) : Assembly.Load(byts);
                                         customRoutineAssemblies.Add(newAsm);
                                         customRoutineAssemblyToMetadata[newAsm.ManifestModule.ModuleVersionId] = new Metadata() { ModID = "AMLCustomRoutines" }; // dummy metadata
 
@@ -1142,6 +1149,7 @@ namespace AstroModIntegrator
 #endif
 
                                         foundDll = true;
+                                        willBreak = true;
                                         LogToDiskNoPrefix("Found AMLCustomRoutines.dll, adding to list of assemblies");
                                         break;
                                     }
