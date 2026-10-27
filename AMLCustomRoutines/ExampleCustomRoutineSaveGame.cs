@@ -6,7 +6,7 @@ namespace AMLCustomRoutines
     public class ExampleCustomRoutineSaveGame : CustomRoutine
     {
         public override string RoutineID => "ExampleCustomRoutineSaveGame";
-        public override bool Enabled => true;
+        public override bool Enabled => false;
         public override int APIVersion => 1;
 
         public override void Execute(ICustomRoutineAPI api)
