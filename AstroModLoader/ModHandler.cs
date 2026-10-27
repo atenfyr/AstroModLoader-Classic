@@ -1231,7 +1231,7 @@ namespace AstroModLoader
                         if (modsNeedingApproval.Count > 0)
                         {
                             int dialogRes = -1;
-                            AMLUtils.InvokeUI(() => dialogRes = BaseForm.ShowBasicButton("The following mods use custom routines:\n\n" + string.Join(", ", modsNeedingApproval.Where(x => x?.CurrentModData?.ModID != null).Select(x => x.CurrentModData.ModID)) + "\n\nAstroModLoader Classic is requesting your approval\nto integrate these mods. Custom routines are isolated\nand sandboxed for your protection, but some mods might\nstill try to execute malicious code on your computer.\nYou can disable custom routines in Settings.\n\nMake sure you fully trust these mods.\nWould you like to continue?", "Continue", "No, disable mods", null));
+                            AMLUtils.InvokeUI(() => dialogRes = BaseForm.ShowBasicButton("The following mods use custom routines:\n\n" + string.Join(", ", modsNeedingApproval.Where(x => x?.CurrentModData?.ModID != null).Select(x => x.CurrentModData.ModID)) + "\n\nAstroModLoader Classic is requesting your approval\nto integrate these mods.\n\nCustom routines allow mods to execute custom code in\nAstroModLoader Classic. Custom routines are isolated\nand sandboxed for your protection, but some mods might\nstill try to execute malicious code on your computer.\nYou can disable custom routines in Settings.\n\nMake sure you fully trust these mods.\nWould you like to continue?", "Continue", "No, disable mods", null));
                             switch (dialogRes)
                             {
                                 case 0:
