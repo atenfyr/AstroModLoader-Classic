@@ -59,7 +59,7 @@ namespace AstroModIntegrator
         public UeSaveGame.SaveGame ReadSave(string target);
 
         /// <summary>
-        /// Add an asset to be deployed in the integrator pak. Overrides any asset at the same path that have already been added to the integrator pak.
+        /// Add an asset to be deployed in the integrator pak. Overrides any asset at the same path that has already been added to the integrator pak.
         /// <para/>
         /// This method will immediately serialize the asset so that outAsset can be modified after the method is called without changing the file at outPath.
         /// </summary>
@@ -68,7 +68,7 @@ namespace AstroModIntegrator
         public void AddFile(string outPath, UAsset outAsset);
 
         /// <summary>
-        /// Add a raw file to be deployed in the integrator pak. Overrides any file at the same path that have already been added to the integrator pak.
+        /// Add a raw file to be deployed in the integrator pak. Overrides any file at the same path that has already been added to the integrator pak.
         /// </summary>
         /// <param name="outPath">The desired output raw file path of the file.</param>
         /// <param name="rawData">The raw binary data of the file to deploy.</param>

@@ -323,7 +323,7 @@ namespace AstroModIntegrator
             bool usePipe = !string.IsNullOrEmpty(PakToNamedPipe);
             string desiredText = "[" + DateTime.Now.ToString() + "] " + (prefixWithMod ? ("[" + (GetCurrentMod()?.ModID ?? "Unknown") + "] ") : "") + text + "\n";
 
-            if (!usePipe && LogPath == "-") // stdout
+            if (LogPath == "-") // stdout
             {
                 if (!hasLoggedOnceAlready)
                 {
@@ -332,7 +332,7 @@ namespace AstroModIntegrator
                 }
 
                 Console.Out.Write(desiredText);
-                return true;
+                if (!usePipe) return true; // if using pipe, print both to stdout and to named pipe
             }
 
             string outPath = LogPath ?? "ModIntegrator.log";
