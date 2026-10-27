@@ -245,36 +245,60 @@ namespace AstroModIntegrator
         public UeSaveGame.SaveGame ReadSave(string target)
         {
             string saveDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Astro", "Saved", "SaveGames");
-            if (!Directory.Exists(saveDir) && allPakPaths != null)
+            if ((saveDir == null || !Directory.Exists(saveDir)) && allPakPaths != null)
             {
                 // try backtracking from Paks directory
                 foreach (string pakPath in allPakPaths)
                 {
+                    if (pakPath == null) continue;
                     string potentialSaveDir = Path.Combine(pakPath, "..", "SaveGames");
-                    if (Directory.Exists(potentialSaveDir))
+                    if (potentialSaveDir != null && Directory.Exists(potentialSaveDir))
                     {
                         saveDir = potentialSaveDir;
                         break;
                     }
                 }
             }
-            if (!Directory.Exists(saveDir)) return null;
+            if (saveDir == null || !Directory.Exists(saveDir)) return null;
 
             string savePath = Path.Combine(saveDir, Path.GetFileName(target));
+            if (!File.Exists(savePath)) return null;
+
             try
             {
-                byte[] file = File.ReadAllBytes(savePath);
-                byte[] decompressed = null;
+                using var fs = new FileStream(savePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+                if (fs.Length <= 16 || fs.Length > 500L * 1024 * 1024) return null; // max allowed compressed size is 500 MB
 
-                using (var compressed = new MemoryStream(file, 16, file.Length - 16, writable: false))
-                using (var zlib = new ZLibStream(compressed, CompressionMode.Decompress))
-                using (MemoryStream outStream = new())
+                byte[] magicRaw = new byte[4];
+                fs.Read(magicRaw, 0, 4);
+                int magic = BitConverter.ToInt32(magicRaw);
+
+                if (magic == 0x53415647) // GVAS
                 {
-                    zlib.CopyTo(outStream);
-                    decompressed = outStream.ToArray();
-                }
+                    // uncompressed
+                    fs.Position = 0;
 
-                return UeSaveGame.SaveGame.LoadFrom(new MemoryStream(decompressed, false));
+                    var decompressed = new MemoryStream();
+                    fs.CopyTo(decompressed);
+                    return UeSaveGame.SaveGame.LoadFrom(new MemoryStream(decompressed.GetBuffer(), 0, (int)decompressed.Length, writable: false));
+                }
+                else
+                {
+                    // compressed with zlib
+                    fs.Position = 16;
+
+                    using var zlib = new ZLibStream(fs, CompressionMode.Decompress);
+                    var decompressed = new MemoryStream();
+                    byte[] buf = new byte[81920];
+                    int n = 0;
+                    while ((n = zlib.Read(buf, 0, buf.Length)) > 0)
+                    {
+                        if (decompressed.Length + n > 500L * 1024 * 1024) return null; // max allowed decompressed size is 500 MB
+                        decompressed.Write(buf, 0, n);
+                    }
+
+                    return UeSaveGame.SaveGame.LoadFrom(new MemoryStream(decompressed.GetBuffer(), 0, (int)decompressed.Length, writable: false));
+                }
             }
             catch (Exception ex)
             {
@@ -384,7 +408,7 @@ namespace AstroModIntegrator
             SearchLookup = new Dictionary<string, string>();
             foreach (string realPakPath in realPakPaths)
             {
-                using (FileStream f = new FileStream(realPakPath, FileMode.Open, FileAccess.Read))
+                using (FileStream f = new FileStream(realPakPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
                 {
                     try
                     {
@@ -437,7 +461,7 @@ namespace AstroModIntegrator
             {
                 try
                 {
-                    using (FileStream f = new FileStream(SearchLookup[searchingPath], FileMode.Open, FileAccess.Read))
+                    using (FileStream f = new FileStream(SearchLookup[searchingPath], FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
                     {
                         try
                         {
@@ -465,7 +489,7 @@ namespace AstroModIntegrator
         {
             Dictionary<string, byte[]> outDat = new Dictionary<string, byte[]>();
             string mountPoint = null;
-            using (FileStream f = new FileStream(pakPath, FileMode.Open, FileAccess.Read))
+            using (FileStream f = new FileStream(pakPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
             {
                 PakExtractor us = null;
                 try
@@ -535,7 +559,7 @@ namespace AstroModIntegrator
                 try
                 {
                     EngineVersion curVer = IntegratorUtils.MainEngineVersion;
-                    using (FileStream f = new FileStream(file, FileMode.Open, FileAccess.Read))
+                    using (FileStream f = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
                     {
                         Metadata us = null;
                         try
@@ -587,7 +611,7 @@ namespace AstroModIntegrator
             {
                 try
                 {
-                    using (FileStream f = new FileStream(file, FileMode.Open, FileAccess.Read))
+                    using (FileStream f = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
                     {
                         PakExtractor newPakExtractor = new PakExtractor(f);
                         Metadata us = newPakExtractor.ReadMetadata();
@@ -751,7 +775,7 @@ namespace AstroModIntegrator
             {
                 LogToDiskVerbose("Parsing " + file);
 
-                using (FileStream f = new FileStream(file, FileMode.Open, FileAccess.Read))
+                using (FileStream f = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
                 {
                     Metadata us = null;
                     try
@@ -928,7 +952,7 @@ namespace AstroModIntegrator
                 IntegratorUtils.SplitExportFiles(dtb.Bake3(IntegratorUtils.Concatenate(CreatedPakData["Astro/Content/Integrator/IntegratorStatics.uasset"], CreatedPakData["Astro/Content/Integrator/IntegratorStatics.uexp"]), IntegratorUtils.MainEngineVersion), "Astro/Content/Integrator/IntegratorStatics.uasset", CreatedPakData);
             }
 
-            using (FileStream f = new FileStream(realPakPath, FileMode.Open, FileAccess.Read))
+            using (FileStream f = new FileStream(realPakPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
             {
                 PakExtractor ourExtractor = null;
                 // deliberately throw an exception if we cant access the main pak
@@ -1341,7 +1365,7 @@ namespace AstroModIntegrator
                 {
                     try
                     {
-                        using (FileStream f = new FileStream(file, FileMode.Open, FileAccess.Read))
+                        using (FileStream f = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
                         {
                             PakExtractor us = null;
                             try

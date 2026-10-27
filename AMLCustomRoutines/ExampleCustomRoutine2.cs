@@ -18,9 +18,9 @@ namespace AMLCustomRoutines
                 if (api.ShouldExitNow()) return;
 
                 api.LogToDisk("Parsing " + mod?.ModID ?? "null");
-                if (mod?.IntegratorEntries.ExtraFields != null && mod.IntegratorEntries.ExtraFields.TryGetValue("example", out JToken val))
+                if (mod?.IntegratorEntries.ExtraFields != null && mod.IntegratorEntries.ExtraFields.TryGetValue("example", out JToken? val))
                 {
-                    api.LogToDisk(mod.ModID + ": example = " + val.Value<string>() ?? "???");
+                    api.LogToDisk(mod.ModID + ": example = " + val?.Value<string>() ?? "???");
                 }
             }
 
