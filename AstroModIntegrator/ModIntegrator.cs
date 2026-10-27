@@ -359,7 +359,7 @@ namespace AstroModIntegrator
                             client.WriteLine("WriteFile:Log");
                             client.WriteLine((logCacheIdx + addlBytes.Length).ToString());
                             client.Write(logCache, 0, logCacheIdx);
-                            client.Write(addlBytes);
+                            if (addlBytes.Length > 0) client.Write(addlBytes);
                             client.Flush();
                         }
                         catch
