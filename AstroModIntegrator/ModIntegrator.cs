@@ -1111,6 +1111,7 @@ namespace AstroModIntegrator
                         {
                             LogToDiskNoPrefix("Trying " + currentTestPath);
 
+                            bool willBreak = false;
                             try
                             {
                                 string[] allPossibleDlls = Directory.GetFiles(currentTestPath, "AMLCustomRoutines.dll", SearchOption.AllDirectories);
@@ -1140,13 +1141,17 @@ namespace AstroModIntegrator
                                         break;
                                     }
                                 }
-
-                                if (Directory.GetFiles(currentTestPath, "*.sln", SearchOption.TopDirectoryOnly).Length > 0) break; // don't go any farther back if we have a sln file here
                             }
                             catch
                             {
                                 // whatever
                             }
+                            finally
+                            {
+                                if (Directory.GetFiles(currentTestPath, "*.sln", SearchOption.TopDirectoryOnly).Length > 0) willBreak = true; // don't go any farther back if we have a sln file here
+                            }
+
+                            if (willBreak) break;
 
                             currentTestPath = Directory.GetParent(currentTestPath)?.FullName;
                             if (currentTestPath == null) break;
