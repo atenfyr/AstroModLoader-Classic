@@ -23,8 +23,11 @@ namespace ModIntegratorCMD
         [Option('o', "output", Required = false, Default = null, HelpText = "The folder to output the integrator .pak file to. Defaults to the first directory passed into the input parameter.")]
         public string OutputFolder { get; set; }
 
-        [Option('v', "verbose", Required = false, Default = false, HelpText = "Whether or not to enable verbose logging to disk.")]
+        [Option('v', "verbose", Required = false, Default = false, HelpText = "Whether or not to enable logging.")]
         public bool Verbose { get; set; }
+
+        [Option('l', "log", Required = false, Default = "ModIntegrator.log", HelpText = "If enabled, the path to write any logs to.")]
+        public string LogPath { get; set; }
 
         [Option("mount_point", Required = false, Default = "../../../", HelpText = "The integrator .pak file's mount point. Almost always should be left unspecified.")]
         public string MountPoint { get; set; }
@@ -321,6 +324,7 @@ namespace ModIntegratorCMD
                             EnableCustomRoutines = o.EnableCustomRoutines,
                             OptionalModIDs = o.OptionalModIDs?.ToList() ?? new List<string>(),
                             Verbose = o.Verbose,
+                            LogPath = o.LogPath,
                             PakToNamedPipe = o.PakToNamedPipe,
                             CallingExePath = o.CallingExePath,
                             IsModIntegratorCMD = true
