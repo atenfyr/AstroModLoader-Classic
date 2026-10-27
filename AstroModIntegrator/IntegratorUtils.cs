@@ -181,6 +181,7 @@ namespace AstroModIntegrator
 
         public static void WriteLine(this PipeStream strm, string str)
         {
+            //Console.WriteLine(str);
             byte[] bytes = Encoding.ASCII.GetBytes(str + "\n");
             strm.Write(bytes, 0, bytes.Length);
         }

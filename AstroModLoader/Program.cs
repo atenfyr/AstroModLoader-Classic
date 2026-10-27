@@ -264,8 +264,16 @@ namespace AstroModLoader
                                             {
                                                 int numBytes1 = int.Parse(reader.ReadLine());
                                                 if (numBytes1 == 0) continue;
+
                                                 byte[] data1 = new byte[numBytes1];
-                                                server.Read(data1, 0, numBytes1);
+                                                int numReadSoFar = 0;
+                                                while (numReadSoFar < numBytes1)
+                                                {
+                                                    int read = server.Read(data1, numReadSoFar, numBytes1 - numReadSoFar);
+                                                    if (read <= 0) break;
+                                                    numReadSoFar += read;
+                                                }
+
                                                 File.AppendAllText(Path.Combine(Program.Cwd, "ModIntegrator.log"), Encoding.UTF8.GetString(data1));
                                             }
 

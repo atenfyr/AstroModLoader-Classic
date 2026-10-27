@@ -308,7 +308,8 @@ namespace AstroModIntegrator
             }
         }
 
-        private string logCache = string.Empty;
+        private byte[] logCache = new byte[3000]; 
+        private int logCacheIdx = 0;
         private bool ForceLogCacheFlush = false;
 
         public bool LogToDisk(string text, bool prefixWithMod = true)
@@ -340,21 +341,25 @@ namespace AstroModIntegrator
 
                 if (usePipe)
                 {
-                    logCache += desiredText;
+                    bool flushNow = false;
+                    if (ForceLogCacheFlush || logCacheIdx + desiredText.Length > logCache.Length)
+                    {
+                        flushNow = true;
+                    }
+                    else
+                    {
+                        logCacheIdx += Encoding.UTF8.GetBytes(desiredText, 0, desiredText.Length, logCache, logCacheIdx);
+                    }
 
-                    int flushFrequency = 3000;
-#if DEBUG_CUSTOMROUTINETEST
-                    flushFrequency = 100;
-#endif
-
-                    if (ForceLogCacheFlush || logCache.Length > flushFrequency)
+                    if (flushNow)
                     {
                         try
                         {
-                            byte[] bytes = Encoding.UTF8.GetBytes(logCache);
+                            byte[] addlBytes = Encoding.UTF8.GetBytes(desiredText);
                             client.WriteLine("WriteFile:Log");
-                            client.WriteLine(bytes.Length.ToString());
-                            client.Write(bytes);
+                            client.WriteLine((logCacheIdx + addlBytes.Length).ToString());
+                            client.Write(logCache, 0, logCacheIdx);
+                            client.Write(addlBytes);
                             client.Flush();
                         }
                         catch
@@ -363,7 +368,7 @@ namespace AstroModIntegrator
                         }
                         finally
                         {
-                            logCache = string.Empty;
+                            logCacheIdx = 0;
                             ForceLogCacheFlush = false;
                         }
                     }
