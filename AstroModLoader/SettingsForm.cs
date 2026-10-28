@@ -139,6 +139,7 @@ namespace AstroModLoader
             BaseForm.SwitchPlatform(nextPlatform);
 
             this.UpdateLabels();
+            UpdateUE4SSButtonText();
         }
 
         private void UpdatePathing(object sender, EventArgs e)
@@ -166,6 +167,7 @@ namespace AstroModLoader
             BaseForm.SwitchPlatform(PlatformType.Custom);
 
             this.UpdateLabels();
+            UpdateUE4SSButtonText();
         }
 
         private void ue4ssButton_Click(object sender, EventArgs e)
