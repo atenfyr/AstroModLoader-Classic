@@ -718,6 +718,17 @@ namespace AstroModIntegrator
             {
                 if (client != null)
                 {
+                    // attempt to flush logs if can
+                    try
+                    {
+                        if (hasLoggedOnceAlready)
+                        {
+                            ForceLogCacheFlush = true;
+                            LogToDisk("Flushing logs", false);
+                        }
+                    }
+                    catch { }
+
                     client.WriteLine("WriteFile:Close");
                     client.WriteLine("Disconnect");
                     client.Flush();
@@ -1565,12 +1576,6 @@ namespace AstroModIntegrator
             }
 
             LogToDiskNoPrefix("All done");
-
-            if (usePipe && hasLoggedOnceAlready)
-            {
-                ForceLogCacheFlush = true;
-                LogToDisk("Flushing logs", false);
-            }
         }
 
         private Dictionary<string, byte[]> StarterPakData = new Dictionary<string, byte[]>();
