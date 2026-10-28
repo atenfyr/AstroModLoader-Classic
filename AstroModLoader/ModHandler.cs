@@ -50,7 +50,7 @@ namespace AstroModLoader
         {
             BaseForm = baseForm;
             RefuseMismatchedConnections = true;
-            EnableCustomRoutines = false;
+            EnableCustomRoutines = true;
 
             string automaticSteamPath = null;
             string automaticWin10Path = null;
