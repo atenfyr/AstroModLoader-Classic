@@ -766,12 +766,16 @@ namespace AstroModIntegrator
             if (usePipe)
             {
                 client = new NamedPipeClientStream(".", PakToNamedPipe, PipeDirection.Out);
-                client.Connect(5);
                 try
                 {
+                    client.Connect(5);
                     client.WriteLine("WriteFile:Open");
                 }
                 catch (IOException)
+                {
+                    throw new IOException("Failed to connect to named pipe server");
+                }
+                catch (TimeoutException)
                 {
                     throw new IOException("Failed to connect to named pipe server");
                 }
