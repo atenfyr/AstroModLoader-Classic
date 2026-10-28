@@ -136,6 +136,7 @@ namespace AstroModIntegrator
         private volatile Dictionary<string, Metadata> customRoutinesMap2;
         private volatile Dictionary<Guid, Metadata> customRoutineAssemblyToMetadata = null;
         private volatile string[] allPakPaths;
+        private volatile string allInstallPath;
         private volatile bool isCurrentlyIntegrating = false;
         private volatile bool hasLoggedOnceAlready = false;
 
@@ -248,27 +249,70 @@ namespace AstroModIntegrator
             return res.ToList().AsReadOnly();
         }
 
-        public UeSaveGame.SaveGame ReadSave(string target)
+        private string GetBlobPath(string target, string wgsPath)
         {
-            string saveDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Astro", "Saved", "SaveGames");
-            if ((saveDir == null || !Directory.Exists(saveDir)) && allPakPaths != null)
+            string blobName = Path.GetFileNameWithoutExtension(target);
+            string[] allContainers = Directory.GetFiles(wgsPath, "container.*", SearchOption.AllDirectories);
+            foreach (string containerPath in allContainers)
             {
-                // try backtracking from Paks directory
-                foreach (string pakPath in allPakPaths)
+                try
                 {
-                    if (pakPath == null) continue;
-                    string potentialSaveDir = Path.Combine(pakPath, "..", "SaveGames");
-                    if (potentialSaveDir != null && Directory.Exists(potentialSaveDir))
+                    using var fs = new FileStream(containerPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+                    WgsContainer container = WgsContainer.Read(fs);
+                    foreach (WgsBlob blob in container.Blobs)
                     {
-                        saveDir = potentialSaveDir;
-                        break;
+                        if (blob.Name == blobName)
+                        {
+                            string fileName = blob.WgsFilename.ToString("N").ToUpper();
+                            string filePath = Path.Combine(Path.GetDirectoryName(containerPath), fileName);
+                            if (File.Exists(filePath)) return filePath;
+                        }
                     }
                 }
+                catch
+                {
+                    continue;
+                }
             }
-            if (saveDir == null || !Directory.Exists(saveDir)) return null;
+            return null;
+        }
 
-            string savePath = Path.Combine(saveDir, Path.GetFileName(target));
-            if (!File.Exists(savePath)) return null;
+        public UeSaveGame.SaveGame ReadSave(string target)
+        {
+            string savePath = null;
+
+            // if on microsoft store, try that first
+            if (allInstallPath != null && allInstallPath.Contains("SystemEraSoftworks.29415440E1269"))
+            {
+                string wgsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Packages", "SystemEraSoftworks.29415440E1269_ftk5pbg2rayv2", "SystemAppdata", "wgs");
+                if (wgsPath != null && Directory.Exists(wgsPath)) savePath = GetBlobPath(target, wgsPath);
+            }
+
+            // else, try steam
+            if (savePath == null || !File.Exists(savePath))
+            {
+                string saveDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Astro", "Saved", "SaveGames");
+                if ((saveDir == null || !Directory.Exists(saveDir)) && allPakPaths != null)
+                {
+                    // try backtracking from Paks directory
+                    foreach (string pakPath in allPakPaths)
+                    {
+                        if (pakPath == null) continue;
+                        string potentialSaveDir = Path.Combine(pakPath, "..", "SaveGames");
+                        if (potentialSaveDir != null && Directory.Exists(potentialSaveDir))
+                        {
+                            saveDir = potentialSaveDir;
+                            break;
+                        }
+                    }
+                }
+
+                // if still fail, then out of options
+                if (saveDir == null || !Directory.Exists(saveDir)) return null;
+
+                savePath = Path.Combine(saveDir, Path.GetFileName(target));
+            }
+            if (savePath == null || !File.Exists(savePath)) return null;
 
             try
             {
@@ -696,6 +740,7 @@ namespace AstroModIntegrator
             pakExtractorForCustomRoutines = null;
             customRoutineAssemblyToMetadata = null;
             allPakPaths = paksPaths;
+            allInstallPath = installPath;
             hasLoggedOnceAlready = false;
             client = null;
 
