@@ -289,22 +289,26 @@ namespace AstroModLoader
                                             while (true)
                                             {
                                                 string prefix = reader.ReadLine();
-                                                if (prefix == "!!!Stop") break;
-                                                if (prefix != "!!!File") throw new IOException("Invalid prefix in WriteFile:ClientTransmitUE4SSMods named pipe command; got \"" + prefix + "\", expected \"!!!File\"");
+                                                if (prefix == "///Stop") break;
+                                                if (prefix != "///File") throw new IOException("Invalid prefix in WriteFile:ClientTransmitUE4SSMods named pipe command; got \"" + prefix + "\", expected \"!!!File\"");
 
                                                 string modId = reader.ReadLine().Replace("..", "");
+                                                if (modId == "///Stop") break;
                                                 string modSubPath = reader.ReadLine().Replace("..", "");
-                                                int numBytes1 = int.Parse(reader.ReadLine());
-                                                if (numBytes1 == 0) continue;
+                                                if (modSubPath == "///Stop") break;
+                                                string numBytes1str = reader.ReadLine();
+                                                if (numBytes1str == "///Stop") break;
+
+                                                int numBytes1 = int.Parse(numBytes1str);
                                                 byte[] data1 = new byte[numBytes1];
-                                                server.Read(data1, 0, numBytes1);
+                                                if (numBytes1 > 0) server.Read(data1, 0, numBytes1);
 
                                                 string newPath = Path.Combine(f1.ModManager.InstallPathLua, modId, modSubPath);
                                                 Directory.CreateDirectory(Path.GetDirectoryName(newPath));
                                                 File.WriteAllBytes(newPath, data1);
                                             }
 
-                                            while (reader.ReadLine() == "!!!Stop") { }
+                                            while (reader.ReadLine() == "///Stop") { }
 
                                             {
                                                 int numBytes1 = int.Parse(reader.ReadLine());

@@ -1464,11 +1464,11 @@ namespace AstroModIntegrator
                                     if (usePipe)
                                     {
                                         byte[] rawData = us.ReadRaw(subPath);
-                                        client.WriteLine("!!!File");
+                                        client.WriteLine("///File");
                                         client.WriteLine(mtd.ModID);
                                         client.WriteLine(subPath.Substring(6));
                                         client.WriteLine(rawData.Length.ToString());
-                                        client.Write(rawData, 0, rawData.Length);
+                                        if (rawData.Length > 0) client.Write(rawData, 0, rawData.Length);
                                     }
                                     else
                                     {
@@ -1489,10 +1489,10 @@ namespace AstroModIntegrator
 
                 if (usePipe)
                 {
-                    client.WriteLine("!!!Stop");
-                    client.WriteLine("!!!Stop");
-                    client.WriteLine("!!!Stop");
-                    client.WriteLine("Next");
+                    client.WriteLine("///Stop");
+                    client.WriteLine("///Stop");
+                    client.WriteLine("///Stop");
+                    client.WriteLine("///Next");
                 }
 
                 if (Path.Exists(luaDir))
