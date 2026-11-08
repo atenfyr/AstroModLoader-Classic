@@ -330,8 +330,11 @@ namespace AstroModLoader
                                                     server.Read(data1, 0, numBytes1);
 
                                                     string newPath = Path.Combine(f1.ModManager.InstallPathLua, "shared", "UEHelpers", "UEHelpers.lua");
-                                                    Directory.CreateDirectory(Path.GetDirectoryName(newPath));
-                                                    File.WriteAllBytes(newPath, data1);
+                                                    if (!File.Exists(newPath)) // only create if does not already exist to avoid unnecessarily overwriting stock file
+                                                    {
+                                                        Directory.CreateDirectory(Path.GetDirectoryName(newPath));
+                                                        File.WriteAllBytes(newPath, data1);
+                                                    }
 
                                                     string[] binariesDir = Directory.GetDirectories(Path.Combine(f1.ModManager.GamePath, "Astro", "Binaries"), "*", SearchOption.TopDirectoryOnly);
                                                     if (binariesDir.Length > 0)
@@ -339,8 +342,11 @@ namespace AstroModLoader
                                                         try
                                                         {
                                                             string newPath2 = Path.Combine(binariesDir[0], "ue4ss", "Mods", "shared", "UEHelpers", "UEHelpers.lua");
-                                                            Directory.CreateDirectory(Path.GetDirectoryName(newPath2));
-                                                            File.WriteAllBytes(newPath2, data1);
+                                                            if (!File.Exists(newPath2)) // only create if does not already exist to avoid unnecessarily overwriting stock file
+                                                            {
+                                                                Directory.CreateDirectory(Path.GetDirectoryName(newPath2));
+                                                                File.WriteAllBytes(newPath2, data1);
+                                                            }
                                                         }
                                                         catch { }
                                                     }

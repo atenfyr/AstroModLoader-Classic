@@ -1543,9 +1543,13 @@ namespace AstroModIntegrator
                     }
                     else
                     {
-                        Directory.CreateDirectory(Path.Combine(luaDir, "shared", "UEHelpers"));
+                        string ueHelpersPath = Path.Combine(luaDir, "shared", "UEHelpers", "UEHelpers.lua");
+                        if (!File.Exists(ueHelpersPath)) // only create if does not already exist to avoid unnecessarily overwriting stock file
+                        {
+                            Directory.CreateDirectory(Path.GetDirectoryName(ueHelpersPath));
+                            File.WriteAllBytes(ueHelpersPath, Properties.Resources.UEHelpers);
+                        }
                         Directory.CreateDirectory(Path.Combine(luaDir, "shared", "AstroHelpers"));
-                        File.WriteAllBytes(Path.Combine(luaDir, "shared", "UEHelpers", "UEHelpers.lua"), Properties.Resources.UEHelpers);
                         File.WriteAllBytes(Path.Combine(luaDir, "shared", "AstroHelpers", "AstroHelpers.lua"), Properties.Resources.AstroHelpers);
 
                         // if exists, also write these to binaryDir\ue4ss\Mods
@@ -1558,9 +1562,13 @@ namespace AstroModIntegrator
                                 string binaryDir2 = Path.Combine(binaryDir1_subDirs[0], "ue4ss", "Mods");
                                 if (Directory.Exists(binaryDir2))
                                 {
-                                    Directory.CreateDirectory(Path.Combine(binaryDir2, "shared", "UEHelpers"));
+                                    string ueHelpersPath2 = Path.Combine(binaryDir2, "shared", "UEHelpers", "UEHelpers.lua");
+                                    if (!File.Exists(ueHelpersPath2)) // only create if does not already exist to avoid unnecessarily overwriting stock file
+                                    {
+                                        Directory.CreateDirectory(Path.GetDirectoryName(ueHelpersPath2));
+                                        File.WriteAllBytes(ueHelpersPath2, Properties.Resources.UEHelpers);
+                                    }
                                     Directory.CreateDirectory(Path.Combine(binaryDir2, "shared", "AstroHelpers"));
-                                    File.WriteAllBytes(Path.Combine(binaryDir2, "shared", "UEHelpers", "UEHelpers.lua"), Properties.Resources.UEHelpers);
                                     File.WriteAllBytes(Path.Combine(binaryDir2, "shared", "AstroHelpers", "AstroHelpers.lua"), Properties.Resources.AstroHelpers);
                                 }
                             }
