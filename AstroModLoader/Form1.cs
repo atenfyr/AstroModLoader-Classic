@@ -11,6 +11,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -1337,7 +1338,7 @@ namespace AstroModLoader
                 ServerSyncPopup waiting = new ServerSyncPopup();
                 waiting.StartPosition = FormStartPosition.Manual;
                 waiting.Location = new Point((this.Location.X + this.Width / 2) - (waiting.Width / 2), (this.Location.Y + this.Height / 2) - (waiting.Height / 2));
-                waiting.OurIP = getIPPrompt.OutputText.Trim();
+                waiting.OurIP = Regex.Replace(getIPPrompt.OutputText.Trim(), @"[^a-zA-Z0-9_~\-\.]", string.Empty);
 
                 syncErrored = true;
                 syncErrorMessage = "The syncing process halted prematurely!";

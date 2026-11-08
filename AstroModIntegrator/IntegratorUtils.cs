@@ -51,7 +51,7 @@ namespace AstroModIntegrator
         {
             if (AstroBuild == null) return MainEngineVersion;
 
-            if (AstroBuild.CompareTo(new Version(1, 24, 0, 0)) < 0)
+            if (AstroBuild.CompareTo(new Version(1, 15, 0, 0)) < 0)
             {
                 return EngineVersion.VER_UE4_18;
             }
