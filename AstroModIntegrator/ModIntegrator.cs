@@ -11,13 +11,12 @@ namespace AstroModIntegrator
 {
     internal interface ICustomRoutineAPIWrapper
     {
-        internal void SetEnabled(bool newVal);
         internal void SetShouldExitNow(bool newVal);
     }
 
     public class CustomRoutineAPIWrapper_V1 : ICustomRoutineAPI, ICustomRoutineAPIWrapper
     {
-        private bool Enabled = true;
+        private bool Enabled => Integrator?.EnabledRoutine == this;
         private bool bShouldExitNow = false;
         private ModIntegrator Integrator;
 
@@ -87,10 +86,6 @@ namespace AstroModIntegrator
         {
             return bShouldExitNow;
         }
-        void ICustomRoutineAPIWrapper.SetEnabled(bool newVal)
-        {
-            Enabled = newVal;
-        }
         void ICustomRoutineAPIWrapper.SetShouldExitNow(bool newVal)
         {
             bShouldExitNow = newVal;
@@ -98,7 +93,6 @@ namespace AstroModIntegrator
 
         internal CustomRoutineAPIWrapper_V1(ModIntegrator integrator)
         {
-            Enabled = true;
             bShouldExitNow = false;
             Integrator = integrator;
         }
@@ -135,6 +129,7 @@ namespace AstroModIntegrator
         private volatile Dictionary<string, CustomRoutine> customRoutinesMap;
         private volatile Dictionary<string, Metadata> customRoutinesMap2;
         private volatile Dictionary<Guid, Metadata> customRoutineAssemblyToMetadata = null;
+        internal volatile ICustomRoutineAPIWrapper EnabledRoutine = null;
         private volatile string[] allPakPaths;
         private volatile string allInstallPath;
         private volatile bool isCurrentlyIntegrating = false;
@@ -750,6 +745,7 @@ namespace AstroModIntegrator
             customRoutinesMap2 = null;
             pakExtractorForCustomRoutines = null;
             customRoutineAssemblyToMetadata = null;
+            EnabledRoutine = null;
             allPakPaths = paksPaths;
             allInstallPath = installPath;
             hasLoggedOnceAlready = false;
@@ -1247,7 +1243,9 @@ namespace AstroModIntegrator
                     try
                     {
                         CreatedPakDataTemp = new Dictionary<string, byte[]>();
-                        new CR_CrateOverlayTextures().Execute(new CustomRoutineAPIWrapper_V1(this));
+                        var wrap = new CustomRoutineAPIWrapper_V1(this);
+                        EnabledRoutine = wrap;
+                        new CR_CrateOverlayTextures().Execute(wrap);
                         foreach (KeyValuePair<string, byte[]> entry in CreatedPakDataTemp) CreatedPakData[entry.Key] = entry.Value;
                     }
                     catch (Exception ex)
@@ -1258,7 +1256,9 @@ namespace AstroModIntegrator
                     try
                     {
                         CreatedPakDataTemp = new Dictionary<string, byte[]>();
-                        new CR_IntegratorTabButton().Execute(new CustomRoutineAPIWrapper_V1(this));
+                        var wrap = new CustomRoutineAPIWrapper_V1(this);
+                        EnabledRoutine = wrap;
+                        new CR_IntegratorTabButton().Execute(wrap);
                         foreach (KeyValuePair<string, byte[]> entry in CreatedPakDataTemp) CreatedPakData[entry.Key] = entry.Value;
                     }
                     catch (Exception ex)
@@ -1343,6 +1343,7 @@ namespace AstroModIntegrator
                                         {
                                             try
                                             {
+                                                EnabledRoutine = apiWrapper;
                                                 customRoutineInstance.Execute((CustomRoutineAPIWrapper_V1)apiWrapper);
                                             }
                                             catch (Exception ex)
@@ -1389,7 +1390,7 @@ namespace AstroModIntegrator
                                     LogToDisk("[" + modId + "] Custom routine is unresponsive; discarding changes, disabling API, and moving on", false);
                                     if (IsModIntegratorCMD) LogToDisk("[" + modId + "] Thread will be killed after integration", false);
                                 }
-                                apiWrapper?.SetEnabled(false); // disable all api methods
+                                EnabledRoutine = null; // disable all api methods
                             }
                             catch (Exception ex)
                             {
